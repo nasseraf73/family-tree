@@ -1,0 +1,138 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Family Tree API v1",
+    "description": "المواصفة التفاعلية البرمجية القياسية لواجهات البرمجة في منصة شجرة العائلة الكبرى (Crowdsourced Family Tree Platform API).",
+    "version": "1.0.0",
+    "contact": {
+      "name": "فريق تطوير شجرة العائلة",
+      "email": "support@familytree.local"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "بيئة التطوير والاختبار المحلية"
+    },
+    {
+      "url": "https://familytree.app/api/v1",
+      "description": "بيئة الإنتاج الحية"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "تسجيل مستخدم جديد في المنظومة",
+        "operationId": "registerUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "full_name"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "user@example.com" },
+                  "full_name": { "type": "string", "example": "عبدالله سلمان العلي" },
+                  "phone": { "type": "string", "example": "+966500000000" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "تم تسجيل أو جلب المستخدم بنجاح" },
+          "400": { "description": "بيانات الإدخال غير صالحة" }
+        }
+      }
+    },
+    "/persons": {
+      "get": {
+        "summary": "استعلام أفراد شجرة العائلة",
+        "responses": {
+          "200": { "description": "قائمة أفراد العائلة" }
+        }
+      },
+      "post": {
+        "summary": "إضافة فرد جديد إلى شجرة العائلة",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["first_name", "gender"],
+                "properties": {
+                  "first_name": { "type": "string", "example": "أحمد" },
+                  "father_name": { "type": "string", "example": "محمد" },
+                  "grand_father_name": { "type": "string", "example": "علي" },
+                  "family_name": { "type": "string", "example": "العلي" },
+                  "gender": { "type": "string", "enum": ["MALE", "FEMALE"] },
+                  "is_alive": { "type": "boolean", "default": true },
+                  "birth_year": { "type": "integer", "example": 1990 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "تم إنشاء الفرد بنجاح" },
+          "400": { "description": "بيانات الفرد مفقودة أو غير صالحة" }
+        }
+      }
+    },
+    "/dedup/check": {
+      "post": {
+        "summary": "فحص التكرارات ومقارنة الأفراد بالذكاء الهجائي",
+        "responses": {
+          "200": { "description": "نتائج الفحص والنسب المئوية للمطابقة" }
+        }
+      }
+    },
+    "/marriages": {
+      "post": {
+        "summary": "إضافة عقد أو سجل زواج جديد",
+        "responses": {
+          "200": { "description": "تم تسجيل عقد الزواج بنجاح" },
+          "401": { "description": "غير مصرح - يلزم تسجيل الدخول" }
+        }
+      }
+    },
+    "/relationships": {
+      "delete": {
+        "summary": "حذف علاقة مباشرة وتنظيف العقد اليتيمة تلقائياً",
+        "responses": {
+          "200": { "description": "تم حذف العلاقة وتنظيف العقد" },
+          "401": { "description": "غير مصرح" },
+          "403": { "description": "لا تملك صلاحية الحذف" }
+        }
+      }
+    },
+    "/claim/request": {
+      "post": {
+        "summary": "رفع طلب مطالبة وتوثيق ملكية بطاقة نسب",
+        "responses": {
+          "200": { "description": "تم تقديم طلب المطالبة بنجاح" },
+          "409": { "description": "البطاقة مطالب بها مسبقاً" }
+        }
+      }
+    },
+    "/review/merge": {
+      "post": {
+        "summary": "الموافقة على دمج السجلات المكررة (صلاحية مراجع/مدير)",
+        "responses": {
+          "200": { "description": "تم دمج السجلين بنجاح" },
+          "403": { "description": "عفواً لا تملك صلاحية مراجع" }
+        }
+      }
+    },
+    "/tree/canvas": {
+      "get": {
+        "summary": "جلب شبكة العقد والروابط الجاهزة للعرض في React Flow Canvas",
+        "responses": {
+          "200": { "description": "عقد وروابط الرسم البياني" }
+        }
+      }
+    }
+  }
+}

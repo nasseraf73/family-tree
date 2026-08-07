@@ -1,0 +1,861 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, Check, X, GitMerge, Clock, UserCheck, AlertCircle, Users, UserPlus, Trash2, Plus, RefreshCw, Shield } from 'lucide-react';
+import { Person, Relationship, MergeRequest } from '../types';
+import { normalizeForSearch } from '../lib/dedup';
+
+interface StewardDashboardProps {
+  isOpen: boolean;
+  onClose: () => void;
+  pendingRelationships: Relationship[];
+  allPersonsMap: Map<number, Person>;
+  mergeRequests: MergeRequest[];
+  onRefresh: () => void;
+  userRole?: string;
+}
+
+export const StewardDashboard: React.FC<StewardDashboardProps> = ({
+  isOpen,
+  onClose,
+  pendingRelationships,
+  allPersonsMap,
+  mergeRequests,
+  onRefresh,
+  userRole = 'USER',
+}) => {
+  const isAdmin = userRole === 'ADMIN' || userRole === 'ADM';
+  const [activeTab, setActiveTab] = useState<'pending' | 'merge' | 'claims' | 'stewards'>('pending');
+  const [loading, setLoading] = useState(false);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  // Profile Claims Management State
+  const [claimsList, setClaimsList] = useState<any[]>([]);
+  const [loadingClaims, setLoadingClaims] = useState(false);
+
+  // Steward Management State
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [isAddStewardOpen, setIsAddStewardOpen] = useState(false);
+
+  const [stewardName, setStewardName] = useState('');
+  const [stewardNameShowDropdown, setStewardNameShowDropdown] = useState(false);
+  const [stewardEmail, setStewardEmail] = useState('');
+  const [stewardPhone, setStewardPhone] = useState('');
+  const [stewardRole, setStewardRole] = useState<'REVIEWER' | 'ADMIN' | 'USER'>('REVIEWER');
+  const [submittingSteward, setSubmittingSteward] = useState(false);
+
+  // Tree Person Search for Steward Name Autocomplete
+  const allPersonsList = Array.from(allPersonsMap.values());
+  const cleanStewardNameQuery = normalizeForSearch(stewardName);
+
+  const stewardNameSuggestions = cleanStewardNameQuery.length >= 1
+    ? allPersonsList.filter(p => {
+        const full4 = [p.first_name, p.father_name, p.grand_father_name, p.family_name].filter(Boolean).join(' ');
+        const cleanFull = normalizeForSearch(full4);
+        return cleanFull.includes(cleanStewardNameQuery);
+      }).slice(0, 8)
+    : [];
+
+  const fetchClaimsList = async () => {
+    setLoadingClaims(true);
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
+      const res = await fetch('/api/v1/claim/requests', {
+        headers: { 'x-user-email': savedEmail },
+      });
+      const data = await res.json();
+      if (data.claims) {
+        setClaimsList(data.claims);
+      }
+    } catch {
+      // Safe catch
+    } finally {
+      setLoadingClaims(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchClaimsList();
+    }
+  }, [isOpen]);
+
+  const handleApproveOrRejectClaim = async (personId: number, action: 'approve' | 'reject') => {
+    setLoading(true);
+    setActionMessage(null);
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
+      const res = await fetch('/api/v1/claim/requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': savedEmail,
+        },
+        body: JSON.stringify({ person_id: personId, action }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage(data.message);
+        fetchClaimsList();
+        onRefresh();
+      } else {
+        setActionMessage(data.error || 'حدث خطأ أثناء معالجة المطالبة');
+      }
+    } catch {
+      setActionMessage('حدث خطأ أثناء معالجة المطالبة');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAdmin && activeTab === 'stewards') {
+      setActiveTab('pending');
+    }
+  }, [isAdmin, activeTab]);
+
+  const fetchUsersList = async () => {
+    if (!isAdmin) return;
+    setLoadingUsers(true);
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
+      const res = await fetch('/api/v1/admin/users', {
+        headers: { 'x-user-email': savedEmail },
+      });
+      const data = await res.json();
+      if (data.users) {
+        setUsersList(data.users);
+      }
+    } catch {
+      // Safe catch
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && activeTab === 'stewards' && isAdmin) {
+      fetchUsersList();
+    }
+  }, [isOpen, activeTab, isAdmin]);
+
+  const handleAddStewardSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stewardEmail || !stewardName) return;
+
+    setSubmittingSteward(true);
+    setActionMessage(null);
+
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
+      const res = await fetch('/api/v1/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': savedEmail,
+        },
+        body: JSON.stringify({
+          full_name: stewardName,
+          email: stewardEmail,
+          phone: stewardPhone,
+          role: stewardRole,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage(data.message || 'تمت إضافة المشرف بنجاح');
+        setStewardName('');
+        setStewardEmail('');
+        setStewardPhone('');
+        setIsAddStewardOpen(false);
+        fetchUsersList();
+      } else {
+        setActionMessage(data.error || 'فشلت إضافة المشرف');
+      }
+    } catch {
+      setActionMessage('حدث خطأ أثناء إضافة المشرف');
+    } finally {
+      setSubmittingSteward(false);
+    }
+  };
+
+  const handleRoleChange = async (userId: number, newRole: 'USER' | 'REVIEWER' | 'ADMIN') => {
+    setActionMessage(null);
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
+      const res = await fetch('/api/v1/admin/users', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': savedEmail,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          role: newRole,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage(data.message || 'تم تغيير دور المشرف بنجاح');
+        fetchUsersList();
+      } else {
+        setActionMessage(data.error || 'فشل تغيير دور المشرف');
+      }
+    } catch {
+      setActionMessage('حدث خطأ أثناء تغيير دور المشرف');
+    }
+  };
+
+  const handleDeleteSteward = async (userId: number) => {
+    if (!confirm('هل أنت تأكد من رغبتك في حذف هذا المشرف/المستخدم من النظام؟')) return;
+
+    setActionMessage(null);
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
+      const res = await fetch(`/api/v1/admin/users?id=${userId}`, {
+        method: 'DELETE',
+        headers: { 'x-user-email': savedEmail },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage(data.message || 'تم حذف المشرف بنجاح');
+        fetchUsersList();
+      } else {
+        setActionMessage(data.error || 'فشل حذف المشرف');
+      }
+    } catch {
+      setActionMessage('حدث خطأ أثناء حذف المشرف');
+    }
+  };
+
+  // Helper function to build 4-part full name
+  const get4PartName = (p: Person) => {
+    return [p.first_name, p.father_name, p.grand_father_name, p.family_name]
+      .filter(Boolean)
+      .join(' ');
+  };
+
+  const handleApproveRelation = async (relId: number, action: 'approve' | 'reject') => {
+    setLoading(true);
+    setActionMessage(null);
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
+      const res = await fetch('/api/v1/review/approve', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': savedEmail
+        },
+        body: JSON.stringify({
+          relationship_id: relId,
+          action,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage(data.message);
+        onRefresh();
+      } else {
+        setActionMessage(data.error || 'حدث خطأ أثناء معالجة الطلب');
+      }
+    } catch {
+      setActionMessage('حدث خطأ أثناء معالجة الطلب');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveMerge = async (mergeId: number) => {
+    setLoading(true);
+    setActionMessage(null);
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
+      const res = await fetch('/api/v1/review/merge', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': savedEmail
+        },
+        body: JSON.stringify({
+          merge_request_id: mergeId,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage(data.message);
+        onRefresh();
+      } else {
+        setActionMessage(data.error || 'حدث خطأ أثناء تنفيذ عملية الدمج');
+      }
+    } catch {
+      setActionMessage('حدث خطأ أثناء تنفيذ عملية الدمج');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isStewardOrAdmin = userRole === 'ADMIN' || userRole === 'ADM' || userRole === 'REVIEWER' || userRole === 'STEWARD';
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl text-slate-100 overflow-hidden dir-rtl flex flex-col max-h-[85vh]">
+        {/* Header */}
+        <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {isStewardOrAdmin ? (
+              <ShieldCheck className="w-6 h-6 text-amber-400" />
+            ) : (
+              <Clock className="w-6 h-6 text-emerald-400" />
+            )}
+            <div>
+              <h3 className="font-bold text-lg">
+                {isStewardOrAdmin ? 'لوحة مراجعة وإدارة المشرفين (Steward & Admin Portal)' : 'سجل طلباتي الخاصة وسلسلة الاعتماد'}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {isStewardOrAdmin
+                  ? 'مراجعة العلاقات المعلقة، دمج المكررات، وإدارة حسابات المشرفين وصلاحياتهم'
+                  : 'متابعة حالة طلباتك الخاصة بإضافة الأقارب والمطالبة بالفرع وسلسلة التوثيق'}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-slate-800 bg-slate-950/50 px-6 pt-2 gap-4">
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors ${
+              activeTab === 'pending'
+                ? 'border-amber-400 text-amber-300'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            {isStewardOrAdmin ? `طلبات العلاقات المعلقة (${pendingRelationships.length})` : `طلباتي المعلقة (${pendingRelationships.length})`}
+          </button>
+
+          {isStewardOrAdmin && (
+            <button
+              onClick={() => setActiveTab('merge')}
+              className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors ${
+                activeTab === 'merge'
+                  ? 'border-amber-400 text-amber-300'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <GitMerge className="w-4 h-4" />
+              أداة دمج المكررات Side-by-Side ({mergeRequests.length})
+            </button>
+          )}
+
+          <button
+            onClick={() => setActiveTab('claims')}
+            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors ${
+              activeTab === 'claims'
+                ? 'border-blue-400 text-blue-300'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <UserCheck className="w-4 h-4" />
+            {isStewardOrAdmin ? `طلبات المطالبة بالبطاقات والفرع (${claimsList.length})` : `طلبات المطالبة بملكيّتي (${claimsList.length})`}
+          </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => setActiveTab('stewards')}
+              className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors ${
+                activeTab === 'stewards'
+                  ? 'border-emerald-400 text-emerald-300'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              إدارة المشرفين وصلاحيات النظام ({usersList.filter(u => u.role === 'REVIEWER' || u.role === 'ADMIN').length})
+            </button>
+          )}
+        </div>
+
+        {/* Content Body */}
+        <div className="p-6 overflow-y-auto space-y-4 flex-1">
+          {actionMessage && (
+            <div className="p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-xl text-emerald-200 text-xs flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-400" />
+                <span>{actionMessage}</span>
+              </div>
+              <button onClick={() => setActionMessage(null)} className="text-emerald-400 hover:text-white">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {activeTab === 'pending' && (
+            <div className="space-y-3">
+              {pendingRelationships.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-xs">
+                  <Check className="w-8 h-8 mx-auto mb-2 text-emerald-500/40" />
+                  لا يوجد أي طلبات علاقات معلقة حالياً. شجرة العائلة محدثة بالكامل!
+                </div>
+              ) : (
+                pendingRelationships.map(rel => {
+                  const person = allPersonsMap.get(rel.person_id);
+                  const relatedPerson = allPersonsMap.get(rel.related_person_id);
+
+                  if (!person || !relatedPerson) return null;
+
+                  const name1_4 = get4PartName(person);
+                  const name2_4 = get4PartName(relatedPerson);
+
+                  const relLabel = rel.relationship_type === 'PARENT'
+                    ? 'ابن / ابنة لـ'
+                    : rel.relationship_type === 'CHILD'
+                    ? 'أب / أم لـ'
+                    : 'زوج / زوجة لـ';
+
+                  return (
+                    <div
+                      key={rel.id}
+                      className="bg-slate-950 border border-amber-500/30 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-2">
+                        {/* 4-part name for both sides */}
+                        <div className="flex flex-wrap items-center gap-2 font-bold text-amber-200 text-sm">
+                          <span className="bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg text-amber-100">
+                            {name1_4}
+                          </span>
+                          <span className="text-slate-400 text-xs px-1">[{relLabel}]</span>
+                          <span className="bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-emerald-300">
+                            {name2_4}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">
+                          مقدم الطلب: <span className="text-slate-200 font-semibold">مستخدم الفرع</span> | تاريخ الطلب: {rel.created_at.substring(0, 10)}
+                        </p>
+                      </div>
+
+                      {isStewardOrAdmin ? (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            disabled={loading}
+                            onClick={() => handleApproveRelation(rel.id, 'approve')}
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center gap-1 transition-all text-xs"
+                          >
+                            <Check className="w-4 h-4" />
+                            اعتماد (VERIFIED)
+                          </button>
+                          <button
+                            disabled={loading}
+                            onClick={() => handleApproveRelation(rel.id, 'reject')}
+                            className="px-3.5 py-2 bg-red-950 hover:bg-red-900 border border-red-500/30 text-red-300 rounded-lg font-semibold flex items-center gap-1 transition-all text-xs"
+                          >
+                            <X className="w-4 h-4" />
+                            رفض
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="px-3.5 py-2 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-lg font-bold flex items-center gap-1.5 text-xs">
+                            <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+                            <span>قيد مراجعة المشرفين واللجنة</span>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {activeTab === 'merge' && isStewardOrAdmin && (
+            <div className="space-y-4">
+              {mergeRequests.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-xs">
+                  لا يوجد أي طلبات دمج مكررات معلقة.
+                </div>
+              ) : (
+                mergeRequests.map(req => {
+                  const primary = allPersonsMap.get(req.primary_person_id);
+                  const duplicate = allPersonsMap.get(req.duplicate_person_id);
+
+                  if (!primary || !duplicate) return null;
+
+                  const primary4 = get4PartName(primary);
+                  const duplicate4 = get4PartName(duplicate);
+
+                  return (
+                    <div key={req.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="font-bold text-amber-300 text-xs flex items-center gap-1.5">
+                          <GitMerge className="w-4 h-4 text-amber-400" />
+                          طلب دمج سجلين مكررين في سجل واحد موحد (Side-by-Side Merge)
+                        </span>
+                        <button
+                          disabled={loading}
+                          onClick={() => handleApproveMerge(req.id)}
+                          className="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs flex items-center gap-1.5"
+                        >
+                          <GitMerge className="w-4 h-4" />
+                          تنفيذ الدمج الآن
+                        </button>
+                      </div>
+
+                      {/* Side-by-side comparison with 4-part names */}
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        {/* Primary Node */}
+                        <div className="bg-slate-900 border border-emerald-500/40 p-3.5 rounded-xl space-y-1.5">
+                          <span className="text-[10px] text-emerald-400 font-bold block">السجل الأساسي المعتمد:</span>
+                          <p className="font-bold text-slate-100 text-sm">{primary4}</p>
+                          <p className="text-slate-400 text-[11px]">سنة الميلاد: {primary.birth_year || 'غير متاح'}</p>
+                          <p className="text-slate-400 text-[11px]">السيرة: {primary.biography || 'بدون سيرة'}</p>
+                        </div>
+
+                        {/* Duplicate Node */}
+                        <div className="bg-slate-900 border border-amber-500/40 p-3.5 rounded-xl space-y-1.5">
+                          <span className="text-[10px] text-amber-400 font-bold block">السجل المكرر (سيتم دمج علاقاته ثم حذفه):</span>
+                          <p className="font-bold text-slate-100 text-sm">{duplicate4}</p>
+                          <p className="text-slate-400 text-[11px]">سنة الميلاد: {duplicate.birth_year || 'غير متاح'}</p>
+                          <p className="text-slate-400 text-[11px]">ملاحظات: {duplicate.biography || 'بدون ملاحظات'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {activeTab === 'claims' && (
+            <div className="space-y-3">
+              {loadingClaims ? (
+                <div className="text-center py-8 text-slate-400 text-xs">جاري تحميل طلبات المطالبة بالبطاقات...</div>
+              ) : claimsList.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-xs">
+                  <UserCheck className="w-8 h-8 mx-auto mb-2 text-blue-500/40" />
+                  لا يوجد أي طلبات مطالبة بالبطاقات حالياً.
+                </div>
+              ) : (
+                claimsList.map(claim => {
+                  const personName = [claim.first_name, claim.father_name, claim.grand_father_name, claim.family_name].filter(Boolean).join(' ');
+
+                  return (
+                    <div
+                      key={claim.person_id}
+                      className="bg-slate-950 border border-blue-500/30 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs shadow-md"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-blue-300 text-sm">{personName}</span>
+                          <span className="text-[10px] bg-blue-500/20 text-blue-200 px-2 py-0.5 rounded-full border border-blue-500/40 font-bold">
+                            طلب مطالبة ("هذا أنا")
+                          </span>
+                        </div>
+
+                        <p className="text-slate-300 text-xs">
+                          طالب البطاقة: <span className="font-bold text-amber-200">{claim.user_full_name}</span> ({claim.user_email}) {claim.user_phone ? `| 📞 ${claim.user_phone}` : ''}
+                        </p>
+                      </div>
+
+                      {isStewardOrAdmin ? (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            disabled={loading}
+                            onClick={() => handleApproveOrRejectClaim(claim.person_id, 'approve')}
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center gap-1 transition-all text-xs shadow-md"
+                          >
+                            <Check className="w-4 h-4" />
+                            اعتماد التوثيق الرسمي
+                          </button>
+
+                          <button
+                            disabled={loading}
+                            onClick={() => handleApproveOrRejectClaim(claim.person_id, 'reject')}
+                            className="px-3.5 py-2 bg-red-950 hover:bg-red-900 border border-red-500/30 text-red-300 rounded-lg font-semibold flex items-center gap-1 transition-all text-xs"
+                          >
+                            <X className="w-4 h-4" />
+                            إلغاء / فك الربط
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 shrink-0">
+                          {claim.status === 'APPROVED' ? (
+                            <span className="px-3.5 py-2 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 rounded-lg font-bold flex items-center gap-1.5 text-xs">
+                              <Check className="w-4 h-4 text-emerald-400" />
+                              <span>تم الاعتماد والموافقة</span>
+                            </span>
+                          ) : claim.status === 'REJECTED' ? (
+                            <span className="px-3.5 py-2 bg-red-500/10 text-red-300 border border-red-500/30 rounded-lg font-bold flex items-center gap-1.5 text-xs">
+                              <X className="w-4 h-4 text-red-400" />
+                              <span>مرفوض</span>
+                            </span>
+                          ) : (
+                            <span className="px-3.5 py-2 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-lg font-bold flex items-center gap-1.5 text-xs">
+                              <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+                              <span>قيد المراجعة والاعتماد</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {isAdmin && activeTab === 'stewards' && (
+            <div className="space-y-4">
+              {/* Top Action Bar */}
+              <div className="flex items-center justify-between bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <div>
+                  <h4 className="font-extrabold text-sm text-slate-100 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-emerald-400" />
+                    قائمة المشرفين وأصحاب الصلاحيات بالنظام
+                  </h4>
+                  <p className="text-[11px] text-slate-400">إضافة، تعديل الأدوار، وحذف المشرفين من النظام</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={fetchUsersList}
+                    className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs"
+                    title="تحديث القائمة"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${loadingUsers ? 'animate-spin' : ''}`} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAddStewardOpen(!isAddStewardOpen)}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 transition-all"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>{isAddStewardOpen ? 'إلغاء الإضافة' : 'إضافة مشرف جديد'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Add New Steward Form (Collapsible Modal / Panel) */}
+              {isAddStewardOpen && (
+                <form onSubmit={handleAddStewardSubmit} className="bg-slate-950 border-2 border-emerald-500/40 p-4 rounded-2xl space-y-3 shadow-xl">
+                  <h5 className="font-extrabold text-xs text-emerald-300 flex items-center gap-1.5">
+                    <UserPlus className="w-4 h-4" />
+                    بيانات المشرف الجديد:
+                  </h5>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div className="relative">
+                      <label className="block text-slate-400 mb-1 font-semibold">الاسم الكامل (اختر من الشجرة) *</label>
+                      <input
+                        type="text"
+                        required
+                        value={stewardName}
+                        onChange={(e) => {
+                          setStewardName(e.target.value);
+                          setStewardNameShowDropdown(true);
+                        }}
+                        onFocus={() => setStewardNameShowDropdown(true)}
+                        placeholder="ابدأ بكتابة الاسم للاختيار من الشجرة..."
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-500 font-bold"
+                      />
+
+                      {/* Tree Autocomplete Suggestions Dropdown */}
+                      {stewardNameShowDropdown && stewardNameSuggestions.length > 0 && (
+                        <div className="absolute top-full right-0 left-0 mt-1 bg-slate-950 border-2 border-emerald-500/60 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-800 dir-rtl">
+                          {stewardNameSuggestions.map((p) => {
+                            const full4 = [p.first_name, p.father_name, p.grand_father_name, p.family_name].filter(Boolean).join(' ');
+                            const cleanFull4 = normalizeForSearch(full4);
+                            const matchedUser = (p.claimed_by_user_id ? usersList.find(u => u.id === p.claimed_by_user_id) : null) ||
+                              usersList.find(u => normalizeForSearch(u.full_name) === cleanFull4);
+
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => {
+                                  setStewardName(full4);
+                                  setStewardNameShowDropdown(false);
+                                  if (matchedUser?.email) {
+                                    setStewardEmail(matchedUser.email);
+                                    if (matchedUser.phone) setStewardPhone(matchedUser.phone || '');
+                                  } else {
+                                    const cleanPrefix = normalizeForSearch(p.first_name || 'user');
+                                    setStewardEmail(`${cleanPrefix}${p.id}@family.com`);
+                                  }
+                                }}
+                                className="w-full text-right p-2.5 hover:bg-emerald-950/80 transition-colors flex items-center justify-between text-xs"
+                              >
+                                <div>
+                                  <div className="font-extrabold text-emerald-300">
+                                    {full4}
+                                  </div>
+                                  {matchedUser?.email && (
+                                    <span className="text-[10px] text-amber-300 block font-semibold mt-0.5">
+                                      📧 البريد المسجل: {matchedUser.email}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-700 font-medium">
+                                  {(p as any).generationLevel ? `الجيل ${(p as any).generationLevel}` : ''} {p.birth_year ? `| ${p.birth_year}` : ''}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 mb-1 font-semibold">البريد الإلكتروني *</label>
+                      <input
+                        type="email"
+                        required
+                        value={stewardEmail}
+                        onChange={(e) => setStewardEmail(e.target.value)}
+                        placeholder="name@domain.com"
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 mb-1 font-semibold">رقم الهاتف (اختياري)</label>
+                      <input
+                        type="text"
+                        value={stewardPhone}
+                        onChange={(e) => setStewardPhone(e.target.value)}
+                        placeholder="050xxxxxxx"
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 mb-1 font-semibold">نوع الصلاحية / الدور *</label>
+                      <select
+                        value={stewardRole}
+                        onChange={(e) => setStewardRole(e.target.value as any)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-emerald-500 font-bold"
+                      >
+                        <option value="REVIEWER">مشرف فرع (REVIEWER)</option>
+                        <option value="ADMIN">مدير عام للنظام (ADMIN)</option>
+                        <option value="USER">عضو عائلة عادي (USER)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddStewardOpen(false)}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium"
+                    >
+                      إلغاء
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingSteward}
+                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-extrabold flex items-center gap-1.5 shadow-md"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>{submittingSteward ? 'جاري الحفظ...' : 'حفظ وإضافة المشرف'}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Users & Stewards List */}
+              {loadingUsers ? (
+                <div className="text-center py-8 text-slate-400 text-xs">جاري تحميل قائمة المشرفين...</div>
+              ) : usersList.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-xs">لا يوجد مستخدمون مدونون حالياً.</div>
+              ) : (
+                <div className="space-y-2">
+                  {usersList.map((u) => {
+                    const isAdmin = u.role === 'ADMIN' || u.role === 'ADM';
+                    const isReviewer = u.role === 'REVIEWER' || u.role === 'REV';
+
+                    return (
+                      <div
+                        key={u.id}
+                        className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border ${
+                              isAdmin
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : isReviewer
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                : 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                            }`}
+                          >
+                            {u.full_name ? u.full_name.charAt(0) : 'U'}
+                          </div>
+
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-slate-100 text-sm">{u.full_name || 'مستخدم بدون اسم'}</span>
+                              <span
+                                className={`px-2 py-0.5 rounded-full font-black text-[10px] border ${
+                                  isAdmin
+                                    ? 'bg-amber-950 text-amber-300 border-amber-500/50'
+                                    : isReviewer
+                                    ? 'bg-emerald-950 text-emerald-300 border-emerald-500/50'
+                                    : 'bg-blue-950 text-blue-300 border-blue-500/50'
+                                }`}
+                              >
+                                {isAdmin ? '👑 مدير نظام (ADMIN)' : isReviewer ? '🛡️ مشرف فرع (REVIEWER)' : '👤 عضو (USER)'}
+                              </span>
+                            </div>
+                            <p className="text-slate-400 text-[11px] mt-0.5">
+                              {u.email} {u.phone ? `| 📞 ${u.phone}` : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Actions: Change Role Select & Delete Button */}
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleRoleChange(u.id, e.target.value as any)}
+                            className="bg-slate-900 border border-slate-700 text-slate-200 text-[11px] font-bold rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500"
+                            title="تعديل دور وصلاحيات المستخدم"
+                          >
+                            <option value="REVIEWER">مشرف فرع (REVIEWER)</option>
+                            <option value="ADMIN">مدير نظام (ADMIN)</option>
+                            <option value="USER">عضو عائلة (USER)</option>
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSteward(u.id)}
+                            className="p-1.5 bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-500/30 rounded-lg transition-colors"
+                            title="حذف هذا المشرف/المستخدم"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
