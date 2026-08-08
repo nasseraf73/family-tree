@@ -22,8 +22,9 @@ export async function GET(request: Request) {
     }
 
     try {
-      // Auto-migrate claim_status column in PostgreSQL if not present
-      await db.execute(sql`ALTER TABLE persons ADD COLUMN IF NOT EXISTS claim_status varchar(20) DEFAULT 'PENDING';`).catch(() => {});
+      // Auto-migrate claim_status column in PostgreSQL and update all existing claims to APPROVED
+      await db.execute(sql`ALTER TABLE persons ADD COLUMN IF NOT EXISTS claim_status varchar(20) DEFAULT 'APPROVED';`).catch(() => {});
+      await db.execute(sql`UPDATE persons SET claim_status = 'APPROVED' WHERE claimed_by_user_id IS NOT NULL AND (claim_status IS NULL OR claim_status = 'PENDING');`).catch(() => {});
 
       const dbClaims = await db
         .select({
