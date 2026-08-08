@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Search, ShieldCheck, CheckCircle, RefreshCw } from 'lucide-react';
+import { X, Search, ShieldCheck, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Person } from '../types';
 import { getPentanyicFullName } from '../lib/lineage';
 import { normalizeForSearch, sortSearchResults, filterAndSortSearchResults } from '../lib/dedup';
@@ -29,6 +29,12 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Check if current user already owns/claimed a profile
+  const existingClaimedPerson = useMemo(() => {
+    if (!dbUser) return null;
+    return allPersons.find((p) => Number(p.claimed_by_user_id) === Number(dbUser.id));
+  }, [dbUser, allPersons]);
 
   // Synchronize selectedPerson when modal opens or initialTargetPerson prop changes
   useEffect(() => {
@@ -110,6 +116,19 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
 
         {/* Content */}
         <form onSubmit={handleClaimSubmit} className="p-6 space-y-4 text-sm">
+          {existingClaimedPerson && (
+            <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-xl text-amber-300 text-xs flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block mb-0.5">تنبيه: حسابك مرتبط ببطاقة موثقة بالفعل</span>
+                <span>
+                  حسابك مرتبط مسبقاً ببطاقة: <strong>{getPentanyicFullName(existingClaimedPerson)}</strong>.
+                  لا يتيح النظام للمستخدم الواحد المطالبة بأكثر من بطاقة شخصية واحدة.
+                </span>
+              </div>
+            </div>
+          )}
+
           {!selectedPerson ? (
             <div>
               <label className="block text-xs font-semibold text-slate-400 mb-2">
@@ -203,8 +222,8 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
             {selectedPerson && (
               <button
                 type="submit"
-                disabled={loading}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
+                disabled={loading || (!!existingClaimedPerson && existingClaimedPerson.id !== selectedPerson.id)}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
               >
                 {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
                 إرسال طلب المطالبة (CLAIM_PENDING)

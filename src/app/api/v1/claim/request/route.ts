@@ -24,6 +24,34 @@ export async function POST(request: Request) {
     }
     const userIdToClaim = dbUser.id;
 
+    // Check if the user ALREADY has a claimed profile in DB
+    try {
+      const existingClaims = await db
+        .select()
+        .from(personsTable)
+        .where(eq(personsTable.claimed_by_user_id, userIdToClaim))
+        .limit(1);
+
+      if (existingClaims.length > 0 && existingClaims[0].id !== Number(person_id)) {
+        const claimedName = [
+          existingClaims[0].first_name,
+          existingClaims[0].father_name,
+          existingClaims[0].family_name,
+        ]
+          .filter(Boolean)
+          .join(' ');
+
+        return NextResponse.json(
+          {
+            error: `عفواً، حسابك مرتبط بالفعل ببطاقة موثقة باسم (${claimedName}). لا يمكن للمستخدم المطالبة بأكثر من بطاقة شخصية واحدة.`,
+          },
+          { status: 400 }
+        );
+      }
+    } catch {
+      // Safe catch if query fails
+    }
+
     // 1. Check PostgreSQL DB first
     let personFoundInDb = false;
     let targetPerson: any = null;
@@ -44,8 +72,12 @@ export async function POST(request: Request) {
           .set({ claimed_by_user_id: userIdToClaim })
           .where(eq(personsTable.id, person_id));
       }
-    } catch {
-      // Fallback
+    } catch (dbErr: any) {
+      console.error('[CLAIM REQUEST DB EXCEPTION]', dbErr);
+      return NextResponse.json(
+        { error: 'تعذر حفظ طلب المطالبة في قاعدة البيانات (حسابك مرتبط بالفعل ببطاقة أخرى)' },
+        { status: 400 }
+      );
     }
 
     // 2. Fallback / Sync MemoryStore
