@@ -116,7 +116,7 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
 
         {/* Content */}
         <form onSubmit={handleClaimSubmit} className="p-6 space-y-4 text-sm">
-          {existingClaimedPerson && (
+          {existingClaimedPerson ? (
             <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-xl text-amber-300 text-xs flex items-start gap-2.5">
               <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div>
@@ -124,6 +124,16 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
                 <span>
                   حسابك مرتبط مسبقاً ببطاقة: <strong>{getPentanyicFullName(existingClaimedPerson)}</strong>.
                   لا يتيح النظام للمستخدم الواحد المطالبة بأكثر من بطاقة شخصية واحدة.
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-300 text-xs flex items-start gap-2.5">
+              <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block mb-0.5">تنبيه هام حول التوثيق:</span>
+                <span>
+                  تتيح المنظومة لكل عضو توثيق بطاقة شخصية واحدة فقط بحسابه (بطاقتك &quot;هذا أنا&quot;). يرجى التأكد والتدقيق عند اختيار اسمك قبل إرسال طلب المطالبة للمشرفين.
                 </span>
               </div>
             </div>

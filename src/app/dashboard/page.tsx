@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -24,6 +24,7 @@ import {
   ArrowRight,
   Settings,
   LayoutDashboard,
+  Search,
 } from 'lucide-react';
 
 // ─── Dashboard Content ───────────────────────────────────────────────
@@ -39,6 +40,7 @@ function DashboardContent() {
   const [mergeRequests, setMergeRequests] = useState<MergeRequest[]>([]);
   const [claimsList, setClaimsList] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
+  const [claimsSearchQuery, setClaimsSearchQuery] = useState('');
 
   // ─── UI State ───────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<'claims' | 'pending' | 'merge' | 'stewards'>('claims');
@@ -75,6 +77,22 @@ function DashboardContent() {
       .filter(Boolean)
       .join(' ');
   };
+
+  // ─── Filtered Claims Search List ────────────────────────────────
+  const filteredClaimsList = useMemo(() => {
+    if (!claimsSearchQuery || !claimsSearchQuery.trim()) return claimsList;
+    const q = claimsSearchQuery.trim().toLowerCase();
+    return claimsList.filter((claim) => {
+      const personName = [claim.first_name, claim.father_name, claim.grand_father_name, claim.family_name]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      const userName = (claim.user_full_name || '').toLowerCase();
+      const userEmail = (claim.user_email || '').toLowerCase();
+      const userPhone = (claim.user_phone || '').toLowerCase();
+      return personName.includes(q) || userName.includes(q) || userEmail.includes(q) || userPhone.includes(q);
+    });
+  }, [claimsList, claimsSearchQuery]);
 
   // ─── Data Fetching ─────────────────────────────────────────────
 
@@ -485,7 +503,21 @@ function DashboardContent() {
 
             {/* ════ Claims Tab ════ */}
             {activeTab === 'claims' && (
-              <div className="space-y-3">
+              <div className="space-y-4">
+                {/* Search Bar for Claims */}
+                {claimsList.length > 0 && (
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3" />
+                    <input
+                      type="text"
+                      value={claimsSearchQuery}
+                      onChange={(e) => setClaimsSearchQuery(e.target.value)}
+                      placeholder="ابحث باسم صاحب البطاقة، اسم الطالب، البريد الإلكتروني، أو الهواتف..."
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pr-10 pl-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-medium"
+                    />
+                  </div>
+                )}
+
                 {loadingClaims || loadingData ? (
                   <div className="text-center py-8 text-slate-400 text-xs animate-pulse">جاري تحميل طلبات المطالبة بالبطاقات...</div>
                 ) : claimsList.length === 0 ? (
@@ -493,8 +525,12 @@ function DashboardContent() {
                     <UserCheck className="w-10 h-10 mx-auto mb-3 text-blue-500/30" />
                     <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">لا يوجد أي طلبات مطالبة بالبطاقات حالياً</p>
                   </div>
+                ) : filteredClaimsList.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400 text-xs">
+                    لا توجد نتائج تطابق بحثك عن (&quot;{claimsSearchQuery}&quot;).
+                  </div>
                 ) : (
-                  claimsList.map(claim => {
+                  filteredClaimsList.map((claim) => {
                     const personName = [claim.first_name, claim.father_name, claim.grand_father_name, claim.family_name].filter(Boolean).join(' ');
                     return (
                       <div
