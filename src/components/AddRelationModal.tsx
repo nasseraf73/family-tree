@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, AlertTriangle, CheckCircle, UserPlus, RefreshCw, Upload, Sparkles, Link as LinkIcon, Users, Heart } from 'lucide-react';
-import { Person, DeduplicationMatch, RelationshipType, Gender, Country } from '../types';
+import { X, AlertTriangle, CheckCircle, UserPlus, RefreshCw, Upload, Sparkles, Heart } from 'lucide-react';
+import { Person, RelationshipType, Gender, Country } from '../types';
 import { uploadPersonPhoto } from '../lib/supabase/storage';
 
 interface AddRelationModalProps {
@@ -48,10 +48,6 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
   // States
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  // Deduplication state
-  const [dedupMatches, setDedupMatches] = useState<DeduplicationMatch[]>([]);
-  const [checkingDedup, setCheckingDedup] = useState(false);
 
   const autofillLineageForChild = useCallback((targetP: Person) => {
     if (targetP.gender === 'MALE' || !targetP.gender) {
@@ -86,7 +82,6 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
       setIsAlive(true);
       setPhotoFile(null);
       setPhotoPreview(null);
-      setDedupMatches([]);
       setErrorMessage(null);
 
       fetch('/api/v1/countries')
@@ -177,178 +172,6 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
       const file = e.target.files[0];
       setPhotoFile(file);
       setPhotoPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const performDedupCheck = useCallback(async () => {
-    if (!firstName.trim() || firstName.trim().length < 2) {
-      setDedupMatches([]);
-      return;
-    }
-
-    setCheckingDedup(true);
-    try {
-      const res = await fetch('/api/v1/dedup/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: firstName,
-          father_name: fatherName,
-          grand_father_name: grandFatherName,
-          family_name: familyName,
-          birth_year: birthYear,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.hasDuplicates) {
-        setDedupMatches(data.matches);
-      } else {
-        setDedupMatches([]);
-      }
-    } catch (e) {
-      console.error('Error during dedup check fetch:', e);
-    } finally {
-      setCheckingDedup(false);
-    }
-  }, [firstName, fatherName, grandFatherName, familyName, birthYear]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      performDedupCheck();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [firstName, fatherName, grandFatherName, familyName, birthYear, performDedupCheck]);
-
-  // Standard Link Existing Node Handler
-  const handleLinkExistingPerson = async (existingPersonId: number) => {
-    setLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-
-      if (relationType === 'SPOUSE' && targetPerson) {
-        const isTargetHusband = targetPerson.gender === 'MALE';
-        const resM = await fetch('/api/v1/marriages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-email': savedEmail,
-          },
-          body: JSON.stringify({
-            husband_id: isTargetHusband ? targetPerson.id : existingPersonId,
-            wife_id: isTargetHusband ? existingPersonId : targetPerson.id,
-            status: marriageStatus,
-            marriage_order: marriageOrder,
-          }),
-        });
-
-        if (!resM.ok) {
-          const dataM = await resM.json();
-          setErrorMessage(dataM.error || 'حدث خطأ أثناء ربط الزواج');
-          setLoading(false);
-          return;
-        }
-      } else {
-        const bodyPayload = targetPerson ? {
-          related_person_id: targetPerson.id,
-          existing_person_id: existingPersonId,
-          relationship_type: relationType,
-          user_role: userRole,
-        } : {
-          first_name: firstName,
-          father_name: fatherName,
-          grand_father_name: grandFatherName,
-          family_name: familyName,
-          gender,
-          is_alive: isAlive,
-          birth_year: birthYear,
-          death_date: !isAlive ? deathYear : null,
-          burial_place: !isAlive ? burialPlace : null,
-          existing_person_id: existingPersonId,
-          relationship_type: relationType,
-          user_role: userRole,
-        };
-
-        const res = await fetch('/api/v1/persons', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-email': savedEmail,
-          },
-          body: JSON.stringify(bodyPayload),
-        });
-
-        if (!res.ok) {
-          const data = await res.json();
-          setErrorMessage(data.error || 'حدث خطأ أثناء ربط الشخص');
-          setLoading(false);
-          return;
-        }
-      }
-
-      onSuccess();
-      onClose();
-    } catch (err) {
-      setErrorMessage((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Sibling Bridging Handler
-  const handleLinkAsSiblings = async (existingPersonId: number) => {
-    setLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-
-      const bodyPayload = targetPerson ? {
-        related_person_id: targetPerson.id,
-        existing_person_id: existingPersonId,
-        relationship_type: 'SIBLING',
-        link_mode: 'AUTO_PARENT_BRIDGE',
-        user_role: userRole,
-      } : {
-        first_name: firstName,
-        father_name: fatherName,
-        grand_father_name: grandFatherName,
-        family_name: familyName,
-        gender,
-        is_alive: isAlive,
-        birth_year: birthYear,
-        death_date: !isAlive ? deathYear : null,
-        burial_place: !isAlive ? burialPlace : null,
-        existing_person_id: existingPersonId,
-        relationship_type: 'SIBLING',
-        link_mode: 'AUTO_PARENT_BRIDGE',
-        user_role: userRole,
-      };
-
-      const res = await fetch('/api/v1/persons', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
-        },
-        body: JSON.stringify(bodyPayload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || 'حدث خطأ أثناء ربط الإخوة');
-        setLoading(false);
-        return;
-      }
-
-      onSuccess();
-      onClose();
-    } catch (err) {
-      setErrorMessage((err as Error).message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -483,56 +306,6 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
 
         {/* Modal Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm max-h-[80vh] overflow-y-auto">
-          {/* Real-time Match Suggestion Banner */}
-          {dedupMatches.length > 0 && (
-            <div className="bg-amber-950/90 border-2 border-amber-500/80 rounded-xl p-4 space-y-3 shadow-2xl z-30">
-              <div className="flex items-center gap-2 text-amber-300 font-bold text-xs">
-                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 animate-bounce" />
-                <span>تم العثور على شخص (أو أكثر) مطابق مسبقاً في شجرة العائلة!</span>
-              </div>
-
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {dedupMatches.map(match => (
-                  <div key={match.person.id} className="bg-slate-900/95 border border-amber-800/60 p-3 rounded-lg flex flex-col gap-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <div className="font-bold text-slate-100 flex items-center gap-2">
-                        <span>{match.person.first_name} {match.person.father_name} {match.person.grand_father_name} {match.person.family_name}</span>
-                        <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                          {Math.round(match.score * 100)}% تطابق نسب
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-400">
-                        {match.person.birth_year ? `الميلاد: ${match.person.birth_year}` : ''} {match.person.is_alive ? '(حي)' : '(متوفى)'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
-                      <button
-                        type="button"
-                        onClick={() => handleLinkAsSiblings(match.person.id)}
-                        disabled={loading}
-                        className="flex-1 py-1.5 px-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs transition-transform hover:scale-[1.02] flex items-center justify-center gap-1 shadow-md"
-                      >
-                        <Users className="w-3.5 h-3.5" />
-                        ربط كإخوة (إنشاء الأب المشترك تلقائياً)
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleLinkExistingPerson(match.person.id)}
-                        disabled={loading}
-                        className="py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold rounded-lg text-xs transition-colors flex items-center gap-1"
-                      >
-                        <LinkIcon className="w-3.5 h-3.5" />
-                        ربط مباشر
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Relation Type Selector (Only if targetPerson is defined and relation is not pre-locked to CHILD or SPOUSE) */}
           {targetPerson && initialRelationType !== 'CHILD' && initialRelationType !== 'SPOUSE' && (
             <div>
