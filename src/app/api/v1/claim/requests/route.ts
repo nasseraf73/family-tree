@@ -31,6 +31,7 @@ export async function GET(request: Request) {
           family_name: persons.family_name,
           birth_year: persons.birth_year,
           claimed_by_user_id: persons.claimed_by_user_id,
+          claim_status: persons.claim_status,
           created_at: persons.created_at,
           user_full_name: users.full_name,
           user_email: users.email,
@@ -41,7 +42,11 @@ export async function GET(request: Request) {
         .where(isNotNull(persons.claimed_by_user_id));
 
       if (dbClaims.length > 0) {
-        return NextResponse.json({ claims: dbClaims });
+        const formatted = dbClaims.map(c => ({
+          ...c,
+          claim_status: c.claim_status || 'APPROVED',
+        }));
+        return NextResponse.json({ claims: formatted });
       }
     } catch {
       // Fallback
@@ -61,6 +66,7 @@ export async function GET(request: Request) {
         family_name: p.family_name,
         birth_year: p.birth_year,
         claimed_by_user_id: p.claimed_by_user_id,
+        claim_status: p.claim_status || 'APPROVED',
         created_at: p.created_at,
         user_full_name: u?.full_name || 'مستخدم',
         user_email: u?.email || 'غير متاح',
@@ -114,6 +120,16 @@ export async function POST(request: Request) {
 
     try {
       if (action === 'approve') {
+        // Mark as APPROVED in database
+        await db.update(persons)
+          .set({ claim_status: 'APPROVED' })
+          .where(eq(persons.id, pId));
+
+        const memP = dbStore.getPersonById(pId);
+        if (memP) {
+          memP.claim_status = 'APPROVED';
+        }
+
         // Send Email Notification to Claiming User
         if (claimingUser && claimingUser.email) {
           const personFullName = [targetPerson?.first_name, targetPerson?.father_name, targetPerson?.family_name].filter(Boolean).join(' ');
@@ -131,12 +147,13 @@ export async function POST(request: Request) {
       } else {
         // Revoke claim (un-claim)
         await db.update(persons)
-          .set({ claimed_by_user_id: null })
+          .set({ claimed_by_user_id: null, claim_status: null })
           .where(eq(persons.id, pId));
 
         const memP = dbStore.getPersonById(pId);
         if (memP) {
           memP.claimed_by_user_id = undefined;
+          memP.claim_status = undefined;
         }
 
         if (claimingUser && claimingUser.email) {

@@ -41,6 +41,7 @@ export interface Person {
   is_placeholder?: boolean;
   created_by_user_id?: number;
   claimed_by_user_id?: number;
+  claim_status?: 'PENDING' | 'APPROVED' | 'REJECTED';
   created_at: string;
 }
 

@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
         // Update in PostgreSQL database
         await db.update(personsTable)
-          .set({ claimed_by_user_id: userIdToClaim })
+          .set({ claimed_by_user_id: userIdToClaim, claim_status: 'PENDING' })
           .where(eq(personsTable.id, person_id));
       }
     } catch (dbErr: any) {
@@ -90,6 +90,7 @@ export async function POST(request: Request) {
         );
       }
       person.claimed_by_user_id = userIdToClaim;
+      person.claim_status = 'PENDING';
       if (!targetPerson) {
         targetPerson = person;
       }
