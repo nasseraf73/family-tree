@@ -956,6 +956,15 @@ function FamilyTreeCanvasContent() {
           setIsEditModalOpen(true);
         }}
         onSelectPerson={(p) => handleFocusPerson(p.id)}
+        onClaimProfile={(p) => {
+          setIsProfileModalOpen(false);
+          if (!user) {
+            setIsAuthModalOpen(true);
+            return;
+          }
+          setClaimTargetPerson(p);
+          setIsClaimModalOpen(true);
+        }}
       />
     </div>
   );

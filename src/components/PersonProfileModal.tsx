@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Copy, Check, Edit3, User, Calendar, MapPin, Heart, FileText, Sparkles, Users, Baby, Download, Loader2 } from 'lucide-react';
+import { X, Copy, Check, Edit3, User, Calendar, MapPin, Heart, FileText, Sparkles, Users, Baby, Download, Loader2, ShieldCheck } from 'lucide-react';
 import { Person, Relationship } from '../types';
 import { generateFullLineage } from '../lib/lineage';
 import { exportCustomProfilePdf } from '../lib/lineagePdfExport';
@@ -17,6 +17,7 @@ interface PersonProfileModalProps {
   onToggleCollapse?: (personId: number) => void;
   onEditPerson?: (person: Person) => void;
   onSelectPerson?: (person: Person) => void;
+  onClaimProfile?: (person: Person) => void;
 }
 
 /**
@@ -99,6 +100,7 @@ export const PersonProfileModal: React.FC<PersonProfileModalProps> = ({
   onToggleCollapse,
   onEditPerson,
   onSelectPerson,
+  onClaimProfile,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -413,6 +415,21 @@ export const PersonProfileModal: React.FC<PersonProfileModalProps> = ({
                 </>
               )}
             </button>
+
+            {onClaimProfile && !currentPerson.claimed_by_user_id && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onClaimProfile(currentPerson);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-blue-600/20"
+                title="المطالبة بتوثيق هذا الملف الشخصي كبطاقة نسبك"
+              >
+                <ShieldCheck className="w-4 h-4 text-blue-200" />
+                <span>هذا أنا (مطالبة)</span>
+              </button>
+            )}
 
             {onEditPerson && (
               <button

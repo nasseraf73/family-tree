@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, Search, ShieldCheck, CheckCircle, RefreshCw } from 'lucide-react';
 import { Person } from '../types';
 import { getPentanyicFullName } from '../lib/lineage';
@@ -29,6 +29,17 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Synchronize selectedPerson when modal opens or initialTargetPerson prop changes
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedPerson(initialTargetPerson || null);
+      setMessage(null);
+      setError(null);
+      setProofNote('');
+      setSearchQuery('');
+    }
+  }, [isOpen, initialTargetPerson]);
 
   const filteredPersons = useMemo(() => {
     if (!searchQuery || !searchQuery.trim()) return allPersons.slice(0, 30);
