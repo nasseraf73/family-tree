@@ -43,7 +43,7 @@ function DashboardContent() {
   const [claimsSearchQuery, setClaimsSearchQuery] = useState('');
 
   // ─── UI State ───────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<'claims' | 'pending' | 'merge' | 'stewards'>('claims');
+  const [activeTab, setActiveTab] = useState<'claims' | 'verified_claims' | 'pending' | 'merge' | 'stewards'>('claims');
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(true);
@@ -471,6 +471,20 @@ function DashboardContent() {
 
             {isStewardOrAdmin && (
               <button
+                onClick={() => setActiveTab('verified_claims')}
+                className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'verified_claims'
+                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-300'
+                    : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                البطاقات الموثقة وإلغاء التوثيق ({claimsList.length})
+              </button>
+            )}
+
+            {isStewardOrAdmin && (
+              <button
                 onClick={() => setActiveTab('merge')}
                 className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'merge'
@@ -588,6 +602,72 @@ function DashboardContent() {
                             )}
                           </div>
                         )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* ════ Verified Claims & Un-Claim Tab ════ */}
+            {activeTab === 'verified_claims' && isStewardOrAdmin && (
+              <div className="space-y-4">
+                {/* Search Bar */}
+                {claimsList.length > 0 && (
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3" />
+                    <input
+                      type="text"
+                      value={claimsSearchQuery}
+                      onChange={(e) => setClaimsSearchQuery(e.target.value)}
+                      placeholder="ابحث باسم صاحب البطاقة، اسم الطالب، البريد الإلكتروني، أو الهواتف..."
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pr-10 pl-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 font-medium"
+                    />
+                  </div>
+                )}
+
+                {loadingClaims || loadingData ? (
+                  <div className="text-center py-8 text-slate-400 text-xs animate-pulse">جاري تحميل قائمة البطاقات الموثقة...</div>
+                ) : claimsList.length === 0 ? (
+                  <div className="text-center py-14 text-slate-400">
+                    <ShieldCheck className="w-10 h-10 mx-auto mb-3 text-indigo-500/30" />
+                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">لا يوجد أي بطاقات موثقة حالياً</p>
+                  </div>
+                ) : filteredClaimsList.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400 text-xs">
+                    لا توجد نتائج تطابق بحثك عن (&quot;{claimsSearchQuery}&quot;).
+                  </div>
+                ) : (
+                  filteredClaimsList.map((claim) => {
+                    const personName = [claim.first_name, claim.father_name, claim.grand_father_name, claim.family_name].filter(Boolean).join(' ');
+                    return (
+                      <div
+                        key={claim.person_id}
+                        className="bg-slate-50 dark:bg-slate-950 border border-indigo-500/30 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs shadow-sm"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-indigo-700 dark:text-indigo-300 text-sm">{personName}</span>
+                            <span className="text-[10px] bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-200 px-2 py-0.5 rounded-full border border-indigo-500/40 font-bold">
+                              بطاقة موثقة ومربوطة
+                            </span>
+                          </div>
+                          <p className="text-slate-600 dark:text-slate-300 text-xs">
+                            مالك البطاقة الحسابي: <span className="font-bold text-amber-600 dark:text-amber-200">{claim.user_full_name}</span> ({claim.user_email}) {claim.user_phone ? `| 📞 ${claim.user_phone}` : ''}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            disabled={loading}
+                            onClick={() => handleApproveOrRejectClaim(claim.person_id, 'reject')}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold flex items-center gap-1.5 transition-all text-xs shadow-md"
+                            title="إلغاء وفك توثيق هذه البطاقة وإعادتها لحالتها الأصلية وإشعار المستخدم بالبريد"
+                          >
+                            <X className="w-4 h-4" />
+                            إلغاء / فك التوثيق (إتاحة البطاقة)
+                          </button>
+                        </div>
                       </div>
                     );
                   })
