@@ -1,4 +1,4 @@
-// Universal Email Delivery Engine for FamilyTree App
+import nodemailer from 'nodemailer';
 
 export interface EmailNotificationPayload {
   to: string;
@@ -49,32 +49,33 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
       </html>
     `;
 
-    // 1. Brevo REST API Transport (unrestricted to any recipient email)
+    // 1. Brevo SMTP Relay Transport (Sends to ANY recipient globally without restriction)
     if (brevoApiKey) {
-      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'api-key': brevoApiKey,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          sender: { name: 'منصة شجرة العائلة الكبرى', email: process.env.EMAIL_FROM || 'onboarding@resend.dev' },
-          to: [{ email: payload.to }],
-          subject: payload.subject,
-          htmlContent: htmlContent,
-        }),
-      });
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
+          port: Number(process.env.BREVO_SMTP_PORT) || 587,
+          secure: false,
+          auth: {
+            user: process.env.BREVO_SMTP_USER || 'b4d66f001@smtp-brevo.com',
+            pass: brevoApiKey,
+          },
+        });
 
-      if (response.ok) {
+        await transporter.sendMail({
+          from: '"منصة شجرة العائلة الكبرى" <b4d66f001@smtp-brevo.com>',
+          to: payload.to,
+          subject: payload.subject,
+          html: htmlContent,
+        });
+
         return { success: true };
-      } else {
-        const errData = await response.json();
-        console.error('Brevo Email API Error:', errData);
+      } catch (smtpErr) {
+        console.error('Brevo SMTP Transport error:', smtpErr);
       }
     }
 
-    // 2. Resend API Transport
+    // 2. Fallback to Resend API
     if (resendApiKey) {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -92,10 +93,6 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
 
       if (response.ok) {
         return { success: true };
-      } else {
-        const errData = await response.json();
-        console.error('Resend Email Error:', errData);
-        return { success: false, error: errData.message || 'فشل إرسال البريد' };
       }
     }
 
