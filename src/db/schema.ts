@@ -39,7 +39,7 @@ export const persons = pgTable('persons', {
   is_placeholder: boolean('is_placeholder').default(false),
   created_by_user_id: bigint('created_by_user_id', { mode: 'number' }).references(() => users.id, { onDelete: 'set null' }),
   claimed_by_user_id: bigint('claimed_by_user_id', { mode: 'number' }).unique().references(() => users.id, { onDelete: 'set null' }),
-  claim_status: varchar('claim_status', { length: 20 }).default('APPROVED'),
+  claim_status: varchar('claim_status', { length: 20 }).default('PENDING'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 

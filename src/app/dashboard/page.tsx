@@ -78,11 +78,19 @@ function DashboardContent() {
       .join(' ');
   };
 
-  // ─── Filtered Claims Search List ────────────────────────────────
-  const filteredClaimsList = useMemo(() => {
-    if (!claimsSearchQuery || !claimsSearchQuery.trim()) return claimsList;
+  // ─── Filtered Pending and Verified Claims Lists ──────────────────
+  const pendingClaimsList = useMemo(() => {
+    return claimsList.filter((c) => c.claim_status === 'PENDING');
+  }, [claimsList]);
+
+  const verifiedClaimsList = useMemo(() => {
+    return claimsList.filter((c) => c.claim_status === 'APPROVED' || !c.claim_status);
+  }, [claimsList]);
+
+  const filteredPendingClaimsList = useMemo(() => {
+    if (!claimsSearchQuery || !claimsSearchQuery.trim()) return pendingClaimsList;
     const q = claimsSearchQuery.trim().toLowerCase();
-    return claimsList.filter((claim) => {
+    return pendingClaimsList.filter((claim) => {
       const personName = [claim.first_name, claim.father_name, claim.grand_father_name, claim.family_name]
         .filter(Boolean)
         .join(' ')
@@ -92,7 +100,22 @@ function DashboardContent() {
       const userPhone = (claim.user_phone || '').toLowerCase();
       return personName.includes(q) || userName.includes(q) || userEmail.includes(q) || userPhone.includes(q);
     });
-  }, [claimsList, claimsSearchQuery]);
+  }, [pendingClaimsList, claimsSearchQuery]);
+
+  const filteredVerifiedClaimsList = useMemo(() => {
+    if (!claimsSearchQuery || !claimsSearchQuery.trim()) return verifiedClaimsList;
+    const q = claimsSearchQuery.trim().toLowerCase();
+    return verifiedClaimsList.filter((claim) => {
+      const personName = [claim.first_name, claim.father_name, claim.grand_father_name, claim.family_name]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      const userName = (claim.user_full_name || '').toLowerCase();
+      const userEmail = (claim.user_email || '').toLowerCase();
+      const userPhone = (claim.user_phone || '').toLowerCase();
+      return personName.includes(q) || userName.includes(q) || userEmail.includes(q) || userPhone.includes(q);
+    });
+  }, [verifiedClaimsList, claimsSearchQuery]);
 
   // ─── Data Fetching ─────────────────────────────────────────────
 
@@ -488,7 +511,7 @@ function DashboardContent() {
               }`}
             >
               <UserCheck className="w-4 h-4" />
-              {isStewardOrAdmin ? `طلبات المطالبة بالبطاقات (${claimsList.length})` : `طلبات "هذا أنا" الخاصة بي`}
+              {isStewardOrAdmin ? `طلبات المطالبة المعلقة (${pendingClaimsList.length})` : `طلبات "هذا أنا" الخاصة بي`}
             </button>
 
             <button
@@ -513,7 +536,7 @@ function DashboardContent() {
                 }`}
               >
                 <ShieldCheck className="w-4 h-4 text-indigo-500" />
-                البطاقات الموثقة وإلغاء التوثيق ({claimsList.length})
+                البطاقات الموثقة وإلغاء التوثيق ({verifiedClaimsList.length})
               </button>
             )}
 
@@ -549,11 +572,11 @@ function DashboardContent() {
           {/* ─── Tab Content ─── */}
           <div className="p-6 min-h-[400px]">
 
-            {/* ════ Claims Tab (المطالبات والبطاقات المربوطة) ════ */}
+            {/* ════ Pending Claims Tab (المطالبات المعلقة الجديدة) ════ */}
             {activeTab === 'claims' && (
               <div className="space-y-4">
                 {/* Search Bar for Claims */}
-                {claimsList.length > 0 && (
+                {pendingClaimsList.length > 0 && (
                   <div className="relative">
                     <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3" />
                     <input
@@ -568,17 +591,17 @@ function DashboardContent() {
 
                 {loadingClaims || loadingData ? (
                   <div className="text-center py-8 text-slate-400 text-xs animate-pulse">جاري تحميل طلبات المطالبة بالبطاقات...</div>
-                ) : claimsList.length === 0 ? (
+                ) : pendingClaimsList.length === 0 ? (
                   <div className="text-center py-14 text-slate-400">
                     <UserCheck className="w-10 h-10 mx-auto mb-3 text-blue-500/30" />
-                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">لا يوجد أي طلبات مطالبة بالبطاقات حالياً</p>
+                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">لا يوجد أي طلبات مطالبة بالبطاقات بانتظار الاعتماد حالياً</p>
                   </div>
-                ) : filteredClaimsList.length === 0 ? (
+                ) : filteredPendingClaimsList.length === 0 ? (
                   <div className="text-center py-10 text-slate-400 text-xs">
                     لا توجد نتائج تطابق بحثك عن (&quot;{claimsSearchQuery}&quot;).
                   </div>
                 ) : (
-                  filteredClaimsList.map((claim) => {
+                  filteredPendingClaimsList.map((claim) => {
                     const personName = [claim.first_name, claim.father_name, claim.grand_father_name, claim.family_name].filter(Boolean).join(' ');
                     return (
                       <div
@@ -588,9 +611,9 @@ function DashboardContent() {
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2">
                             <span className="font-extrabold text-blue-700 dark:text-blue-300 text-sm">{personName}</span>
-                            <span className="text-[10px] bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-200 px-2 py-0.5 rounded-full border border-blue-500/40 font-bold flex items-center gap-1">
-                              <ShieldCheck className="w-3 h-3 text-blue-500" />
-                              طلب مطالبة (&quot;هذا أنا&quot;)
+                            <span className="text-[10px] bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-200 px-2 py-0.5 rounded-full border border-amber-500/40 font-bold flex items-center gap-1">
+                              <Clock className="w-3 h-3 animate-pulse" />
+                              طلب مطالبة بانتظار الاعتماد
                             </span>
                           </div>
                           <p className="text-slate-600 dark:text-slate-300 text-xs">
@@ -614,14 +637,14 @@ function DashboardContent() {
                               className="px-3.5 py-2 bg-red-50 dark:bg-red-950 hover:bg-red-100 dark:hover:bg-red-900 border border-red-500/30 text-red-600 dark:text-red-300 rounded-lg font-semibold flex items-center gap-1 transition-all text-xs"
                             >
                               <X className="w-4 h-4" />
-                              إلغاء / فك التوثيق
+                              رفض الطلب
                             </button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 rounded-lg font-bold flex items-center gap-1.5 text-xs">
-                              <Check className="w-4 h-4 text-emerald-500" />
-                              تم تقديم الطلب
+                            <span className="px-3.5 py-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/30 rounded-lg font-bold flex items-center gap-1.5 text-xs">
+                              <Clock className="w-4 h-4 text-amber-500 animate-pulse" />
+                              قيد المراجعة والاعتماد
                             </span>
                           </div>
                         )}
@@ -636,7 +659,7 @@ function DashboardContent() {
             {activeTab === 'verified_claims' && isStewardOrAdmin && (
               <div className="space-y-4">
                 {/* Search Bar */}
-                {claimsList.length > 0 && (
+                {verifiedClaimsList.length > 0 && (
                   <div className="relative">
                     <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3" />
                     <input
@@ -651,17 +674,17 @@ function DashboardContent() {
 
                 {loadingClaims || loadingData ? (
                   <div className="text-center py-8 text-slate-400 text-xs animate-pulse">جاري تحميل قائمة البطاقات الموثقة...</div>
-                ) : claimsList.length === 0 ? (
+                ) : verifiedClaimsList.length === 0 ? (
                   <div className="text-center py-14 text-slate-400">
                     <ShieldCheck className="w-10 h-10 mx-auto mb-3 text-indigo-500/30" />
                     <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">لا يوجد أي بطاقات موثقة حالياً</p>
                   </div>
-                ) : filteredClaimsList.length === 0 ? (
+                ) : filteredVerifiedClaimsList.length === 0 ? (
                   <div className="text-center py-10 text-slate-400 text-xs">
                     لا توجد نتائج تطابق بحثك عن (&quot;{claimsSearchQuery}&quot;).
                   </div>
                 ) : (
-                  filteredClaimsList.map((claim) => {
+                  filteredVerifiedClaimsList.map((claim) => {
                     const personName = [claim.first_name, claim.father_name, claim.grand_father_name, claim.family_name].filter(Boolean).join(' ');
                     return (
                       <div

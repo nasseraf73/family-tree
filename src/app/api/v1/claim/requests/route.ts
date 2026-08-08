@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { persons, users } from '@/db/schema';
-import { eq, isNotNull } from 'drizzle-orm';
+import { eq, isNotNull, sql } from 'drizzle-orm';
 import { dbStore } from '@/lib/store';
 import { getAuthenticatedUser } from '@/lib/supabase/auth';
 import { sendEmailNotification } from '@/lib/email';
@@ -22,6 +22,9 @@ export async function GET(request: Request) {
     }
 
     try {
+      // Auto-migrate claim_status column in PostgreSQL if not present
+      await db.execute(sql`ALTER TABLE persons ADD COLUMN IF NOT EXISTS claim_status varchar(20) DEFAULT 'PENDING';`).catch(() => {});
+
       const dbClaims = await db
         .select({
           person_id: persons.id,
@@ -31,6 +34,7 @@ export async function GET(request: Request) {
           family_name: persons.family_name,
           birth_year: persons.birth_year,
           claimed_by_user_id: persons.claimed_by_user_id,
+          claim_status: persons.claim_status,
           created_at: persons.created_at,
           user_full_name: users.full_name,
           user_email: users.email,
@@ -41,7 +45,11 @@ export async function GET(request: Request) {
         .where(isNotNull(persons.claimed_by_user_id));
 
       if (dbClaims.length > 0) {
-        return NextResponse.json({ claims: dbClaims });
+        const formatted = dbClaims.map(c => ({
+          ...c,
+          claim_status: c.claim_status || 'APPROVED',
+        }));
+        return NextResponse.json({ claims: formatted });
       }
     } catch {
       // Fallback
@@ -97,6 +105,9 @@ export async function POST(request: Request) {
 
     const pId = Number(person_id);
 
+    // Auto-migrate claim_status column if missing
+    await db.execute(sql`ALTER TABLE persons ADD COLUMN IF NOT EXISTS claim_status varchar(20) DEFAULT 'PENDING';`).catch(() => {});
+
     // Fetch Target Person & Claiming User
     let targetPerson: any = null;
     let claimingUser: any = null;
@@ -115,6 +126,16 @@ export async function POST(request: Request) {
 
     try {
       if (action === 'approve') {
+        // Mark claim as APPROVED
+        await db.update(persons)
+          .set({ claim_status: 'APPROVED' })
+          .where(eq(persons.id, pId));
+
+        const memP = dbStore.getPersonById(pId);
+        if (memP) {
+          memP.claim_status = 'APPROVED';
+        }
+
         // Send Email Notification to Claiming User
         if (claimingUser && claimingUser.email) {
           const personFullName = [targetPerson?.first_name, targetPerson?.father_name, targetPerson?.family_name].filter(Boolean).join(' ');
@@ -132,12 +153,13 @@ export async function POST(request: Request) {
       } else {
         // Revoke claim (un-claim)
         await db.update(persons)
-          .set({ claimed_by_user_id: null })
+          .set({ claimed_by_user_id: null, claim_status: null })
           .where(eq(persons.id, pId));
 
         const memP = dbStore.getPersonById(pId);
         if (memP) {
           memP.claimed_by_user_id = undefined;
+          memP.claim_status = undefined;
         }
 
         if (claimingUser && claimingUser.email) {
