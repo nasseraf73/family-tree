@@ -1,7 +1,8 @@
 const postgres = require('postgres');
 
 async function fixSequence() {
-  const sql = postgres('postgresql://postgres:postgres@localhost:5432/family_tree_db');
+  const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/family_tree_db';
+  const sql = postgres(connectionString);
   try {
     await sql`SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 1) + 10)`;
     await sql`SELECT setval('persons_id_seq', COALESCE((SELECT MAX(id) FROM persons), 1) + 10)`;

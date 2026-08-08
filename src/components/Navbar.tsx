@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   Clock,
-  Globe
+  Globe,
+  Database
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -161,14 +162,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               })()}
 
               {(role === 'ADMIN' || (role as string) === 'ADM') && (
-                <Link
-                  href="/admin/countries"
-                  title="تعريف وإدارة قائمة الدول والانتساب الجغرافي"
-                  className="px-2.5 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors text-xs font-extrabold flex items-center gap-1.5"
-                >
-                  <Globe className="w-4 h-4 text-emerald-500" />
-                  <span className="hidden md:inline">إدارة الدول</span>
-                </Link>
+                <>
+                  <Link
+                    href="/admin/countries"
+                    title="تعريف وإدارة قائمة الدول والانتساب الجغرافي"
+                    className="px-2.5 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors text-xs font-extrabold flex items-center gap-1.5"
+                  >
+                    <Globe className="w-4 h-4 text-emerald-500" />
+                    <span className="hidden md:inline">إدارة الدول</span>
+                  </Link>
+
+                  <Link
+                    href="/admin/database"
+                    title="إدارة ومزامنة قواعد البيانات والنسخ الاحتياطي"
+                    className="px-2.5 py-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl hover:bg-purple-500/20 border border-purple-500/30 transition-colors text-xs font-extrabold flex items-center gap-1.5"
+                  >
+                    <Database className="w-4 h-4 text-purple-500" />
+                    <span className="hidden md:inline">إدارة البيانات</span>
+                  </Link>
+                </>
               )}
 
               <button
