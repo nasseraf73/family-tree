@@ -1,4 +1,4 @@
-// Email Notification Utility for FamilyTree App
+// Universal Email Notification Utility for FamilyTree App
 
 export interface EmailNotificationPayload {
   to: string;
@@ -11,6 +11,7 @@ export interface EmailNotificationPayload {
 
 export async function sendEmailNotification(payload: EmailNotificationPayload): Promise<{ success: boolean; error?: string }> {
   try {
+    const brevoApiKey = process.env.BREVO_API_KEY;
     const resendApiKey = process.env.RESEND_API_KEY;
 
     const htmlContent = `
@@ -48,32 +49,58 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
       </html>
     `;
 
-    if (!resendApiKey) {
-      console.log(`[LOCAL EMAIL SIMULATION] To: ${payload.to} | Subject: ${payload.subject}`);
-      return { success: true };
+    // 1. Try Brevo API first if BREVO_API_KEY is available (sends to any email address globally without restriction)
+    if (brevoApiKey) {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': brevoApiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: 'شجرة العائلة الكبرى', email: process.env.EMAIL_FROM || 'notifications@family-tree.org' },
+          to: [{ email: payload.to }],
+          subject: payload.subject,
+          htmlContent: htmlContent,
+        }),
+      });
+
+      if (response.ok) {
+        return { success: true };
+      } else {
+        const errData = await response.json();
+        console.error('Brevo Email API Error:', errData);
+      }
     }
 
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
-        to: [payload.to],
-        subject: payload.subject,
-        html: htmlContent,
-      }),
-    });
+    // 2. Fallback to Resend API
+    if (resendApiKey) {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+          to: [payload.to],
+          subject: payload.subject,
+          html: htmlContent,
+        }),
+      });
 
-    if (response.ok) {
-      return { success: true };
-    } else {
-      const errData = await response.json();
-      console.error('Resend Email Error:', errData);
-      return { success: false, error: errData.message || 'فشل إرسال البريد' };
+      if (response.ok) {
+        return { success: true };
+      } else {
+        const errData = await response.json();
+        console.error('Resend Email Error:', errData);
+        return { success: false, error: errData.message || 'فشل إرسال البريد عبر Resend' };
+      }
     }
+
+    console.log(`[LOCAL EMAIL SIMULATION] To: ${payload.to} | Subject: ${payload.subject}`);
+    return { success: true };
   } catch (err) {
     console.error('Email notification failed:', err);
     return { success: false, error: (err as Error).message };
