@@ -60,7 +60,7 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM || 'شجرة العائلة <notifications@resend.dev>',
+        from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
         to: [payload.to],
         subject: payload.subject,
         html: htmlContent,
