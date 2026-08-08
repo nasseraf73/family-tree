@@ -122,7 +122,7 @@ export async function POST(request: Request) {
             subject: 'تأكيد توثيق حسابك وملفك في شجرة العائلة',
             title: 'تهانينا! تم اعتماد مطالبتك بالبروفايل الشخصي',
             bodyHtml: `تم اعتماد وتوثيق ملكيتك للملف الشخصي (${personFullName}) في شجرة العائلة بنجاح. أصبحت الآن قادراً على إدارة وتحديث ملفك وتلقي الإشعارات.`,
-            actionUrl: 'http://localhost:3000/my-tree',
+            actionUrl: 'https://family-tree-ten-blush.vercel.app/my-tree',
             actionText: 'عرض ملفك وشجرتك',
           });
         }
@@ -145,7 +145,7 @@ export async function POST(request: Request) {
             subject: 'تحديث: إلغاء المطالبة بالملف الشخصي',
             title: 'تحديث حول طلبك للملف الشخصي',
             bodyHtml: `قام مشرف النظام بمراجعة الطلب وإلغاء المطالبة بالملف الشخصي لإتاحته من جديد.`,
-            actionUrl: 'http://localhost:3000/',
+            actionUrl: 'https://family-tree-ten-blush.vercel.app/',
             actionText: 'الانتقال للرئيسية',
           });
         }
