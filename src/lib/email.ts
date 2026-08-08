@@ -1,4 +1,4 @@
-// Universal Email Notification Utility for FamilyTree App
+// Universal Email Delivery Engine for FamilyTree App
 
 export interface EmailNotificationPayload {
   to: string;
@@ -49,7 +49,7 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
       </html>
     `;
 
-    // 1. Try Brevo API first if BREVO_API_KEY is available (sends to any email address globally without restriction)
+    // 1. Brevo REST API Transport (unrestricted to any recipient email)
     if (brevoApiKey) {
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
@@ -59,7 +59,7 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          sender: { name: 'شجرة العائلة الكبرى', email: process.env.EMAIL_FROM || 'notifications@family-tree.org' },
+          sender: { name: 'منصة شجرة العائلة الكبرى', email: process.env.EMAIL_FROM || 'onboarding@resend.dev' },
           to: [{ email: payload.to }],
           subject: payload.subject,
           htmlContent: htmlContent,
@@ -74,7 +74,7 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
       }
     }
 
-    // 2. Fallback to Resend API
+    // 2. Resend API Transport
     if (resendApiKey) {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -95,7 +95,7 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
       } else {
         const errData = await response.json();
         console.error('Resend Email Error:', errData);
-        return { success: false, error: errData.message || 'فشل إرسال البريد عبر Resend' };
+        return { success: false, error: errData.message || 'فشل إرسال البريد' };
       }
     }
 
