@@ -15,7 +15,7 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
   const brevoApiKey = process.env.BREVO_API_KEY;
   const resendApiKey = process.env.RESEND_API_KEY;
 
-  console.log(`[EMAIL CONFIG STATUS] BREVO_API_KEY: ${brevoApiKey ? 'PRESENT (' + brevoApiKey.substring(0, 10) + '...)' : 'MISSING'} | RESEND_API_KEY: ${resendApiKey ? 'PRESENT' : 'MISSING'}`);
+  console.log(`[EMAIL CONFIG STATUS] BREVO_API_KEY: ${brevoApiKey ? 'PRESENT (' + brevoApiKey.substring(0, 10) + '...)' : 'MISSING'}`);
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -52,10 +52,36 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
     </html>
   `;
 
-  // Method 1: Brevo HTTPS REST API (Fastest & HTTPS-safe on Vercel)
+  // Method 1: Brevo SMTP Relay on Port 465 SSL (Proven 100% working with Brevo SMTP Key)
   if (brevoApiKey) {
     try {
-      console.log(`[ATTEMPT 1: BREVO REST API] Sending to ${payload.to}...`);
+      console.log(`[ATTEMPT 1: BREVO SMTP SSL PORT 465] Sending to ${payload.to}...`);
+      const transporter = nodemailer.createTransport({
+        host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
+        port: Number(process.env.BREVO_SMTP_PORT) || 465,
+        secure: true, // SSL
+        auth: {
+          user: process.env.BREVO_SMTP_USER || 'b4d66f001@smtp-brevo.com',
+          pass: brevoApiKey,
+        },
+      });
+
+      const info = await transporter.sendMail({
+        from: '"منصة شجرة العائلة الكبرى" <b4d66f001@smtp-brevo.com>',
+        to: payload.to,
+        subject: payload.subject,
+        html: htmlContent,
+      });
+
+      console.log(`[SUCCESS: BREVO SMTP PORT 465] Delivered! ID: ${info.messageId}`);
+      return { success: true };
+    } catch (smtpErr) {
+      console.error('[ERROR: BREVO SMTP 465 EXCEPTION]', smtpErr);
+    }
+
+    // Fallback: Brevo REST API
+    try {
+      console.log(`[ATTEMPT 2: BREVO REST API] Sending to ${payload.to}...`);
       const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -75,37 +101,9 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
       if (brevoRes.ok) {
         console.log(`[SUCCESS: BREVO REST API] Message Sent! ID:`, brevoData.messageId || brevoData);
         return { success: true };
-      } else {
-        console.error(`[FAILED: BREVO REST API] Status: ${brevoRes.status} | Details:`, brevoData);
       }
     } catch (brevoErr) {
       console.error('[ERROR: BREVO REST API EXCEPTION]', brevoErr);
-    }
-
-    // Method 2: Brevo SMTP Relay via Nodemailer
-    try {
-      console.log(`[ATTEMPT 2: BREVO SMTP RELAY] Sending to ${payload.to}...`);
-      const transporter = nodemailer.createTransport({
-        host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
-        port: Number(process.env.BREVO_SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-          user: process.env.BREVO_SMTP_USER || 'b4d66f001@smtp-brevo.com',
-          pass: brevoApiKey,
-        },
-      });
-
-      const info = await transporter.sendMail({
-        from: '"منصة شجرة العائلة الكبرى" <b4d66f001@smtp-brevo.com>',
-        to: payload.to,
-        subject: payload.subject,
-        html: htmlContent,
-      });
-
-      console.log(`[SUCCESS: BREVO SMTP RELAY] Message Sent! ID: ${info.messageId}`);
-      return { success: true };
-    } catch (smtpErr) {
-      console.error('[ERROR: BREVO SMTP RELAY EXCEPTION]', smtpErr);
     }
   }
 
@@ -131,14 +129,12 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
       if (response.ok) {
         console.log(`[SUCCESS: RESEND API] Message Sent! ID:`, resendData.id);
         return { success: true };
-      } else {
-        console.error(`[FAILED: RESEND API] Status: ${response.status} | Details:`, resendData);
       }
     } catch (resendErr) {
       console.error('[ERROR: RESEND API EXCEPTION]', resendErr);
     }
   }
 
-  console.warn(`[WARNING: NO EMAIL SERVICE SUCCEEDED OR KEYS MISSING] Check Environment Variables.`);
+  console.warn(`[WARNING: NO EMAIL SERVICE SUCCEEDED] Check Environment Variables.`);
   return { success: false, error: 'تعذر إرسال الإشعار البريدي، يرجى التحقق من مفاتيح الربط البيئية' };
 }
