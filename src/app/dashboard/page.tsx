@@ -32,7 +32,7 @@ import {
 function DashboardContent() {
   const { user, dbUser, role, loading: authLoading } = useAuth();
   const isAdmin = role === 'ADMIN' || (role as string) === 'ADM';
-  const isStewardOrAdmin = isAdmin || role === 'REVIEWER' || (role as string) === 'STEWARD';
+  const isStewardOrAdmin = isAdmin || role === 'REVIEWER' || (role as string) === 'STEWARD' || (role as string) === 'REV';
 
   // ─── Data State ─────────────────────────────────────────────────
   const [pendingRelationships, setPendingRelationships] = useState<Relationship[]>([]);
