@@ -1,7 +1,7 @@
 'use client';
 
-import React, { Suspense, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import React, { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ReactFlowProvider } from '@xyflow/react';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import { ThemeProvider } from '../../context/ThemeContext';
@@ -9,15 +9,7 @@ import { MyTreeCanvas } from '../../components/MyTreeCanvas';
 import { FocusMode } from '../../lib/treeFilter';
 
 function MyTreeContent() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
-    }
-  }, [user, loading, router]);
-
+  const { loading } = useAuth();
   const searchParams = useSearchParams();
   const focusRaw = searchParams.get('focus');
   const modeRaw = searchParams.get('mode') as FocusMode | null;
@@ -34,8 +26,6 @@ function MyTreeContent() {
       </div>
     );
   }
-
-  if (!user) return null;
 
   return <MyTreeCanvas initialFocusPersonId={focusId} initialMode={focusMode} />;
 }

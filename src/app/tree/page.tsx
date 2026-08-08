@@ -1,21 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import { ThemeProvider } from '../../context/ThemeContext';
 import { FamilyTreeCanvas } from '../../components/FamilyTreeCanvas';
 
 function TreePageContent() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
-    }
-  }, [user, loading, router]);
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -24,8 +16,6 @@ function TreePageContent() {
       </div>
     );
   }
-
-  if (!user) return null;
 
   return <FamilyTreeCanvas />;
 }
