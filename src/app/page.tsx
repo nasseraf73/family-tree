@@ -1,5 +1,8 @@
 'use client';
 
+// Force static generation - serves from CDN instantly, no cold start
+export const dynamic = 'force-static';
+
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
