@@ -4,6 +4,7 @@ import { persons, users } from '@/db/schema';
 import { eq, isNotNull } from 'drizzle-orm';
 import { dbStore } from '@/lib/store';
 import { getAuthenticatedUser } from '@/lib/supabase/auth';
+import { sendEmailNotification } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
     // Memory store fallback
     const storePersons = dbStore.getPersons().filter(p => !!p.claimed_by_user_id);
     const storeUsers = dbStore.getUsers();
-    
+
     const storeClaims = storePersons.map(p => {
       const u = storeUsers.find(user => user.id === p.claimed_by_user_id);
       return {
@@ -95,9 +96,37 @@ export async function POST(request: Request) {
 
     const pId = Number(person_id);
 
+    // Fetch Target Person & Claiming User
+    let targetPerson: any = null;
+    let claimingUser: any = null;
+    try {
+      const pRes = await db.select().from(persons).where(eq(persons.id, pId));
+      if (pRes.length > 0) {
+        targetPerson = pRes[0];
+        if (targetPerson.claimed_by_user_id) {
+          const uRes = await db.select().from(users).where(eq(users.id, targetPerson.claimed_by_user_id));
+          if (uRes.length > 0) claimingUser = uRes[0];
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
     try {
       if (action === 'approve') {
-        // Claim is confirmed
+        // Send Email Notification to Claiming User
+        if (claimingUser && claimingUser.email) {
+          const personFullName = [targetPerson?.first_name, targetPerson?.father_name, targetPerson?.family_name].filter(Boolean).join(' ');
+          await sendEmailNotification({
+            to: claimingUser.email,
+            subject: 'تأكيد توثيق حسابك وملفك في شجرة العائلة',
+            title: 'تهانينا! تم اعتماد مطالبتك بالبروفايل الشخصي',
+            bodyHtml: `تم اعتماد وتوثيق ملكيتك للملف الشخصي (${personFullName}) في شجرة العائلة بنجاح. أصبحت الآن قادراً على إدارة وتحديث ملفك وتلقي الإشعارات.`,
+            actionUrl: 'http://localhost:3000/my-tree',
+            actionText: 'عرض ملفك وشجرتك',
+          });
+        }
+
         return NextResponse.json({ message: 'تم اعتماد وتوثيق المطالبة بالملف الشخصي بنجاح' });
       } else {
         // Revoke claim (un-claim)
@@ -108,6 +137,17 @@ export async function POST(request: Request) {
         const memP = dbStore.getPersonById(pId);
         if (memP) {
           memP.claimed_by_user_id = undefined;
+        }
+
+        if (claimingUser && claimingUser.email) {
+          await sendEmailNotification({
+            to: claimingUser.email,
+            subject: 'تحديث: إلغاء المطالبة بالملف الشخصي',
+            title: 'تحديث حول طلبك للملف الشخصي',
+            bodyHtml: `قام مشرف النظام بمراجعة الطلب وإلغاء المطالبة بالملف الشخصي لإتاحته من جديد.`,
+            actionUrl: 'http://localhost:3000/',
+            actionText: 'الانتقال للرئيسية',
+          });
         }
 
         return NextResponse.json({ message: 'تم إلغاء المطالبة بالملف الشخصي وإتاحته من جديد' });

@@ -3,8 +3,9 @@ import { dbStore } from '@/lib/store';
 import { getAuthenticatedUser } from '@/lib/supabase/auth';
 import { Relationship } from '@/types';
 import { db } from '@/db';
-import { relationships as relsTable } from '@/db/schema';
+import { relationships as relsTable, users as usersTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { sendEmailNotification } from '@/lib/email';
 
 async function handleApprove(request: Request) {
   try {
@@ -32,10 +33,22 @@ async function handleApprove(request: Request) {
     }
 
     const reviewerId = dbUser.id;
-
     const newStatus = action === 'approve' ? 'VERIFIED' : 'REJECTED';
 
-    // 1. Update in PostgreSQL DB via Drizzle ORM
+    // 1. Fetch relationship record to identify creator
+    let creatorUserId: number | null = null;
+    try {
+      const relRecords = await db.select().from(relsTable).where(eq(relsTable.id, relationship_id));
+      if (relRecords.length > 0) {
+        creatorUserId = relRecords[0].created_by_user_id;
+      }
+    } catch {
+      // Memory store fallback check
+      const storeRel = dbStore.getRelationships().find((r: Relationship) => r.id === relationship_id);
+      if (storeRel) creatorUserId = storeRel.created_by_user_id || null;
+    }
+
+    // 2. Update in PostgreSQL DB via Drizzle ORM
     try {
       if (action === 'approve') {
         await db.update(relsTable)
@@ -56,13 +69,35 @@ async function handleApprove(request: Request) {
       // Fallback
     }
 
-    // 2. Update in MemoryStore fallback
+    // 3. Update in MemoryStore fallback
     const rel = dbStore.getRelationships().find((r: Relationship) => r.id === relationship_id);
     if (rel) {
       rel.status = newStatus;
       if (action === 'approve') {
         rel.verified_by_user_id = reviewerId;
         rel.verified_at = new Date().toISOString();
+      }
+    }
+
+    // 4. Trigger Email Notification to Creator
+    if (creatorUserId) {
+      try {
+        const creatorUsers = await db.select().from(usersTable).where(eq(usersTable.id, creatorUserId));
+        if (creatorUsers.length > 0 && creatorUsers[0].email) {
+          const isApproved = action === 'approve';
+          await sendEmailNotification({
+            to: creatorUsers[0].email,
+            subject: isApproved ? 'تحديث: تم اعتماد طلب النسب الخاص بك' : 'تحديث: نتيجة مراجعة طلب النسب',
+            title: isApproved ? 'تهانينا! تم اعتماد طلبك بنجاح' : 'تحديث حول طلبك المعلق',
+            bodyHtml: isApproved
+              ? `قام ناظر الفرع بمراجعة واعتماد طلب النسب الذي قدمته. أصبحت العلاقة مضافة ومثبتة رسمياً في شجرة العائلة الكبرى.`
+              : `قام ناظر الفرع بمراجعة الطلب المعلق المقدم من قبلك. لم يتم اعتماد الطلب في الوقت الحالي.`,
+            actionUrl: 'http://localhost:3000/tree',
+            actionText: 'عرض الشجرة الكبرى',
+          });
+        }
+      } catch (e) {
+        console.error('Failed sending status email notification:', e);
       }
     }
 
