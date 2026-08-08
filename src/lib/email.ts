@@ -20,26 +20,30 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
     <html dir="rtl" lang="ar">
     <head><meta charset="utf-8">
       <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; border: 1px solid #334155; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; text-align: right; direction: rtl; }
+        .container { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; border: 1px solid #334155; overflow: hidden; text-align: right; direction: rtl; }
         .header { background: linear-gradient(135deg, #059669, #0d9488); padding: 24px; text-align: center; }
         .header h1 { color: #fff; margin: 0; font-size: 20px; font-weight: 800; }
-        .content { padding: 24px; line-height: 1.6; }
-        .title { font-size: 18px; font-weight: 700; color: #34d399; margin-bottom: 12px; }
-        .body-text { color: #cbd5e1; font-size: 14px; margin-bottom: 20px; }
+        .content { padding: 24px; line-height: 1.6; text-align: right; direction: rtl; }
+        .title { font-size: 18px; font-weight: 700; color: #34d399; margin-bottom: 12px; text-align: right; direction: rtl; }
+        .body-text { color: #cbd5e1; font-size: 14px; margin-bottom: 20px; text-align: right; direction: rtl; }
         .btn { display: inline-block; padding: 12px 24px; background: #10b981; color: #fff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 13px; }
         .footer { background: #0f172a; padding: 16px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155; }
       </style>
     </head>
-    <body>
-      <div class="container">
-        <div class="header"><h1>منصة شجرة العائلة الكبرى</h1></div>
-        <div class="content">
-          <div class="title">${payload.title}</div>
-          <div class="body-text">${payload.bodyHtml}</div>
-          ${payload.actionUrl ? `<div style="text-align:center;margin-top:24px"><a href="${payload.actionUrl}" class="btn">${payload.actionText || 'عرض التفاصيل'}</a></div>` : ''}
+    <body dir="rtl" style="font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; text-align: right; direction: rtl;">
+      <div class="container" dir="rtl" style="max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; border: 1px solid #334155; overflow: hidden; text-align: right; direction: rtl;">
+        <div class="header" style="background: linear-gradient(135deg, #059669, #0d9488); padding: 24px; text-align: center;">
+          <h1 style="color: #fff; margin: 0; font-size: 20px; font-weight: 800;">منصة شجرة العائلة الكبرى</h1>
         </div>
-        <div class="footer">هذا إشعار تلقائي من منصة شجرة العائلة • جميع الحقوق محفوظة</div>
+        <div class="content" dir="rtl" style="padding: 24px; line-height: 1.6; text-align: right; direction: rtl;">
+          <div class="title" dir="rtl" style="font-size: 18px; font-weight: 700; color: #34d399; margin-bottom: 12px; text-align: right; direction: rtl;">${payload.title}</div>
+          <div class="body-text" dir="rtl" style="color: #cbd5e1; font-size: 14px; margin-bottom: 20px; text-align: right; direction: rtl;">${payload.bodyHtml}</div>
+          ${payload.actionUrl ? `<div style="text-align:center;margin-top:24px"><a href="${payload.actionUrl}" class="btn" style="display: inline-block; padding: 12px 24px; background: #10b981; color: #fff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 13px;">${payload.actionText || 'عرض التفاصيل'}</a></div>` : ''}
+        </div>
+        <div class="footer" style="background: #0f172a; padding: 16px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155;">
+          هذا إشعار تلقائي من منصة شجرة العائلة • جميع الحقوق محفوظة
+        </div>
       </div>
     </body>
     </html>
