@@ -274,5 +274,7 @@ export async function GET(request: Request) {
     edges,
     totalNodes: nodes.length,
     totalEdges: edges.length,
+    persons,
+    relationships,
   });
 }

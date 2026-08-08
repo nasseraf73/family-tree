@@ -134,7 +134,10 @@ function DashboardContent() {
 
       if (data.relationships) {
         const rels: Relationship[] = data.relationships;
-        const pending = rels.filter(r => r.status === 'PENDING');
+        const currentUserId = dbUser?.id;
+        const pending = isStewardOrAdmin
+          ? rels.filter((r) => r.status === 'PENDING')
+          : rels.filter((r) => r.status === 'PENDING' && (currentUserId ? r.created_by_user_id === currentUserId : true));
         setPendingRelationships(pending);
       }
 
