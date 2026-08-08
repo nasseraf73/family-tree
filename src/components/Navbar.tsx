@@ -16,7 +16,8 @@ import {
   X,
   Clock,
   Globe,
-  Database
+  Database,
+  Users
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -170,6 +171,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <Globe className="w-4 h-4 text-emerald-500" />
                     <span className="hidden md:inline">إدارة الدول</span>
+                  </Link>
+
+                  <Link
+                    href="/admin/users"
+                    title="إدارة الحسابات، تعديل الإيميلات، وتخصيص الصلاحيات"
+                    className="px-2.5 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-500/20 border border-blue-500/30 transition-colors text-xs font-extrabold flex items-center gap-1.5"
+                  >
+                    <Users className="w-4 h-4 text-blue-500" />
+                    <span className="hidden md:inline">إدارة المستخدمين</span>
                   </Link>
 
                   <Link
