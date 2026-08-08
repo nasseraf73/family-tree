@@ -464,8 +464,8 @@ function AdminDatabaseContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tableDefinitions.map((tb) => {
               const IconComponent = tb.icon;
-              const cloudVal = cloudStats ? (cloudStats as Record<string, number>)[tb.key] || 0 : 0;
-              const localVal = localStats ? (localStats as Record<string, number>)[tb.key] || 0 : 0;
+              const cloudVal = cloudStats ? (cloudStats as unknown as Record<string, number>)[tb.key] || 0 : 0;
+              const localVal = localStats ? (localStats as unknown as Record<string, number>)[tb.key] || 0 : 0;
               const diff = cloudVal - localVal;
 
               return (
