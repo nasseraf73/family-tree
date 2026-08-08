@@ -20,7 +20,7 @@ import { AddRelationModal } from './AddRelationModal';
 import { AddSpouseModal } from './AddSpouseModal';
 import { EditPersonModal } from './EditPersonModal';
 import { ClaimProfileModal } from './ClaimProfileModal';
-import { StewardDashboard } from './StewardDashboard';
+
 import { AuthModal } from './AuthModal';
 import { LinkNodesModal } from './LinkNodesModal';
 import { DeleteRelationModal } from './DeleteRelationModal';
@@ -136,7 +136,7 @@ function FamilyTreeCanvasContent() {
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [claimTargetPerson, setClaimTargetPerson] = useState<Person | null>(null);
 
-  const [isStewardDashboardOpen, setIsStewardDashboardOpen] = useState(false);
+
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedProfilePerson, setSelectedProfilePerson] = useState<Person | null>(null);
@@ -622,7 +622,6 @@ function FamilyTreeCanvasContent() {
       {/* Top Navbar */}
       <Navbar
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
-        onOpenStewardDashboard={() => setIsStewardDashboardOpen(true)}
       />
 
       {/* Single Unified Action & Layout Control Bar */}
@@ -898,15 +897,7 @@ function FamilyTreeCanvasContent() {
         }}
       />
 
-      <StewardDashboard
-        isOpen={isStewardDashboardOpen}
-        onClose={() => setIsStewardDashboardOpen(false)}
-        pendingRelationships={pendingRelationships}
-        mergeRequests={mergeRequests}
-        allPersonsMap={allPersonsMap}
-        onRefresh={() => fetchTreeData()}
-        userRole={role}
-      />
+
 
       <LinkNodesModal
         isOpen={isLinkModalOpen}

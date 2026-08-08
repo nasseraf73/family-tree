@@ -11,25 +11,17 @@ import {
   Moon,
   LogIn,
   LogOut,
-  ShieldCheck,
   Menu,
   X,
-  Clock,
-  Globe,
-  Database,
-  Users
+  LayoutDashboard,
 } from 'lucide-react';
 
 interface NavbarProps {
   onOpenAuthModal?: () => void;
-  onOpenStewardDashboard?: () => void;
-  onOpenAddBranchModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuthModal,
-  onOpenStewardDashboard,
-  onOpenAddBranchModal,
 }) => {
   const pathname = usePathname();
   const { user, dbUser, role, signOut } = useAuth();
@@ -138,60 +130,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
 
-              {/* Steward Dashboard for Admins/Stewards OR My Requests for Regular Users */}
-              {onOpenStewardDashboard && (() => {
-                const isStewardOrAdmin = role === 'ADMIN' || role === 'REVIEWER' || (role as string) === 'STEWARD';
-                return (
-                  <button
-                    onClick={onOpenStewardDashboard}
-                    title={isStewardOrAdmin ? 'لوحة مراجعة وإدارة المشرفين والصلاحيات' : 'متابعة سجل طلباتي الخاصة وحالتها'}
-                    className="px-2.5 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-500/20 border border-amber-500/30 transition-colors text-xs font-extrabold flex items-center gap-1.5"
-                  >
-                    {isStewardOrAdmin ? (
-                      <>
-                        <ShieldCheck className="w-4 h-4 text-amber-400" />
-                        <span className="hidden md:inline">لوحة المشرفين</span>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-4 h-4 text-emerald-400" />
-                        <span className="hidden md:inline">طلباتي</span>
-                      </>
-                    )}
-                  </button>
-                );
-              })()}
-
-              {(role === 'ADMIN' || (role as string) === 'ADM') && (
-                <>
-                  <Link
-                    href="/admin/countries"
-                    title="تعريف وإدارة قائمة الدول والانتساب الجغرافي"
-                    className="px-2.5 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors text-xs font-extrabold flex items-center gap-1.5"
-                  >
-                    <Globe className="w-4 h-4 text-emerald-500" />
-                    <span className="hidden md:inline">إدارة الدول</span>
-                  </Link>
-
-                  <Link
-                    href="/admin/users"
-                    title="إدارة الحسابات، تعديل الإيميلات، وتخصيص الصلاحيات"
-                    className="px-2.5 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-500/20 border border-blue-500/30 transition-colors text-xs font-extrabold flex items-center gap-1.5"
-                  >
-                    <Users className="w-4 h-4 text-blue-500" />
-                    <span className="hidden md:inline">إدارة المستخدمين</span>
-                  </Link>
-
-                  <Link
-                    href="/admin/database"
-                    title="إدارة ومزامنة قواعد البيانات والنسخ الاحتياطي"
-                    className="px-2.5 py-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl hover:bg-purple-500/20 border border-purple-500/30 transition-colors text-xs font-extrabold flex items-center gap-1.5"
-                  >
-                    <Database className="w-4 h-4 text-purple-500" />
-                    <span className="hidden md:inline">إدارة البيانات</span>
-                  </Link>
-                </>
-              )}
+              {/* Dashboard Link - لوحة التحكم */}
+              <Link
+                href="/dashboard"
+                title="لوحة التحكم والإعدادات"
+                className={`px-2.5 py-1.5 rounded-xl border transition-colors text-xs font-extrabold flex items-center gap-1.5 ${
+                  pathname === '/dashboard'
+                    ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/50'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4 text-emerald-500" />
+                <span className="hidden md:inline">لوحة التحكم</span>
+              </Link>
 
               <button
                 onClick={signOut}

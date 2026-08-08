@@ -225,7 +225,7 @@ function AdminDatabaseContent() {
               <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
                 <Link href="/" className="hover:underline">الرئيسية</Link>
                 <span>/</span>
-                <span className="text-slate-400">لوحة الإدارة</span>
+                <Link href="/dashboard" className="hover:underline text-emerald-400">لوحة التحكم</Link>
                 <span>/</span>
                 <span className="text-white">إدارة قواعد البيانات</span>
               </div>
@@ -240,15 +240,25 @@ function AdminDatabaseContent() {
               </p>
             </div>
 
-            {/* Refresh Stats Button */}
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-all flex items-center gap-2 self-start md:self-auto"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
-              <span>تحديث الإحصائيات والحالة</span>
-            </button>
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+              <Link
+                href="/dashboard"
+                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-all flex items-center gap-2"
+              >
+                <ArrowRight className="w-4 h-4" />
+                <span>العودة للوحة التحكم</span>
+              </Link>
+
+              <button
+                onClick={fetchData}
+                disabled={loading}
+                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-all flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
+                <span>تحديث الإحصائيات والحالة</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>

@@ -235,13 +235,14 @@ function AdminCountriesContent() {
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
-              title="رجوع"
+            <Link
+              href="/dashboard"
+              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-2 text-xs font-bold"
+              title="العودة للوحة التحكم"
             >
               <ArrowRight className="w-5 h-5" />
-            </button>
+              <span className="hidden sm:inline">العودة للوحة التحكم</span>
+            </Link>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 bg-emerald-100 dark:bg-emerald-950/60 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <Globe className="w-6 h-6" />
