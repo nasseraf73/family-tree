@@ -125,10 +125,17 @@ function DashboardContent() {
     }
   }, [role]);
 
+  const getUserAuthEmail = useCallback(() => {
+    return user?.email || dbUser?.email || (typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '');
+  }, [user, dbUser]);
+
   const fetchClaimsList = useCallback(async () => {
     setLoadingClaims(true);
     try {
-      const res = await fetch('/api/v1/claim/requests');
+      const email = getUserAuthEmail();
+      const res = await fetch('/api/v1/claim/requests', {
+        headers: { 'x-user-email': email },
+      });
       const data = await res.json();
       if (data.claims) {
         setClaimsList(data.claims);
@@ -138,13 +145,16 @@ function DashboardContent() {
     } finally {
       setLoadingClaims(false);
     }
-  }, []);
+  }, [getUserAuthEmail]);
 
   const fetchUsersList = useCallback(async () => {
     if (!isAdmin) return;
     setLoadingUsers(true);
     try {
-      const res = await fetch('/api/v1/admin/users');
+      const email = getUserAuthEmail();
+      const res = await fetch('/api/v1/admin/users', {
+        headers: { 'x-user-email': email },
+      });
       const data = await res.json();
       if (data.users) {
         setUsersList(data.users);
@@ -154,7 +164,7 @@ function DashboardContent() {
     } finally {
       setLoadingUsers(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, getUserAuthEmail]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -166,11 +176,11 @@ function DashboardContent() {
         fetchUsersList();
       }
     }
-  }, [authLoading, user, role]);
+  }, [authLoading, user, role, isStewardOrAdmin, isAdmin, fetchTreeData, fetchClaimsList, fetchUsersList]);
 
   // Fix tab if user role doesn't allow current tab
   useEffect(() => {
-    if (!isStewardOrAdmin && (activeTab === 'merge' || activeTab === 'stewards')) {
+    if (!isStewardOrAdmin && (activeTab === 'merge' || activeTab === 'stewards' || activeTab === 'verified_claims')) {
       setActiveTab('claims');
     }
     if (!isAdmin && activeTab === 'stewards') {
@@ -184,9 +194,13 @@ function DashboardContent() {
     setLoading(true);
     setActionMessage(null);
     try {
+      const email = getUserAuthEmail();
       const res = await fetch('/api/v1/review/approve', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': email,
+        },
         body: JSON.stringify({ relationship_id: relId, action }),
       });
       const data = await res.json();
@@ -207,9 +221,13 @@ function DashboardContent() {
     setLoading(true);
     setActionMessage(null);
     try {
+      const email = getUserAuthEmail();
       const res = await fetch('/api/v1/review/merge', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': email,
+        },
         body: JSON.stringify({ merge_request_id: mergeId }),
       });
       const data = await res.json();
@@ -230,9 +248,13 @@ function DashboardContent() {
     setLoading(true);
     setActionMessage(null);
     try {
+      const email = getUserAuthEmail();
       const res = await fetch('/api/v1/claim/requests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': email,
+        },
         body: JSON.stringify({ person_id: personId, action }),
       });
       const data = await res.json();
@@ -255,9 +277,13 @@ function DashboardContent() {
     setSubmittingSteward(true);
     setActionMessage(null);
     try {
+      const email = getUserAuthEmail();
       const res = await fetch('/api/v1/admin/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': email,
+        },
         body: JSON.stringify({
           full_name: stewardName,
           email: stewardEmail,
@@ -286,9 +312,13 @@ function DashboardContent() {
   const handleRoleChange = async (userId: number, newRole: 'USER' | 'REVIEWER' | 'ADMIN') => {
     setActionMessage(null);
     try {
+      const email = getUserAuthEmail();
       const res = await fetch('/api/v1/admin/users', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': email,
+        },
         body: JSON.stringify({ user_id: userId, role: newRole }),
       });
       const data = await res.json();
@@ -307,8 +337,12 @@ function DashboardContent() {
     if (!confirm('هل أنت متأكد من رغبتك في حذف هذا المشرف/المستخدم من النظام؟')) return;
     setActionMessage(null);
     try {
+      const email = getUserAuthEmail();
       const res = await fetch(`/api/v1/admin/users?id=${userId}`, {
         method: 'DELETE',
+        headers: {
+          'x-user-email': email,
+        },
       });
       const data = await res.json();
       if (res.ok) {
