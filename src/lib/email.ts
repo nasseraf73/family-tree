@@ -1,5 +1,3 @@
-import nodemailer from 'nodemailer';
-
 export interface EmailNotificationPayload {
   to: string;
   subject: string;
@@ -10,79 +8,48 @@ export interface EmailNotificationPayload {
 }
 
 export async function sendEmailNotification(payload: EmailNotificationPayload): Promise<{ success: boolean; error?: string }> {
-  console.log(`[EMAIL DISPATCH START] Target: ${payload.to} | Subject: ${payload.subject}`);
-  
+  console.log(`[EMAIL] Sending to: ${payload.to} | Subject: ${payload.subject}`);
+
   const brevoApiKey = process.env.BREVO_API_KEY;
   const resendApiKey = process.env.RESEND_API_KEY;
 
-  console.log(`[EMAIL CONFIG STATUS] BREVO_API_KEY: ${brevoApiKey ? 'PRESENT (' + brevoApiKey.substring(0, 10) + '...)' : 'MISSING'}`);
+  console.log(`[EMAIL] BREVO_API_KEY: ${brevoApiKey ? 'YES (' + brevoApiKey.substring(0, 10) + '...)' : 'NO'} | RESEND: ${resendApiKey ? 'YES' : 'NO'}`);
 
   const htmlContent = `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
-    <head>
-      <meta charset="utf-8">
+    <head><meta charset="utf-8">
       <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background-color: #1e293b; border-radius: 16px; border: 1px solid #334155; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; border: 1px solid #334155; overflow: hidden; }
         .header { background: linear-gradient(135deg, #059669, #0d9488); padding: 24px; text-align: center; }
-        .header h1 { color: #ffffff; margin: 0; font-size: 20px; font-weight: 800; }
+        .header h1 { color: #fff; margin: 0; font-size: 20px; font-weight: 800; }
         .content { padding: 24px; line-height: 1.6; }
         .title { font-size: 18px; font-weight: 700; color: #34d399; margin-bottom: 12px; }
         .body-text { color: #cbd5e1; font-size: 14px; margin-bottom: 20px; }
-        .btn { display: inline-block; padding: 12px 24px; background-color: #10b981; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 13px; text-align: center; }
-        .footer { background-color: #0f172a; padding: 16px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155; }
+        .btn { display: inline-block; padding: 12px 24px; background: #10b981; color: #fff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 13px; }
+        .footer { background: #0f172a; padding: 16px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155; }
       </style>
     </head>
     <body>
       <div class="container">
-        <div class="header">
-          <h1>منصة شجرة العائلة الكبرى</h1>
-        </div>
+        <div class="header"><h1>منصة شجرة العائلة الكبرى</h1></div>
         <div class="content">
           <div class="title">${payload.title}</div>
           <div class="body-text">${payload.bodyHtml}</div>
-          ${payload.actionUrl ? `<div style="text-align: center; margin-top: 24px;"><a href="${payload.actionUrl}" class="btn">${payload.actionText || 'عرض التفاصيل'}</a></div>` : ''}
+          ${payload.actionUrl ? `<div style="text-align:center;margin-top:24px"><a href="${payload.actionUrl}" class="btn">${payload.actionText || 'عرض التفاصيل'}</a></div>` : ''}
         </div>
-        <div class="footer">
-          هذا إشعار تلقائي من منصة شجرة العائلة • جميع الحقوق محفوظة
-        </div>
+        <div class="footer">هذا إشعار تلقائي من منصة شجرة العائلة • جميع الحقوق محفوظة</div>
       </div>
     </body>
     </html>
   `;
 
-  // Method 1: Brevo SMTP Relay on Port 465 SSL (Proven 100% working with Brevo SMTP Key)
+  // Brevo REST API (HTTPS - works on Vercel without SMTP port restrictions)
   if (brevoApiKey) {
     try {
-      console.log(`[ATTEMPT 1: BREVO SMTP SSL PORT 465] Sending to ${payload.to}...`);
-      const transporter = nodemailer.createTransport({
-        host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
-        port: Number(process.env.BREVO_SMTP_PORT) || 465,
-        secure: true, // SSL
-        auth: {
-          user: process.env.BREVO_SMTP_USER || 'b4d66f001@smtp-brevo.com',
-          pass: brevoApiKey,
-        },
-      });
-
-      const info = await transporter.sendMail({
-        from: '"منصة شجرة العائلة الكبرى" <b4d66f001@smtp-brevo.com>',
-        to: payload.to,
-        subject: payload.subject,
-        html: htmlContent,
-      });
-
-      console.log(`[SUCCESS: BREVO SMTP PORT 465] Delivered! ID: ${info.messageId}`);
-      return { success: true };
-    } catch (smtpErr) {
-      console.error('[ERROR: BREVO SMTP 465 EXCEPTION]', smtpErr);
-    }
-
-    // Fallback: Brevo REST API
-    try {
-      console.log(`[ATTEMPT 2: BREVO REST API] Sending to ${payload.to}...`);
-      const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+      console.log(`[EMAIL] Calling Brevo REST API...`);
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
           'api-key': brevoApiKey,
@@ -90,51 +57,56 @@ export async function sendEmailNotification(payload: EmailNotificationPayload): 
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          sender: { name: 'منصة شجرة العائلة الكبرى', email: process.env.EMAIL_FROM || 'nasser.grav.2000@gmail.com' },
+          sender: { name: 'منصة شجرة العائلة الكبرى', email: 'nasser.grav.2000@gmail.com' },
           to: [{ email: payload.to }],
           subject: payload.subject,
           htmlContent: htmlContent,
         }),
       });
 
-      const brevoData = await brevoRes.json();
-      if (brevoRes.ok) {
-        console.log(`[SUCCESS: BREVO REST API] Message Sent! ID:`, brevoData.messageId || brevoData);
+      const data = await res.json();
+      console.log(`[EMAIL] Brevo response status: ${res.status}`, JSON.stringify(data));
+
+      if (res.ok) {
+        console.log(`[EMAIL] SUCCESS via Brevo REST API`);
         return { success: true };
+      } else {
+        console.error(`[EMAIL] Brevo FAILED: ${res.status}`, data);
       }
-    } catch (brevoErr) {
-      console.error('[ERROR: BREVO REST API EXCEPTION]', brevoErr);
+    } catch (err) {
+      console.error('[EMAIL] Brevo exception:', err);
     }
   }
 
-  // Method 3: Resend API Fallback
+  // Resend API fallback
   if (resendApiKey) {
     try {
-      console.log(`[ATTEMPT 3: RESEND API] Sending to ${payload.to}...`);
-      const response = await fetch('https://api.resend.com/emails', {
+      console.log(`[EMAIL] Calling Resend API...`);
+      const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${resendApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+          from: 'onboarding@resend.dev',
           to: [payload.to],
           subject: payload.subject,
           html: htmlContent,
         }),
       });
 
-      const resendData = await response.json();
-      if (response.ok) {
-        console.log(`[SUCCESS: RESEND API] Message Sent! ID:`, resendData.id);
+      const data = await res.json();
+      if (res.ok) {
+        console.log(`[EMAIL] SUCCESS via Resend API`);
         return { success: true };
       }
-    } catch (resendErr) {
-      console.error('[ERROR: RESEND API EXCEPTION]', resendErr);
+      console.error(`[EMAIL] Resend FAILED:`, data);
+    } catch (err) {
+      console.error('[EMAIL] Resend exception:', err);
     }
   }
 
-  console.warn(`[WARNING: NO EMAIL SERVICE SUCCEEDED] Check Environment Variables.`);
-  return { success: false, error: 'تعذر إرسال الإشعار البريدي، يرجى التحقق من مفاتيح الربط البيئية' };
+  console.warn(`[EMAIL] ALL METHODS FAILED - no email sent`);
+  return { success: false, error: 'تعذر إرسال البريد' };
 }
