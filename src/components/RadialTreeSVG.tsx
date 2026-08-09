@@ -737,7 +737,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 className="cursor-pointer group"
                 onMouseEnter={() => setHoveredNode(node.id)}
                 onMouseLeave={() => setHoveredNode(null)}
-                onClick={() => setSelectedPersonForModal(p)}
+
               >
                 {/* Node Outer Circle */}
                 <circle
@@ -907,33 +907,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             );
           })}
 
-          {/* Center Root Ancestor Highlight Card */}
-          {treeRoot && treeRoot.id !== -1 && (
-            <g transform={`translate(${layoutCenter}, ${layoutCenter + 30})`}>
-              <rect
-                x={-130}
-                y={-20}
-                width={260}
-                height={40}
-                rx={20}
-                fill="#064e3b"
-                stroke="#10b981"
-                strokeWidth={2.5}
-                className="shadow-2xl"
-              />
-              <text
-                x={0}
-                y={5}
-                textAnchor="middle"
-                fill="#ecfdf5"
-                fontSize={15}
-                fontWeight="900"
-                fontFamily="Cairo, sans-serif"
-              >
-                👑 أصل العائلة: {treeRoot.person.first_name} {treeRoot.person.family_name || ''}
-              </text>
-            </g>
-          )}
+
         </svg>
       </div>
 
