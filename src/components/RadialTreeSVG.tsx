@@ -644,7 +644,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   }
 
   // Get hovered person data for the fixed info card
-  const hoveredPersonData = useMemo(() => {
+  const hoveredPersonData = (() => {
     if (hoveredNode === null || !showInfoCard) return null;
     const node = allNodes.find((n) => n.id === hoveredNode);
     if (!node) return null;
@@ -654,7 +654,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       .join(' ');
     const descendantCount = getDescendantsCount(node.id);
     return { person: p, fullName, descendantCount, depth: node.depth };
-  }, [hoveredNode, showInfoCard, allNodes]);
+  })();
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-950 text-slate-100 select-none">
