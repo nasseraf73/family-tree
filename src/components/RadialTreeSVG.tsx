@@ -72,8 +72,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   // Controls
   const [arcAngle, setArcAngle] = useState(360);
   const [rotationDeg, setRotationDeg] = useState(0);
-  const [branchLength, setBranchLength] = useState(180); // Base radial distance
-  const [zoom, setZoom] = useState(0.45); // Framed default zoom
+  const [branchLength, setBranchLength] = useState(200); // Base radial distance
+  const [zoom, setZoom] = useState(0.4); // Framed default zoom
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
 
@@ -82,6 +82,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   const dragStartRef = useRef({ x: 0, y: 0 });
   const panStartRef = useRef({ x: 0, y: 0 });
   const hasMovedRef = useRef(false);
+
 
   // Persons Map for quick lookup
   const personsMap = useMemo(() => {
@@ -116,7 +117,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 const isParentRel = relType === 'PARENT';
                 return {
                   id: parseInt(String(e.id).replace('e-', ''), 10) || Date.now(),
-                  // In API edges: e.source is Parent, e.target is Child
                   person_id: isParentRel ? parseInt(e.target, 10) : parseInt(e.source, 10),
                   related_person_id: isParentRel ? parseInt(e.source, 10) : parseInt(e.target, 10),
                   relationship_type: relType,
@@ -163,7 +163,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     const pMap = new Map<number, Person>();
     persons.forEach((p) => pMap.set(p.id, p));
 
-    // Build parent->children map from PARENT/CHILD relationships
+    // Build parent->children map
     const childrenMap = new Map<number, number[]>();
     const hasParent = new Set<number>();
 
@@ -192,10 +192,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       hasParent.add(childId);
     });
 
-    // Root ancestors = persons with no parent
     let rootIds = persons.filter((p) => !hasParent.has(p.id)).map((p) => p.id);
 
-    // If initialFocusPersonId is specified, find top root ancestor for that focus person
     if (initialFocusPersonId && pMap.has(initialFocusPersonId)) {
       const findRoot = (currId: number, visited = new Set<number>()): number => {
         if (visited.has(currId)) return currId;
@@ -219,7 +217,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       rootIds = [persons[0].id];
     }
 
-    // Build tree recursively
     const visited = new Set<number>();
     const buildNode = (id: number, depth: number): TreeNode | null => {
       if (visited.has(id)) return null;
@@ -260,7 +257,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       return buildNode(rootIds[0], 0);
     }
 
-    // Virtual root for multiple top ancestors
     const virtualRoot: TreeNode = {
       id: -1,
       person: {
@@ -290,7 +286,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     return virtualRoot;
   }, [persons, relationships, collapsedNodes, initialFocusPersonId]);
 
-  // ===== Helper to count total descendants =====
+  // Count total descendants
   const getDescendantsCount = useCallback(
     (personId: number): number => {
       const childrenMap = new Map<number, number[]>();
@@ -324,24 +320,20 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     [relationships]
   );
 
-  // ===== Helper: Calculate radius per generation depth =====
-  // Uses exponential scaling so outer generations (which have 90% of population) get huge circumferences
-  const getRadiusForDepth = useCallback(
-    (depth: number): number => {
-      if (depth <= 0) return 0;
-      // Exponential growth curve for radius:
-      // Depth 1: 1.2 * branchLength
-      // Depth 2: 2.6 * branchLength
-      // Depth 3: 4.3 * branchLength
-      // Depth 4: 6.5 * branchLength
-      // Depth 5: 9.0 * branchLength ...
-      const factor = depth === 1 ? 1.2 : 1.2 + Math.pow(depth - 1, 1.25) * 1.4;
-      return factor * branchLength;
-    },
-    [branchLength]
-  );
+  // Compute depth node counts flat map
+  const getDepthNodeCounts = useCallback((root: TreeNode): Map<number, number> => {
+    const counts = new Map<number, number>();
+    const traverse = (node: TreeNode) => {
+      if (node.id !== -1) {
+        counts.set(node.depth, (counts.get(node.depth) || 0) + 1);
+      }
+      node.children.forEach(traverse);
+    };
+    traverse(root);
+    return counts;
+  }, []);
 
-  // ===== Compute radial positions =====
+  // Compute Layout with Guaranteed Ring Circumference
   const computeLayout = useCallback(
     (root: TreeNode, centerX: number, centerY: number) => {
       const arcRad = (arcAngle * Math.PI) / 180;
@@ -355,6 +347,27 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         endAngle = rotRad + 2 * Math.PI;
       }
 
+      // 1. Calculate required radius for each depth to guarantee NO node overlap (minimum 65px per node)
+      const depthNodeCounts = getDepthNodeCounts(root);
+      const depthRadii = new Map<number, number>();
+      depthRadii.set(0, 0);
+
+      let currentAccumulatedRadius = 0;
+      const maxD = Math.max(...Array.from(depthNodeCounts.keys()), 0);
+
+      for (let d = 1; d <= maxD; d++) {
+        const countAtDepth = depthNodeCounts.get(d) || 1;
+        // Circumference C = 2 * PI * R => R = C / (2 * PI)
+        // We require C >= countAtDepth * 65px
+        const requiredRadiusForUncrowdedRing = (countAtDepth * 65) / (2 * Math.PI);
+        const minLinearRadius = d * branchLength;
+
+        // Radius is accumulated dynamically so rings stay properly spaced
+        const step = Math.max(branchLength, requiredRadiusForUncrowdedRing - currentAccumulatedRadius);
+        currentAccumulatedRadius += step;
+        depthRadii.set(d, currentAccumulatedRadius);
+      }
+
       root.x = centerX;
       root.y = centerY;
       root.radius = 0;
@@ -362,14 +375,13 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       root.angleEnd = endAngle;
       root.angleMid = (startAngle + endAngle) / 2;
 
-      // Recursive sector partitioning
+      // Sector partitioning
       const layoutNode = (node: TreeNode, aStart: number, aEnd: number, depth: number) => {
         node.angleStart = aStart;
         node.angleEnd = aEnd;
         node.angleMid = (aStart + aEnd) / 2;
-        node.radius = getRadiusForDepth(depth);
+        node.radius = depthRadii.get(depth) || depth * branchLength;
 
-        // Polar to Cartesian conversion
         node.x = centerX + node.radius * Math.cos(node.angleMid);
         node.y = centerY + node.radius * Math.sin(node.angleMid);
 
@@ -417,10 +429,9 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         layoutNode(root, startAngle, endAngle, 0);
       }
     },
-    [arcAngle, rotationDeg, getRadiusForDepth]
+    [arcAngle, rotationDeg, branchLength, getDepthNodeCounts]
   );
 
-  // ===== Collect all nodes flat =====
   const collectNodes = (node: TreeNode): TreeNode[] => {
     const result: TreeNode[] = [node];
     node.children.forEach((c) => {
@@ -429,7 +440,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     return result;
   };
 
-  // ===== Generate SVG smooth polar cubic Bezier branch path =====
+  // ===== Generate TRUE Radial Circular Arc Path (A r r ... L x y) =====
   const generateBranchPath = (parent: TreeNode, child: TreeNode, centerX: number, centerY: number): string => {
     const px = parent.x;
     const py = parent.y;
@@ -437,26 +448,37 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     const cy = child.y;
 
     if (parent.radius === 0) {
+      // From root center to 1st generation ring: straight line
       return `M ${px} ${py} L ${cx} ${cy}`;
     }
 
-    const midRadius = (parent.radius + child.radius) / 2;
+    const rP = parent.radius;
+    const aP = parent.angleMid;
+    const aC = child.angleMid;
 
-    const ctrl1X = centerX + midRadius * Math.cos(parent.angleMid);
-    const ctrl1Y = centerY + midRadius * Math.sin(parent.angleMid);
+    // Arc endpoint along parent's ring at child's angle
+    const arcX = centerX + rP * Math.cos(aC);
+    const arcY = centerY + rP * Math.sin(aC);
 
-    const ctrl2X = centerX + midRadius * Math.cos(child.angleMid);
-    const ctrl2Y = centerY + midRadius * Math.sin(child.angleMid);
+    // Determine SVG arc sweep flag
+    // Normalize angle difference
+    let diff = aC - aP;
+    while (diff < -Math.PI) diff += 2 * Math.PI;
+    while (diff > Math.PI) diff -= 2 * Math.PI;
 
-    return `M ${px} ${py} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${cx} ${cy}`;
+    const sweepFlag = diff >= 0 ? 1 : 0;
+    const largeArcFlag = Math.abs(diff) > Math.PI ? 1 : 0;
+
+    // 1. Draw arc along parent's ring radius rP from parent angle to child angle
+    // 2. Draw radial straight line along child angle from rP to rC (child position)
+    return `M ${px} ${py} A ${rP} ${rP} 0 ${largeArcFlag} ${sweepFlag} ${arcX} ${arcY} L ${cx} ${cy}`;
   };
 
-  // ===== Render Calculations =====
+  // Render Calculations
   const treeRoot = buildTree();
 
-  // Canvas size enlarged to 5000x5000 to accommodate wide outer generational circumferences
-  const canvasWidth = 5500;
-  const canvasHeight = 5500;
+  const canvasWidth = 7000;
+  const canvasHeight = 7000;
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
 
@@ -479,10 +501,20 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
   const maxDepth = allNodes.reduce((m, n) => Math.max(m, n.depth), 0);
 
-  // Branch styling
+  // Compute depth radii for background ring circles
+  const depthRadiiMap = useMemo(() => {
+    const map = new Map<number, number>();
+    allNodes.forEach((n) => {
+      if (!map.has(n.depth)) {
+        map.set(n.depth, n.radius);
+      }
+    });
+    return map;
+  }, [allNodes]);
+
   const getBranchColor = (depth: number): string => {
     const colors = [
-      '#10b981', // Emerald trunk
+      '#10b981',
       '#059669',
       '#047857',
       '#0f766e',
@@ -497,7 +529,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
 
   const getBranchWidth = (depth: number): number => {
-    return Math.max(1.5, 4.5 - depth * 0.4);
+    return Math.max(1.5, 4 - depth * 0.35);
   };
 
   const getNodeColor = (person: Person): string => {
@@ -520,8 +552,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    setZoom((prev) => Math.max(0.1, Math.min(3.5, prev + delta)));
+    const delta = e.deltaY > 0 ? -0.04 : 0.04;
+    setZoom((prev) => Math.max(0.05, Math.min(3, prev + delta)));
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -551,7 +583,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
 
   const fitView = () => {
-    setZoom(0.45);
+    setZoom(0.4);
     setPanX(0);
     setPanY(0);
     setRotationDeg(0);
@@ -604,7 +636,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
           <span className="text-xs font-bold text-slate-300">
-            جاري بناء وترتيب الشجرة الدائرية المتراكزة...
+            جاري رسم المروحة القطبية بالأقواس الدائرية...
           </span>
         </div>
       </div>
@@ -651,7 +683,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           {/* ===== Concentric Generational Rings ===== */}
           {Array.from({ length: maxDepth + 1 }, (_, i) => i).map((depth) => {
             if (depth === 0) return null;
-            const r = getRadiusForDepth(depth);
+            const r = depthRadiiMap.get(depth) || depth * branchLength;
             return (
               <g key={`ring-group-${depth}`}>
                 <circle
@@ -690,7 +722,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             );
           })}
 
-          {/* ===== Smooth Polar Bezier Branches ===== */}
+          {/* ===== True Radial Arc Branches ===== */}
           {branches.map(({ parent, child }, i) => {
             const parentDepth = parent.id === -1 ? 0 : parent.depth;
             const isHoveredBranch = hoveredNode === parent.id || hoveredNode === child.id;
@@ -703,7 +735,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 stroke={isHoveredBranch ? '#34d399' : getBranchColor(parentDepth)}
                 strokeWidth={isHoveredBranch ? getBranchWidth(parentDepth) + 2.5 : getBranchWidth(parentDepth)}
                 strokeLinecap="round"
-                opacity={isHoveredBranch ? 1 : 0.75}
+                opacity={isHoveredBranch ? 1 : 0.8}
                 className="transition-all duration-300"
               />
             );
@@ -717,7 +749,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             const hasChildren = node.children.length > 0 || collapsedNodes.has(node.id);
             const isCollapsed = collapsedNodes.has(node.id);
 
-            // Node dot radius adapts to depth
             const nodeRadius = isRootNode ? 26 : node.depth <= 2 ? 14 : 10;
 
             let angleDeg = ((node.angleMid * 180) / Math.PI) % 360;
@@ -746,7 +777,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                   className="transition-all duration-200"
                 />
 
-                {/* Root node crown star */}
+                {/* Root node star */}
                 {isRootNode && (
                   <text
                     x={node.x}
@@ -1009,7 +1040,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             <input
               type="range"
               min="100"
-              max="300"
+              max="350"
               step="10"
               value={branchLength}
               onChange={(e) => setBranchLength(Number(e.target.value))}
@@ -1027,7 +1058,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             </div>
             <input
               type="range"
-              min="10"
+              min="5"
               max="300"
               step="5"
               value={Math.round(zoom * 100)}
@@ -1102,5 +1133,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     </div>
   );
 };
+
 
 
