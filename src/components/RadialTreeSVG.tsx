@@ -174,11 +174,13 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       let childId: number;
 
       if (rel.relationship_type === 'PARENT') {
+        // PARENT: person_id IS the child, related_person_id IS the parent
         childId = rel.person_id;
         parentId = rel.related_person_id;
       } else if (rel.relationship_type === 'CHILD') {
-        parentId = rel.person_id;
-        childId = rel.related_person_id;
+        // CHILD: person_id IS the child, related_person_id IS the parent
+        childId = rel.person_id;
+        parentId = rel.related_person_id;
       } else {
         childId = rel.person_id;
         parentId = rel.related_person_id;
@@ -292,12 +294,9 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       const childrenMap = new Map<number, number[]>();
       relationships.forEach((rel) => {
         if (rel.relationship_type === 'SPOUSE' || rel.status === 'REJECTED') return;
-        let pId = rel.related_person_id;
-        let cId = rel.person_id;
-        if (rel.relationship_type === 'CHILD') {
-          pId = rel.person_id;
-          cId = rel.related_person_id;
-        }
+        // For both PARENT and CHILD: person_id=child, related_person_id=parent
+        const pId = rel.related_person_id;
+        const cId = rel.person_id;
         if (!childrenMap.has(pId)) childrenMap.set(pId, []);
         const arr = childrenMap.get(pId)!;
         if (!arr.includes(cId)) arr.push(cId);
