@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Person, Relationship } from '../types';
 import { createClient } from '../lib/supabase/client';
-import { Download, Maximize, Minimize } from 'lucide-react';
+import { Download, Maximize, Minimize, RotateCw, ZoomIn, ZoomOut, RefreshCw, Eye } from 'lucide-react';
+import { PersonProfileModal } from './PersonProfileModal';
 
 // ===== Tree Node for SVG rendering =====
 interface TreeNode {
@@ -39,6 +40,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [isFullscreenState, setIsFullscreenState] = useState(false);
+  const [selectedPersonForModal, setSelectedPersonForModal] = useState<Person | null>(null);
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -68,9 +70,10 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   const [collapsedNodes, setCollapsedNodes] = useState<Set<number>>(new Set());
 
   // Controls
-  const [arcAngle, setArcAngle] = useState(180);
-  const [branchLength, setBranchLength] = useState(120);
-  const [zoom, setZoom] = useState(1);
+  const [arcAngle, setArcAngle] = useState(360); // Default to full 360° circle
+  const [rotationDeg, setRotationDeg] = useState(0); // Tree rotation angle
+  const [branchLength, setBranchLength] = useState(130); // Radial distance per generation
+  const [zoom, setZoom] = useState(0.85);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
 
@@ -79,6 +82,13 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   const dragStartRef = useRef({ x: 0, y: 0 });
   const panStartRef = useRef({ x: 0, y: 0 });
   const hasMovedRef = useRef(false);
+
+  // Persons Map for quick lookup
+  const personsMap = useMemo(() => {
+    const map = new Map<number, Person>();
+    persons.forEach((p) => map.set(p.id, p));
+    return map;
+  }, [persons]);
 
   // ===== Fetch data =====
   useEffect(() => {
@@ -92,7 +102,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Try API first
         let fetchedPersons: Person[] = [];
         let fetchedRels: Relationship[] = [];
 
@@ -106,7 +115,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 const relType = e.data?.relationship_type || (e.style?.stroke === '#ec4899' ? 'SPOUSE' : 'PARENT');
                 const isParentRel = relType === 'PARENT';
                 return {
-                  id: parseInt(e.id.replace('e-', ''), 10) || Date.now(),
+                  id: parseInt(String(e.id).replace('e-', ''), 10) || Date.now(),
                   person_id: isParentRel ? parseInt(e.target, 10) : parseInt(e.source, 10),
                   related_person_id: isParentRel ? parseInt(e.source, 10) : parseInt(e.target, 10),
                   relationship_type: relType,
@@ -144,14 +153,14 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       }
     };
     fetchData();
-  }, []);
+  }, [customPersons, customRelationships]);
 
   // ===== Build hierarchical tree from flat data =====
   const buildTree = useCallback((): TreeNode | null => {
     if (persons.length === 0) return null;
 
-    const personsMap = new Map<number, Person>();
-    persons.forEach((p) => personsMap.set(p.id, p));
+    const pMap = new Map<number, Person>();
+    persons.forEach((p) => pMap.set(p.id, p));
 
     // Build parent->children map from PARENT/CHILD relationships
     const childrenMap = new Map<number, number[]>();
@@ -175,7 +184,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         parentId = rel.related_person_id;
       }
 
-      if (!personsMap.has(parentId) || !personsMap.has(childId)) return;
+      if (!pMap.has(parentId) || !pMap.has(childId)) return;
 
       if (!childrenMap.has(parentId)) childrenMap.set(parentId, []);
       const arr = childrenMap.get(parentId)!;
@@ -184,11 +193,32 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     });
 
     // Find root ancestors (persons with no parent)
-    const rootIds = persons
-      .filter((p) => !hasParent.has(p.id))
-      .map((p) => p.id);
+    let rootIds = persons.filter((p) => !hasParent.has(p.id)).map((p) => p.id);
 
-    if (rootIds.length === 0) return null;
+    // If initialFocusPersonId is specified and exists, use it as focus or find its top root
+    if (initialFocusPersonId && pMap.has(initialFocusPersonId)) {
+      let current = initialFocusPersonId;
+      const findRoot = (currId: number, visited = new Set<number>()): number => {
+        if (visited.has(currId)) return currId;
+        visited.add(currId);
+        for (const rel of relationships) {
+          if (rel.status === 'REJECTED' || rel.relationship_type === 'SPOUSE') continue;
+          if (rel.relationship_type === 'PARENT' && rel.person_id === currId) {
+            return findRoot(rel.related_person_id, visited);
+          }
+          if (rel.relationship_type === 'CHILD' && rel.related_person_id === currId) {
+            return findRoot(rel.person_id, visited);
+          }
+        }
+        return currId;
+      };
+      const topRoot = findRoot(current);
+      if (topRoot) rootIds = [topRoot];
+    }
+
+    if (rootIds.length === 0 && persons.length > 0) {
+      rootIds = [persons[0].id];
+    }
 
     // Build tree recursively
     const visited = new Set<number>();
@@ -196,7 +226,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       if (visited.has(id)) return null;
       visited.add(id);
 
-      const person = personsMap.get(id);
+      const person = pMap.get(id);
       if (!person) return null;
 
       const childIds = childrenMap.get(id) || [];
@@ -227,17 +257,16 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       };
     };
 
-    // If single root, use it directly
     if (rootIds.length === 1) {
       return buildNode(rootIds[0], 0);
     }
 
-    // Multiple roots: create a virtual root
+    // Virtual root for multiple top ancestors
     const virtualRoot: TreeNode = {
       id: -1,
       person: {
         id: -1,
-        first_name: '',
+        first_name: 'أصل الشجرة',
         gender: 'MALE',
         is_alive: false,
         created_at: '',
@@ -260,67 +289,57 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     virtualRoot.leafCount = virtualRoot.children.reduce((s, c) => s + c.leafCount, 0);
 
     return virtualRoot;
-  }, [persons, relationships, collapsedNodes]);
+  }, [persons, relationships, collapsedNodes, initialFocusPersonId]);
 
-  // ===== Helper to count total descendants of a person (children, grandchildren, etc.) =====
-  const getDescendantsCount = useCallback((personId: number): number => {
-    const childrenMap = new Map<number, number[]>();
-    relationships.forEach((rel) => {
-      if (rel.relationship_type === 'SPOUSE') return;
-      if (rel.status === 'REJECTED') return;
+  // ===== Helper to count total descendants =====
+  const getDescendantsCount = useCallback(
+    (personId: number): number => {
+      const childrenMap = new Map<number, number[]>();
+      relationships.forEach((rel) => {
+        if (rel.relationship_type === 'SPOUSE' || rel.status === 'REJECTED') return;
+        let pId = rel.related_person_id;
+        let cId = rel.person_id;
+        if (rel.relationship_type === 'CHILD') {
+          pId = rel.person_id;
+          cId = rel.related_person_id;
+        }
+        if (!childrenMap.has(pId)) childrenMap.set(pId, []);
+        const arr = childrenMap.get(pId)!;
+        if (!arr.includes(cId)) arr.push(cId);
+      });
 
-      let parentId: number;
-      let childId: number;
+      const visited = new Set<number>();
+      const countKids = (pId: number): number => {
+        if (visited.has(pId)) return 0;
+        visited.add(pId);
+        const kids = childrenMap.get(pId) || [];
+        let total = kids.length;
+        for (const kId of kids) {
+          total += countKids(kId);
+        }
+        return total;
+      };
 
-      if (rel.relationship_type === 'PARENT') {
-        childId = rel.person_id;
-        parentId = rel.related_person_id;
-      } else if (rel.relationship_type === 'CHILD') {
-        parentId = rel.person_id;
-        childId = rel.related_person_id;
-      } else {
-        childId = rel.person_id;
-        parentId = rel.related_person_id;
-      }
+      return countKids(personId);
+    },
+    [relationships]
+  );
 
-      if (!childrenMap.has(parentId)) {
-        childrenMap.set(parentId, []);
-      }
-      const arr = childrenMap.get(parentId)!;
-      if (!arr.includes(childId)) {
-        arr.push(childId);
-      }
-    });
-
-    const visited = new Set<number>();
-    const countKids = (pId: number): number => {
-      if (visited.has(pId)) return 0;
-      visited.add(pId);
-      
-      const kids = childrenMap.get(pId) || [];
-      let total = kids.length;
-      for (const kidId of kids) {
-        total += countKids(kidId);
-      }
-      return total;
-    };
-
-    return countKids(personId);
-  }, [relationships]);
-
-  // ===== Compute radial positions =====
+  // ===== Compute radial positions (Strict Concentric Layout) =====
   const computeLayout = useCallback(
     (root: TreeNode, centerX: number, centerY: number) => {
       const arcRad = (arcAngle * Math.PI) / 180;
-      // Semi-circle: start from bottom-left going to bottom-right, arching upward
-      // For 180°: angles go from 3π/2 - π/2 = π to 3π/2 + π/2 = 2π, i.e. bottom semicircle inverted
-      // We want the tree to fan UPWARD from the bottom, so:
-      // Start angle: π + (π - arcRad)/2 (left side)
-      // End angle: startAngle + arcRad (right side)
-      const startAngle = Math.PI / 2 - arcRad / 2; // fan upward
-      const endAngle = Math.PI / 2 + arcRad / 2;
+      const rotRad = (rotationDeg * Math.PI) / 180;
 
-      // Root at bottom center
+      // Start and end angles according to arcAngle and rotationDeg
+      let startAngle = -Math.PI / 2 + rotRad;
+      let endAngle = startAngle + arcRad;
+
+      if (arcAngle === 360) {
+        startAngle = rotRad;
+        endAngle = rotRad + 2 * Math.PI;
+      }
+
       root.x = centerX;
       root.y = centerY;
       root.radius = 0;
@@ -328,14 +347,16 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       root.angleEnd = endAngle;
       root.angleMid = (startAngle + endAngle) / 2;
 
+      // Recursive sector partitioning for subtrees
       const layoutNode = (node: TreeNode, aStart: number, aEnd: number, depth: number) => {
         node.angleStart = aStart;
         node.angleEnd = aEnd;
         node.angleMid = (aStart + aEnd) / 2;
         node.radius = depth * branchLength;
-        // Convert polar to Cartesian (y-axis inverted: up is negative)
+
+        // Polar to Cartesian conversion
         node.x = centerX + node.radius * Math.cos(node.angleMid);
-        node.y = centerY - node.radius * Math.sin(node.angleMid);
+        node.y = centerY + node.radius * Math.sin(node.angleMid);
 
         if (node.children.length === 0) return;
 
@@ -351,10 +372,21 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           layoutNode(child, childStart, childEnd, depth + 1);
           currentAngle = childEnd;
         });
+
+        // Recenter parent angle at exact midpoint of its children
+        if (node.children.length > 0) {
+          const firstChildMid = node.children[0].angleMid;
+          const lastChildMid = node.children[node.children.length - 1].angleMid;
+          node.angleMid = (firstChildMid + lastChildMid) / 2;
+          if (depth > 0) {
+            node.x = centerX + node.radius * Math.cos(node.angleMid);
+            node.y = centerY + node.radius * Math.sin(node.angleMid);
+          }
+        }
       };
 
       if (root.id === -1) {
-        // Virtual root: layout children as if they're at depth 0
+        // Virtual root
         const totalLeaves = root.children.reduce((s, c) => s + c.leafCount, 0);
         let currentAngle = startAngle;
         const wedge = endAngle - startAngle;
@@ -369,22 +401,9 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         });
       } else {
         layoutNode(root, startAngle, endAngle, 0);
-        // Now shift children to start from depth 1
-        const relayout = (node: TreeNode, depth: number) => {
-          node.radius = depth * branchLength;
-          if (depth === 0) {
-            node.x = centerX;
-            node.y = centerY;
-          } else {
-            node.x = centerX + node.radius * Math.cos(node.angleMid);
-            node.y = centerY - node.radius * Math.sin(node.angleMid);
-          }
-          node.children.forEach((c) => relayout(c, depth + 1));
-        };
-        relayout(root, 0);
       }
     },
-    [arcAngle, branchLength]
+    [arcAngle, rotationDeg, branchLength]
   );
 
   // ===== Collect all nodes flat =====
@@ -396,30 +415,40 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     return result;
   };
 
-  // ===== Generate SVG branch path (curved thick branch) =====
+  // ===== Generate SVG smooth polar cubic Bezier branch path =====
   const generateBranchPath = (parent: TreeNode, child: TreeNode, centerX: number, centerY: number): string => {
-    // Quadratic bezier from parent to child, curving through a control point
     const px = parent.x;
     const py = parent.y;
     const cx = child.x;
     const cy = child.y;
 
-    // Control point: at child's radius but at parent's angle
-    const midRadius = (parent.radius + child.radius) / 2;
-    const ctrlX = centerX + midRadius * Math.cos(child.angleMid);
-    const ctrlY = centerY - midRadius * Math.sin(child.angleMid);
+    if (parent.radius === 0) {
+      // Line from center to first generation
+      return `M ${px} ${py} L ${cx} ${cy}`;
+    }
 
-    return `M ${px} ${py} Q ${ctrlX} ${ctrlY} ${cx} ${cy}`;
+    // Midpoint radius between parent ring and child ring
+    const midRadius = (parent.radius + child.radius) / 2;
+
+    // Control point 1: Extends along parent's radial angle
+    const ctrl1X = centerX + midRadius * Math.cos(parent.angleMid);
+    const ctrl1Y = centerY + midRadius * Math.sin(parent.angleMid);
+
+    // Control point 2: Extends along child's radial angle
+    const ctrl2X = centerX + midRadius * Math.cos(child.angleMid);
+    const ctrl2Y = centerY + midRadius * Math.sin(child.angleMid);
+
+    // Smooth Cubic Bezier Arc
+    return `M ${px} ${py} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${cx} ${cy}`;
   };
 
-  // ===== Render =====
+  // ===== Render Calculations =====
   const treeRoot = buildTree();
 
-  const canvasWidth = 3000;
-  const canvasHeight = 3000;
+  const canvasWidth = 3200;
+  const canvasHeight = 3200;
   const centerX = canvasWidth / 2;
-  // When arc > 180°, root moves to center so full circle renders properly
-  const centerY = arcAngle > 180 ? canvasHeight / 2 : canvasHeight - 150;
+  const centerY = canvasHeight / 2;
 
   if (treeRoot) {
     computeLayout(treeRoot, centerX, centerY);
@@ -427,7 +456,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
   const allNodes = treeRoot ? collectNodes(treeRoot).filter((n) => n.id !== -1) : [];
 
-  // Collect all parent-child pairs for branches
   const branches: { parent: TreeNode; child: TreeNode }[] = [];
   const collectBranches = (node: TreeNode) => {
     node.children.forEach((child) => {
@@ -439,33 +467,29 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
   if (treeRoot) collectBranches(treeRoot);
 
-  // Max depth for color gradient
   const maxDepth = allNodes.reduce((m, n) => Math.max(m, n.depth), 0);
 
-  // Branch color by depth
+  // Branch styling
   const getBranchColor = (depth: number): string => {
     const colors = [
-      '#8B6914', // dark gold trunk
-      '#A0842B',
-      '#B59A42',
-      '#C8AD59',
-      '#D4BE6F',
-      '#DFCF86',
-      '#E8D99D',
-      '#9EC7A3',
-      '#79B586',
-      '#5BA36A',
+      '#10b981', // Emerald trunk
+      '#059669',
+      '#047857',
+      '#0f766e',
+      '#0284c7',
+      '#2563eb',
+      '#4f46e5',
+      '#7c3aed',
+      '#9333ea',
+      '#c026d3',
     ];
     return colors[Math.min(depth, colors.length - 1)];
   };
 
-  // Branch thickness by depth (moderate at root, thin at leaves)
   const getBranchWidth = (depth: number): number => {
-    const base = 5;
-    return Math.max(1, base - depth * 0.5);
+    return Math.max(1.5, 4.5 - depth * 0.5);
   };
 
-  // Node color by gender
   const getNodeColor = (person: Person): string => {
     return person.gender === 'MALE' ? '#10b981' : '#ec4899';
   };
@@ -475,7 +499,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
 
   // Toggle collapse
-  const toggleCollapse = (id: number) => {
+  const toggleCollapse = (id: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setCollapsedNodes((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -487,8 +512,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   // Mouse wheel zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.08 : 0.08;
-    setZoom((prev) => Math.max(0.1, Math.min(5, prev + delta)));
+    const delta = e.deltaY > 0 ? -0.06 : 0.06;
+    setZoom((prev) => Math.max(0.15, Math.min(4, prev + delta)));
   };
 
   // Pan handlers
@@ -505,8 +530,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     if (isDragging) {
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
-      
-      // Only recognize drag if mouse moved more than 4px
+
       if (hasMovedRef.current || Math.sqrt(dx * dx + dy * dy) > 4) {
         hasMovedRef.current = true;
         setPanX(panStartRef.current.x + dx);
@@ -519,37 +543,36 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     setIsDragging(false);
   };
 
-  // Fit to view
   const fitView = () => {
-    setZoom(0.5);
+    setZoom(0.85);
     setPanX(0);
     setPanY(0);
+    setRotationDeg(0);
+    setArcAngle(360);
   };
 
-  // Export to SVG
+  // Export SVG
   const exportToSVG = () => {
     if (!svgRef.current) return;
-    
     try {
       const svgElement = svgRef.current;
       const serializer = new XMLSerializer();
       let source = serializer.serializeToString(svgElement);
-      
-      // Inject required namespaces if not present
+
       if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
         source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
       }
       if (!source.match(/^<svg[^>]+xmlns:xlink="http:\/\/www\.w3\.org\/1999\/xlink"/)) {
         source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
       }
-      
+
       source = '<?xml version="1.0" encoding="utf-8"?>\n' + source;
-      
+
       const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const downloadLink = document.createElement('a');
       downloadLink.href = url;
-      downloadLink.download = `family_tree_${Date.now()}.svg`;
+      downloadLink.download = `radial_family_tree_${Date.now()}.svg`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
@@ -559,13 +582,24 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     }
   };
 
+  // Generation names helper
+  const getGenLabel = (d: number): string => {
+    if (d === 0) return 'أصل الشجرة (المركز)';
+    if (d === 1) return 'الجيل الأول (الأبناء)';
+    if (d === 2) return 'الجيل الثاني (الأحفاد)';
+    if (d === 3) return 'الجيل الثالث';
+    if (d === 4) return 'الجيل الرابع';
+    if (d === 5) return 'الجيل الخامس';
+    return `الجيل ${d}`;
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-slate-950 dir-rtl">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
           <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-            جاري تحميل الشجرة الدائرية...
+            جاري بناء وترتيب الشجرة الدائرية المتراكزة...
           </span>
         </div>
       </div>
@@ -573,7 +607,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="relative w-full h-screen overflow-hidden bg-slate-950 text-slate-100">
       {/* ===== SVG Canvas ===== */}
       <div
         ref={containerRef}
@@ -592,207 +626,274 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           className="select-none"
           style={{
             transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
-            transformOrigin: '50% 100%',
+            transformOrigin: '50% 50%',
           }}
         >
-          {/* Background generation rings */}
+          <defs>
+            {/* Center glow radial gradient */}
+            <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#022c22" stopOpacity="0" />
+            </radialGradient>
+            {/* Filter glow for hovered nodes */}
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Central background glow */}
+          <circle cx={centerX} cy={centerY} r={branchLength * 1.5} fill="url(#centerGlow)" />
+
+          {/* ===== Concentric Generational Rings ===== */}
           {Array.from({ length: maxDepth + 1 }, (_, i) => i).map((depth) => {
             if (depth === 0) return null;
             const r = depth * branchLength;
             return (
-              <circle
-                key={`ring-${depth}`}
-                cx={centerX}
-                cy={centerY}
-                r={r}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={0.5}
-                className="text-slate-300 dark:text-slate-800"
-                opacity={0.4}
-                strokeDasharray="6,6"
-              />
+              <g key={`ring-group-${depth}`}>
+                <circle
+                  cx={centerX}
+                  cy={centerY}
+                  r={r}
+                  fill="none"
+                  stroke="#334155"
+                  strokeWidth={1}
+                  strokeDasharray="4,6"
+                  opacity={0.5}
+                />
+                {/* Generation Label Tag at the top of ring */}
+                <rect
+                  x={centerX - 60}
+                  y={centerY - r - 11}
+                  width={120}
+                  height={22}
+                  rx={11}
+                  fill="#0f172a"
+                  stroke="#334155"
+                  strokeWidth={1}
+                />
+                <text
+                  x={centerX}
+                  y={centerY - r + 4}
+                  textAnchor="middle"
+                  fill="#94a3b8"
+                  fontSize={10.5}
+                  fontWeight="bold"
+                  fontFamily="Cairo, sans-serif"
+                >
+                  {getGenLabel(depth)}
+                </text>
+              </g>
             );
           })}
 
-          {/* Branches (thick curved lines) */}
+          {/* ===== Smooth Polar Bezier Branches ===== */}
           {branches.map(({ parent, child }, i) => {
             const parentDepth = parent.id === -1 ? 0 : parent.depth;
+            const isHoveredBranch = hoveredNode === parent.id || hoveredNode === child.id;
+
             return (
               <path
                 key={`branch-${i}`}
                 d={generateBranchPath(parent, child, centerX, centerY)}
                 fill="none"
-                stroke={getBranchColor(parentDepth)}
-                strokeWidth={getBranchWidth(parentDepth)}
+                stroke={isHoveredBranch ? '#34d399' : getBranchColor(parentDepth)}
+                strokeWidth={isHoveredBranch ? getBranchWidth(parentDepth) + 2 : getBranchWidth(parentDepth)}
                 strokeLinecap="round"
-                opacity={0.85}
-                className="transition-opacity duration-200"
+                opacity={isHoveredBranch ? 1 : 0.8}
+                className="transition-all duration-300"
               />
             );
           })}
 
-          {/* Node circles + names */}
+          {/* ===== Nodes & Cards ===== */}
           {allNodes.map((node) => {
             const p = node.person;
             const isHovered = hoveredNode === node.id;
-            const hasKids = (node.children.length > 0) || collapsedNodes.has(node.id);
+            const isRootNode = node.depth === 0;
+            const hasChildren = node.children.length > 0 || collapsedNodes.has(node.id);
             const isCollapsed = collapsedNodes.has(node.id);
-            const nodeRadius = node.depth === 0 ? 20 : 10;
+            const nodeRadius = isRootNode ? 24 : 12;
 
-            // Label rotation: align text along the radial direction
-            const angleDeg = (node.angleMid * 180) / Math.PI;
+            // Compute angle in degrees for smart text rotation
+            let angleDeg = ((node.angleMid * 180) / Math.PI) % 360;
+            if (angleDeg < 0) angleDeg += 360;
+
+            // Flip text if on left half of circle so it's always right-side-up
             const flipText = angleDeg > 90 && angleDeg < 270;
             const textRotation = flipText ? angleDeg - 180 : angleDeg;
 
             return (
               <g
                 key={`node-${node.id}`}
-                className="cursor-pointer"
+                className="cursor-pointer group"
                 onMouseEnter={() => setHoveredNode(node.id)}
                 onMouseLeave={() => setHoveredNode(null)}
-                onClick={() => hasKids && toggleCollapse(node.id)}
+                onClick={() => setSelectedPersonForModal(p)}
               >
-                {/* Node Circle */}
+                {/* Node Outer Circle/Glow */}
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={isHovered ? nodeRadius + 4 : nodeRadius}
+                  r={isHovered ? nodeRadius + 6 : nodeRadius}
                   fill={getNodeBg(p)}
                   stroke={getNodeColor(p)}
-                  strokeWidth={node.depth === 0 ? 4 : 2.5}
+                  strokeWidth={isRootNode ? 4 : 2.5}
+                  filter={isHovered ? 'url(#glow)' : undefined}
                   className="transition-all duration-200"
                 />
 
+                {/* Root node star icon indicator */}
+                {isRootNode && (
+                  <text
+                    x={node.x}
+                    y={node.y + 6}
+                    textAnchor="middle"
+                    fill="#f59e0b"
+                    fontSize={18}
+                    fontWeight="bold"
+                  >
+                    ★
+                  </text>
+                )}
+
                 {/* Deceased indicator */}
-                {!p.is_alive && (
+                {!p.is_alive && !isRootNode && (
                   <circle
-                    cx={node.x + nodeRadius * 0.6}
-                    cy={node.y - nodeRadius * 0.6}
-                    r={3}
+                    cx={node.x + nodeRadius * 0.7}
+                    cy={node.y - nodeRadius * 0.7}
+                    r={3.5}
                     fill="#a1a1aa"
-                    stroke="white"
+                    stroke="#090d16"
                     strokeWidth={1}
                   />
                 )}
 
-                {/* Collapse indicator */}
-                {isCollapsed && (
-                  <text
-                    x={node.x}
-                    y={node.y + 4}
-                    textAnchor="middle"
-                    fill="white"
-                    fontSize={12}
-                    fontWeight="bold"
-                  >
-                    +
-                  </text>
+                {/* Collapse / Expand Toggle Button */}
+                {hasChildren && !isRootNode && (
+                  <g onClick={(e) => toggleCollapse(node.id, e)} className="hover:scale-125 transition-transform">
+                    <circle
+                      cx={node.x - nodeRadius * 0.7}
+                      cy={node.y + nodeRadius * 0.7}
+                      r={7}
+                      fill={isCollapsed ? '#f59e0b' : '#334155'}
+                      stroke="#ffffff"
+                      strokeWidth={1.5}
+                    />
+                    <text
+                      x={node.x - nodeRadius * 0.7}
+                      y={node.y + nodeRadius * 0.7 + 3.5}
+                      textAnchor="middle"
+                      fill="#ffffff"
+                      fontSize={10}
+                      fontWeight="bold"
+                    >
+                      {isCollapsed ? '+' : '-'}
+                    </text>
+                  </g>
                 )}
 
-                {/* Name label - rotated along radial direction */}
-                <g transform={`translate(${node.x}, ${node.y}) rotate(${-textRotation})`}>
+                {/* Name Label Badge (Rotated along radial angle) */}
+                <g transform={`translate(${node.x}, ${node.y}) rotate(${textRotation})`}>
                   {(() => {
-                    const name = p.first_name || '';
-                    const labelWidth = Math.max(50, name.length * 8 + 16);
-                    const offset = nodeRadius + 6;
-                    
+                    const name = p.first_name || 'فرد';
+                    const labelWidth = Math.max(55, name.length * 8 + 18);
+                    const offset = nodeRadius + 8;
+
                     const rectX = flipText ? -offset - labelWidth : offset;
                     const textX = flipText ? -offset - labelWidth / 2 : offset + labelWidth / 2;
 
                     return (
-                      <>
-                        {/* Background pill for name */}
+                      <g className="transition-all duration-200">
+                        {/* Pill Background */}
                         <rect
                           x={rectX}
-                          y={-10}
+                          y={-11}
                           width={labelWidth}
-                          height={20}
-                          rx={8}
-                          fill={isHovered ? getNodeColor(p) : 'white'}
-                          fillOpacity={isHovered ? 0.95 : 0.9}
+                          height={22}
+                          rx={11}
+                          fill={isHovered ? getNodeColor(p) : '#0f172a'}
+                          fillOpacity={0.95}
                           stroke={getNodeColor(p)}
-                          strokeWidth={1.5}
-                          className="dark:fill-slate-900 dark:fill-opacity-90 shadow-sm"
+                          strokeWidth={isHovered ? 2 : 1.5}
+                          className="shadow-lg"
                         />
+                        {/* Person Name Text */}
                         <text
                           x={textX}
                           y={4}
                           textAnchor="middle"
-                          fill={isHovered ? 'white' : '#1e293b'}
-                          fontSize={node.depth === 0 ? 12 : 10.5}
+                          fill={isHovered ? '#ffffff' : '#f8fafc'}
+                          fontSize={isRootNode ? 12 : 11}
                           fontWeight="700"
                           fontFamily="Cairo, sans-serif"
-                          className="dark:fill-slate-100 select-none"
+                          className="select-none"
                         >
                           {name}
                         </text>
-                      </>
+                      </g>
                     );
                   })()}
                 </g>
 
-                {/* Hover tooltip with full info */}
+                {/* Hover Full Card Tooltip */}
                 {isHovered && (() => {
                   const fullName = [p.first_name, p.father_name, p.grand_father_name, p.family_name]
                     .filter(Boolean)
                     .join(' ');
-                  const tooltipWidth = Math.max(200, fullName.length * 7 + 35);
+                  const tooltipWidth = Math.max(220, fullName.length * 7.5 + 30);
                   const descendantCount = getDescendantsCount(node.id);
 
                   return (
-                    <g>
+                    <g className="pointer-events-none">
                       <rect
                         x={node.x - tooltipWidth / 2}
-                        y={node.y - nodeRadius - 80}
+                        y={node.y - nodeRadius - 85}
                         width={tooltipWidth}
-                        height={66}
-                        rx={12}
-                        fill="white"
+                        height={72}
+                        rx={14}
+                        fill="#090d16"
                         fillOpacity={0.98}
                         stroke={getNodeColor(p)}
-                        strokeWidth={2.5}
-                        className="dark:fill-slate-900 shadow-xl"
+                        strokeWidth={2}
+                        className="shadow-2xl"
                       />
                       {/* Name */}
                       <text
                         x={node.x}
-                        y={node.y - nodeRadius - 58}
+                        y={node.y - nodeRadius - 62}
                         textAnchor="middle"
-                        fill="#0f172a"
-                        fontSize={12.5}
+                        fill="#ffffff"
+                        fontSize={13}
                         fontWeight="800"
                         fontFamily="Cairo, sans-serif"
-                        direction="rtl"
-                        className="dark:fill-white"
                       >
                         {fullName}
                       </text>
                       {/* Status / Birth Year */}
                       <text
                         x={node.x}
-                        y={node.y - nodeRadius - 38}
+                        y={node.y - nodeRadius - 42}
                         textAnchor="middle"
-                        fill="#64748b"
-                        fontSize={9.5}
+                        fill="#94a3b8"
+                        fontSize={10}
                         fontFamily="Cairo, sans-serif"
-                        className="dark:fill-slate-400"
                       >
-                        {p.is_alive ? '🟢 حي' : '⚫ متوفى'}{' '}
+                        {p.gender === 'MALE' ? '👨 ذكر' : '👩 أنثى'} •{' '}
+                        {p.is_alive ? '🟢 حي يرزق' : '⚫ متوفى'}{' '}
                         {p.birth_year ? `• مواليد ${p.birth_year}` : ''}
                       </text>
                       {/* Descendants Count */}
                       <text
                         x={node.x}
-                        y={node.y - nodeRadius - 20}
+                        y={node.y - nodeRadius - 22}
                         textAnchor="middle"
-                        fill="#059669"
-                        fontSize={10.5}
+                        fill="#34d399"
+                        fontSize={11}
                         fontWeight="bold"
                         fontFamily="Cairo, sans-serif"
-                        className="dark:fill-emerald-400"
                       >
-                        {`عدد الذرية: ${descendantCount} فرد`}
+                        {`إجمالي الذرية: ${descendantCount} فرد | الجيل ${node.depth}`}
                       </text>
                     </g>
                   );
@@ -801,134 +902,169 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             );
           })}
 
-          {/* Root ancestor name at center bottom */}
+          {/* Center Root Ancestor Highlight Card */}
           {treeRoot && treeRoot.id !== -1 && (
-            <text
-              x={centerX}
-              y={centerY + 40}
-              textAnchor="middle"
-              fill="#10b981"
-              fontSize={18}
-              fontWeight="900"
-              fontFamily="Cairo, sans-serif"
-            >
-              {treeRoot.person.first_name} {treeRoot.person.father_name || ''}{' '}
-              {treeRoot.person.family_name || ''}
-            </text>
+            <g transform={`translate(${centerX}, ${centerY + 50})`}>
+              <rect
+                x={-120}
+                y={-18}
+                width={240}
+                height={36}
+                rx={18}
+                fill="#064e3b"
+                stroke="#10b981"
+                strokeWidth={2}
+                className="shadow-2xl"
+              />
+              <text
+                x={0}
+                y={5}
+                textAnchor="middle"
+                fill="#ecfdf5"
+                fontSize={14}
+                fontWeight="900"
+                fontFamily="Cairo, sans-serif"
+              >
+                👑 أصل العائلة: {treeRoot.person.first_name} {treeRoot.person.family_name || ''}
+              </text>
+            </g>
           )}
         </svg>
       </div>
 
-      {/* ===== Controls Panel ===== */}
-      <div className={`absolute ${isFs ? 'top-4' : 'top-24'} right-4 z-40 flex flex-col gap-3 w-[220px] dir-rtl transition-all duration-300`}>
-        {/* Sliders */}
-        <div className="p-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-3">
-          <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 border-b border-slate-200 dark:border-slate-800 pb-1.5 flex items-center justify-between">
-            <span>🌳 التحكم بتفرع الشجرة</span>
+      {/* ===== Controls Panel (Top Right) ===== */}
+      <div
+        className={`absolute ${
+          isFs ? 'top-4' : 'top-20'
+        } right-4 z-40 flex flex-col gap-3 w-[240px] dir-rtl transition-all duration-300`}
+      >
+        <div className="p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-800 shadow-2xl flex flex-col gap-3">
+          <h3 className="text-xs font-bold text-emerald-400 border-b border-slate-800 pb-2 flex items-center justify-between">
+            <span>🌳 التحكم بالشجرة الدائرية</span>
+            <button
+              onClick={fitView}
+              title="إعادة ضبط الرؤية"
+              className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
           </h3>
 
           {/* Fullscreen Button */}
           <button
             type="button"
             onClick={toggleFullscreen}
-            className={`w-full py-2 px-3 rounded-xl font-bold text-[11.5px] border transition-all flex items-center justify-center gap-1.5 shadow-sm ${
+            className={`w-full py-2 px-3 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 shadow-sm ${
               isFs
-                ? 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border-amber-500/40'
-                : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border-emerald-500/40'
+                ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40'
+                : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40'
             }`}
           >
-            {isFs ? <Minimize className="w-4 h-4 text-amber-500" /> : <Maximize className="w-4 h-4 text-emerald-500" />}
-            <span>{isFs ? 'إنهاء ملء الشاشة' : 'عرض ملء الشاشة'}</span>
+            {isFs ? <Minimize className="w-4 h-4 text-amber-400" /> : <Maximize className="w-4 h-4 text-emerald-400" />}
+            <span>{isFs ? 'خروج من ملء الشاشة' : 'ملء الشاشة الكاملة'}</span>
           </button>
 
-          {/* Arc Angle */}
+          {/* Rotation Slider */}
           <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-              <span>استدارة الشجرة</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold">{arcAngle}°</span>
+            <div className="flex justify-between text-[11px] font-semibold text-slate-300">
+              <span className="flex items-center gap-1">
+                <RotateCw className="w-3 h-3 text-emerald-400" /> استدارة الدائرة
+              </span>
+              <span className="text-emerald-400 font-bold">{rotationDeg}°</span>
             </div>
             <input
               type="range"
-              min="90"
+              min="0"
+              max="360"
+              step="5"
+              value={rotationDeg}
+              onChange={(e) => setRotationDeg(Number(e.target.value))}
+              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+            />
+          </div>
+
+          {/* Arc Angle Spread */}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-[11px] font-semibold text-slate-300">
+              <span>اتساع المروحة الدائرية</span>
+              <span className="text-emerald-400 font-bold">{arcAngle}°</span>
+            </div>
+            <input
+              type="range"
+              min="180"
               max="360"
               step="10"
               value={arcAngle}
               onChange={(e) => setArcAngle(Number(e.target.value))}
-              className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
             />
           </div>
 
-          {/* Branch Length */}
+          {/* Branch Radius Length */}
           <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-              <span>طول الفرع</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold">{branchLength}px</span>
+            <div className="flex justify-between text-[11px] font-semibold text-slate-300">
+              <span>مسافة دوائر الأجيال</span>
+              <span className="text-emerald-400 font-bold">{branchLength}px</span>
             </div>
             <input
               type="range"
-              min="60"
+              min="70"
               max="250"
               step="10"
               value={branchLength}
               onChange={(e) => setBranchLength(Number(e.target.value))}
-              className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
             />
           </div>
 
           {/* Zoom */}
           <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-              <span>التكبير</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold">{Math.round(zoom * 100)}%</span>
+            <div className="flex justify-between text-[11px] font-semibold text-slate-300">
+              <span className="flex items-center gap-1">
+                <ZoomIn className="w-3 h-3 text-emerald-400" /> التكبير والتصغير
+              </span>
+              <span className="text-emerald-400 font-bold">{Math.round(zoom * 100)}%</span>
             </div>
             <input
               type="range"
-              min="10"
+              min="20"
               max="300"
               step="5"
               value={Math.round(zoom * 100)}
               onChange={(e) => setZoom(Number(e.target.value) / 100)}
-              className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
             />
           </div>
 
-          {/* Reset buttons */}
-          <div className="flex gap-2">
+          {/* Expand all button if collapsed */}
+          {collapsedNodes.size > 0 && (
             <button
-              onClick={fitView}
-              className="flex-1 py-1.5 px-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-500/30 transition-all"
+              onClick={() => setCollapsedNodes(new Set())}
+              className="w-full py-1.5 px-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs border border-amber-500/40 transition-all"
             >
-              ضبط العرض
+              إظهار الفروع المطوية ({collapsedNodes.size})
             </button>
-            {collapsedNodes.size > 0 && (
-              <button
-                onClick={() => setCollapsedNodes(new Set())}
-                className="flex-1 py-1.5 px-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-[11px] border border-amber-500/30 transition-all"
-              >
-                فتح الفروع ({collapsedNodes.size})
-              </button>
-            )}
-          </div>
+          )}
 
           {/* Export SVG Button */}
           <button
             onClick={exportToSVG}
-            className="w-full py-2 px-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold text-[11.5px] border border-blue-500/30 transition-all flex items-center justify-center gap-1.5"
+            className="w-full py-2 px-3 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold text-xs border border-blue-500/40 transition-all flex items-center justify-center gap-1.5"
           >
-            <Download className="w-4.5 h-4.5" />
+            <Download className="w-4 h-4" />
             تصدير الشجرة كـ SVG
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="p-2 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-md text-[10px] text-slate-500 dark:text-slate-400 font-semibold flex justify-around">
+        {/* Live Tree Stats */}
+        <div className="p-2.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-800 shadow-md text-xs text-slate-300 font-semibold flex justify-around">
           <span>👥 {allNodes.length} فرد</span>
-          <span>🌿 {maxDepth} جيل</span>
+          <span>🌿 {maxDepth} أجيال</span>
           <span>🔗 {branches.length} رابطة</span>
         </div>
       </div>
 
-      {/* Prominent Floating Fullscreen Button (Bottom-Left) */}
+      {/* Floating Bottom Action */}
       <button
         type="button"
         onClick={toggleFullscreen}
@@ -941,15 +1077,29 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         {isFs ? (
           <>
             <Minimize className="w-4.5 h-4.5 text-amber-400 animate-pulse" />
-            <span>إنهاء ملء الشاشة</span>
+            <span>خروج من ملء الشاشة</span>
           </>
         ) : (
           <>
             <Maximize className="w-4.5 h-4.5 text-emerald-400 animate-pulse" />
-            <span>عرض ملء الشاشة (Full Screen)</span>
+            <span>عرض ملء الشاشة</span>
           </>
         )}
       </button>
+
+      {/* Person Detail Modal */}
+      {selectedPersonForModal && (
+        <PersonProfileModal
+          isOpen={!!selectedPersonForModal}
+          onClose={() => setSelectedPersonForModal(null)}
+          person={selectedPersonForModal}
+          allPersonsMap={personsMap}
+          relationships={relationships}
+          collapsedNodes={collapsedNodes}
+          onToggleCollapse={(pId) => toggleCollapse(pId)}
+        />
+      )}
     </div>
   );
 };
+
