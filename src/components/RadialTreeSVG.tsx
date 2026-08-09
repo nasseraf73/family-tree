@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Person, Relationship } from '../types';
 import { createClient } from '../lib/supabase/client';
-import { Download, Maximize, Minimize, RotateCw, ZoomIn, ZoomOut, RefreshCw, Eye } from 'lucide-react';
+import { Download, Maximize, Minimize, RotateCw, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
 import { PersonProfileModal } from './PersonProfileModal';
 
 // ===== Tree Node for SVG rendering =====
@@ -70,10 +70,10 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   const [collapsedNodes, setCollapsedNodes] = useState<Set<number>>(new Set());
 
   // Controls
-  const [arcAngle, setArcAngle] = useState(360); // Default to full 360° circle
-  const [rotationDeg, setRotationDeg] = useState(0); // Tree rotation angle
-  const [branchLength, setBranchLength] = useState(130); // Radial distance per generation
-  const [zoom, setZoom] = useState(0.85);
+  const [arcAngle, setArcAngle] = useState(360);
+  const [rotationDeg, setRotationDeg] = useState(0);
+  const [branchLength, setBranchLength] = useState(180); // Base radial distance
+  const [zoom, setZoom] = useState(0.45); // Framed default zoom
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
 
@@ -116,6 +116,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 const isParentRel = relType === 'PARENT';
                 return {
                   id: parseInt(String(e.id).replace('e-', ''), 10) || Date.now(),
+                  // In API edges: e.source is Parent, e.target is Child
                   person_id: isParentRel ? parseInt(e.target, 10) : parseInt(e.source, 10),
                   related_person_id: isParentRel ? parseInt(e.source, 10) : parseInt(e.target, 10),
                   relationship_type: relType,
@@ -167,8 +168,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     const hasParent = new Set<number>();
 
     relationships.forEach((rel) => {
-      if (rel.relationship_type === 'SPOUSE') return;
-      if (rel.status === 'REJECTED') return;
+      if (rel.relationship_type === 'SPOUSE' || rel.status === 'REJECTED') return;
 
       let parentId: number;
       let childId: number;
@@ -192,12 +192,11 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       hasParent.add(childId);
     });
 
-    // Find root ancestors (persons with no parent)
+    // Root ancestors = persons with no parent
     let rootIds = persons.filter((p) => !hasParent.has(p.id)).map((p) => p.id);
 
-    // If initialFocusPersonId is specified and exists, use it as focus or find its top root
+    // If initialFocusPersonId is specified, find top root ancestor for that focus person
     if (initialFocusPersonId && pMap.has(initialFocusPersonId)) {
-      let current = initialFocusPersonId;
       const findRoot = (currId: number, visited = new Set<number>()): number => {
         if (visited.has(currId)) return currId;
         visited.add(currId);
@@ -212,7 +211,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         }
         return currId;
       };
-      const topRoot = findRoot(current);
+      const topRoot = findRoot(initialFocusPersonId);
       if (topRoot) rootIds = [topRoot];
     }
 
@@ -266,7 +265,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       id: -1,
       person: {
         id: -1,
-        first_name: 'أصل الشجرة',
+        first_name: 'أصل الشجرة الجامع',
         gender: 'MALE',
         is_alive: false,
         created_at: '',
@@ -325,13 +324,29 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     [relationships]
   );
 
-  // ===== Compute radial positions (Strict Concentric Layout) =====
+  // ===== Helper: Calculate radius per generation depth =====
+  // Uses exponential scaling so outer generations (which have 90% of population) get huge circumferences
+  const getRadiusForDepth = useCallback(
+    (depth: number): number => {
+      if (depth <= 0) return 0;
+      // Exponential growth curve for radius:
+      // Depth 1: 1.2 * branchLength
+      // Depth 2: 2.6 * branchLength
+      // Depth 3: 4.3 * branchLength
+      // Depth 4: 6.5 * branchLength
+      // Depth 5: 9.0 * branchLength ...
+      const factor = depth === 1 ? 1.2 : 1.2 + Math.pow(depth - 1, 1.25) * 1.4;
+      return factor * branchLength;
+    },
+    [branchLength]
+  );
+
+  // ===== Compute radial positions =====
   const computeLayout = useCallback(
     (root: TreeNode, centerX: number, centerY: number) => {
       const arcRad = (arcAngle * Math.PI) / 180;
       const rotRad = (rotationDeg * Math.PI) / 180;
 
-      // Start and end angles according to arcAngle and rotationDeg
       let startAngle = -Math.PI / 2 + rotRad;
       let endAngle = startAngle + arcRad;
 
@@ -347,12 +362,12 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       root.angleEnd = endAngle;
       root.angleMid = (startAngle + endAngle) / 2;
 
-      // Recursive sector partitioning for subtrees
+      // Recursive sector partitioning
       const layoutNode = (node: TreeNode, aStart: number, aEnd: number, depth: number) => {
         node.angleStart = aStart;
         node.angleEnd = aEnd;
         node.angleMid = (aStart + aEnd) / 2;
-        node.radius = depth * branchLength;
+        node.radius = getRadiusForDepth(depth);
 
         // Polar to Cartesian conversion
         node.x = centerX + node.radius * Math.cos(node.angleMid);
@@ -386,7 +401,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
       };
 
       if (root.id === -1) {
-        // Virtual root
         const totalLeaves = root.children.reduce((s, c) => s + c.leafCount, 0);
         let currentAngle = startAngle;
         const wedge = endAngle - startAngle;
@@ -403,7 +417,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         layoutNode(root, startAngle, endAngle, 0);
       }
     },
-    [arcAngle, rotationDeg, branchLength]
+    [arcAngle, rotationDeg, getRadiusForDepth]
   );
 
   // ===== Collect all nodes flat =====
@@ -423,30 +437,26 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     const cy = child.y;
 
     if (parent.radius === 0) {
-      // Line from center to first generation
       return `M ${px} ${py} L ${cx} ${cy}`;
     }
 
-    // Midpoint radius between parent ring and child ring
     const midRadius = (parent.radius + child.radius) / 2;
 
-    // Control point 1: Extends along parent's radial angle
     const ctrl1X = centerX + midRadius * Math.cos(parent.angleMid);
     const ctrl1Y = centerY + midRadius * Math.sin(parent.angleMid);
 
-    // Control point 2: Extends along child's radial angle
     const ctrl2X = centerX + midRadius * Math.cos(child.angleMid);
     const ctrl2Y = centerY + midRadius * Math.sin(child.angleMid);
 
-    // Smooth Cubic Bezier Arc
     return `M ${px} ${py} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${cx} ${cy}`;
   };
 
   // ===== Render Calculations =====
   const treeRoot = buildTree();
 
-  const canvasWidth = 3200;
-  const canvasHeight = 3200;
+  // Canvas size enlarged to 5000x5000 to accommodate wide outer generational circumferences
+  const canvasWidth = 5500;
+  const canvasHeight = 5500;
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
 
@@ -487,7 +497,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
 
   const getBranchWidth = (depth: number): number => {
-    return Math.max(1.5, 4.5 - depth * 0.5);
+    return Math.max(1.5, 4.5 - depth * 0.4);
   };
 
   const getNodeColor = (person: Person): string => {
@@ -498,7 +508,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     return person.gender === 'MALE' ? '#064e3b' : '#831843';
   };
 
-  // Toggle collapse
   const toggleCollapse = (id: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setCollapsedNodes((prev) => {
@@ -509,14 +518,12 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     });
   };
 
-  // Mouse wheel zoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.06 : 0.06;
-    setZoom((prev) => Math.max(0.15, Math.min(4, prev + delta)));
+    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+    setZoom((prev) => Math.max(0.1, Math.min(3.5, prev + delta)));
   };
 
-  // Pan handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 0) {
       setIsDragging(true);
@@ -544,14 +551,13 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
 
   const fitView = () => {
-    setZoom(0.85);
+    setZoom(0.45);
     setPanX(0);
     setPanY(0);
     setRotationDeg(0);
     setArcAngle(360);
   };
 
-  // Export SVG
   const exportToSVG = () => {
     if (!svgRef.current) return;
     try {
@@ -582,9 +588,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     }
   };
 
-  // Generation names helper
   const getGenLabel = (d: number): string => {
-    if (d === 0) return 'أصل الشجرة (المركز)';
+    if (d === 0) return 'أصل العائلة (المركز)';
     if (d === 1) return 'الجيل الأول (الأبناء)';
     if (d === 2) return 'الجيل الثاني (الأحفاد)';
     if (d === 3) return 'الجيل الثالث';
@@ -595,10 +600,10 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-slate-950 dir-rtl">
+      <div className="flex h-screen w-screen items-center justify-center bg-slate-950 dir-rtl">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+          <span className="text-xs font-bold text-slate-300">
             جاري بناء وترتيب الشجرة الدائرية المتراكزة...
           </span>
         </div>
@@ -607,7 +612,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-slate-950 text-slate-100">
+    <div className="relative w-full h-screen overflow-hidden bg-slate-950 text-slate-100 select-none">
       {/* ===== SVG Canvas ===== */}
       <div
         ref={containerRef}
@@ -630,12 +635,10 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           }}
         >
           <defs>
-            {/* Center glow radial gradient */}
             <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
               <stop offset="100%" stopColor="#022c22" stopOpacity="0" />
             </radialGradient>
-            {/* Filter glow for hovered nodes */}
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="6" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
@@ -648,7 +651,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           {/* ===== Concentric Generational Rings ===== */}
           {Array.from({ length: maxDepth + 1 }, (_, i) => i).map((depth) => {
             if (depth === 0) return null;
-            const r = depth * branchLength;
+            const r = getRadiusForDepth(depth);
             return (
               <g key={`ring-group-${depth}`}>
                 <circle
@@ -657,17 +660,17 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                   r={r}
                   fill="none"
                   stroke="#334155"
-                  strokeWidth={1}
-                  strokeDasharray="4,6"
-                  opacity={0.5}
+                  strokeWidth={1.5}
+                  strokeDasharray="5,7"
+                  opacity={0.45}
                 />
-                {/* Generation Label Tag at the top of ring */}
+                {/* Generation Tag */}
                 <rect
-                  x={centerX - 60}
-                  y={centerY - r - 11}
-                  width={120}
-                  height={22}
-                  rx={11}
+                  x={centerX - 65}
+                  y={centerY - r - 12}
+                  width={130}
+                  height={24}
+                  rx={12}
                   fill="#0f172a"
                   stroke="#334155"
                   strokeWidth={1}
@@ -677,7 +680,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                   y={centerY - r + 4}
                   textAnchor="middle"
                   fill="#94a3b8"
-                  fontSize={10.5}
+                  fontSize={11}
                   fontWeight="bold"
                   fontFamily="Cairo, sans-serif"
                 >
@@ -698,9 +701,9 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 d={generateBranchPath(parent, child, centerX, centerY)}
                 fill="none"
                 stroke={isHoveredBranch ? '#34d399' : getBranchColor(parentDepth)}
-                strokeWidth={isHoveredBranch ? getBranchWidth(parentDepth) + 2 : getBranchWidth(parentDepth)}
+                strokeWidth={isHoveredBranch ? getBranchWidth(parentDepth) + 2.5 : getBranchWidth(parentDepth)}
                 strokeLinecap="round"
-                opacity={isHoveredBranch ? 1 : 0.8}
+                opacity={isHoveredBranch ? 1 : 0.75}
                 className="transition-all duration-300"
               />
             );
@@ -713,13 +716,13 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             const isRootNode = node.depth === 0;
             const hasChildren = node.children.length > 0 || collapsedNodes.has(node.id);
             const isCollapsed = collapsedNodes.has(node.id);
-            const nodeRadius = isRootNode ? 24 : 12;
 
-            // Compute angle in degrees for smart text rotation
+            // Node dot radius adapts to depth
+            const nodeRadius = isRootNode ? 26 : node.depth <= 2 ? 14 : 10;
+
             let angleDeg = ((node.angleMid * 180) / Math.PI) % 360;
             if (angleDeg < 0) angleDeg += 360;
 
-            // Flip text if on left half of circle so it's always right-side-up
             const flipText = angleDeg > 90 && angleDeg < 270;
             const textRotation = flipText ? angleDeg - 180 : angleDeg;
 
@@ -731,19 +734,19 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 onMouseLeave={() => setHoveredNode(null)}
                 onClick={() => setSelectedPersonForModal(p)}
               >
-                {/* Node Outer Circle/Glow */}
+                {/* Node Outer Circle */}
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={isHovered ? nodeRadius + 6 : nodeRadius}
+                  r={isHovered ? nodeRadius + 5 : nodeRadius}
                   fill={getNodeBg(p)}
                   stroke={getNodeColor(p)}
-                  strokeWidth={isRootNode ? 4 : 2.5}
+                  strokeWidth={isRootNode ? 4.5 : 2.5}
                   filter={isHovered ? 'url(#glow)' : undefined}
                   className="transition-all duration-200"
                 />
 
-                {/* Root node star icon indicator */}
+                {/* Root node crown star */}
                 {isRootNode && (
                   <text
                     x={node.x}
@@ -797,8 +800,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 <g transform={`translate(${node.x}, ${node.y}) rotate(${textRotation})`}>
                   {(() => {
                     const name = p.first_name || 'فرد';
-                    const labelWidth = Math.max(55, name.length * 8 + 18);
-                    const offset = nodeRadius + 8;
+                    const labelWidth = Math.max(50, name.length * 7.5 + 16);
+                    const offset = nodeRadius + 7;
 
                     const rectX = flipText ? -offset - labelWidth : offset;
                     const textX = flipText ? -offset - labelWidth / 2 : offset + labelWidth / 2;
@@ -808,10 +811,10 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                         {/* Pill Background */}
                         <rect
                           x={rectX}
-                          y={-11}
+                          y={-10}
                           width={labelWidth}
-                          height={22}
-                          rx={11}
+                          height={20}
+                          rx={10}
                           fill={isHovered ? getNodeColor(p) : '#0f172a'}
                           fillOpacity={0.95}
                           stroke={getNodeColor(p)}
@@ -821,10 +824,10 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                         {/* Person Name Text */}
                         <text
                           x={textX}
-                          y={4}
+                          y={3.5}
                           textAnchor="middle"
                           fill={isHovered ? '#ffffff' : '#f8fafc'}
-                          fontSize={isRootNode ? 12 : 11}
+                          fontSize={isRootNode ? 12 : 10.5}
                           fontWeight="700"
                           fontFamily="Cairo, sans-serif"
                           className="select-none"
@@ -858,7 +861,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                         strokeWidth={2}
                         className="shadow-2xl"
                       />
-                      {/* Name */}
                       <text
                         x={node.x}
                         y={node.y - nodeRadius - 62}
@@ -870,7 +872,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                       >
                         {fullName}
                       </text>
-                      {/* Status / Birth Year */}
                       <text
                         x={node.x}
                         y={node.y - nodeRadius - 42}
@@ -883,7 +884,6 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                         {p.is_alive ? '🟢 حي يرزق' : '⚫ متوفى'}{' '}
                         {p.birth_year ? `• مواليد ${p.birth_year}` : ''}
                       </text>
-                      {/* Descendants Count */}
                       <text
                         x={node.x}
                         y={node.y - nodeRadius - 22}
@@ -904,16 +904,16 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
           {/* Center Root Ancestor Highlight Card */}
           {treeRoot && treeRoot.id !== -1 && (
-            <g transform={`translate(${centerX}, ${centerY + 50})`}>
+            <g transform={`translate(${centerX}, ${centerY + 55})`}>
               <rect
-                x={-120}
-                y={-18}
-                width={240}
-                height={36}
-                rx={18}
+                x={-130}
+                y={-20}
+                width={260}
+                height={40}
+                rx={20}
                 fill="#064e3b"
                 stroke="#10b981"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 className="shadow-2xl"
               />
               <text
@@ -921,7 +921,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 y={5}
                 textAnchor="middle"
                 fill="#ecfdf5"
-                fontSize={14}
+                fontSize={15}
                 fontWeight="900"
                 fontFamily="Cairo, sans-serif"
               >
@@ -1003,13 +1003,13 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           {/* Branch Radius Length */}
           <div className="flex flex-col gap-1">
             <div className="flex justify-between text-[11px] font-semibold text-slate-300">
-              <span>مسافة دوائر الأجيال</span>
+              <span>توسع قطر الدوائر</span>
               <span className="text-emerald-400 font-bold">{branchLength}px</span>
             </div>
             <input
               type="range"
-              min="70"
-              max="250"
+              min="100"
+              max="300"
               step="10"
               value={branchLength}
               onChange={(e) => setBranchLength(Number(e.target.value))}
@@ -1027,7 +1027,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             </div>
             <input
               type="range"
-              min="20"
+              min="10"
               max="300"
               step="5"
               value={Math.round(zoom * 100)}
@@ -1102,4 +1102,5 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     </div>
   );
 };
+
 
