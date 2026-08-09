@@ -76,6 +76,9 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   const [zoom, setZoom] = useState(1.0); // 100% default zoom
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
+  const [lineThickness, setLineThickness] = useState(1.5); // Branch stroke + pill border thickness
+  const [nameFontSize, setNameFontSize] = useState(8); // Name label font size
+  const [nameFontBold, setNameFontBold] = useState(true); // Bold names toggle
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -525,7 +528,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
 
   const getBranchWidth = (depth: number): number => {
-    return Math.max(0.8, 2.5 - depth * 0.2);
+    return Math.max(lineThickness * 0.4, lineThickness * (1.2 - depth * 0.08));
   };
 
   const getNodeColor = (person: Person): string => {
@@ -815,7 +818,9 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 <g transform={`translate(${node.x}, ${node.y}) rotate(${textRotation})`}>
                   {(() => {
                     const name = p.first_name || 'فرد';
-                    const labelWidth = Math.max(35, name.length * 6.5 + 10);
+                    const charW = nameFontSize * 0.8;
+                    const labelWidth = Math.max(nameFontSize * 4, name.length * charW + nameFontSize * 1.5);
+                    const pillHeight = nameFontSize * 1.8;
                     const offset = nodeRadius + 3;
 
                     const rectX = flipText ? -offset - labelWidth : offset;
@@ -826,24 +831,24 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                         {/* Pill Background */}
                         <rect
                           x={rectX}
-                          y={-7}
+                          y={-pillHeight / 2}
                           width={labelWidth}
-                          height={14}
-                          rx={8}
+                          height={pillHeight}
+                          rx={pillHeight / 2}
                           fill={isHovered ? getNodeColor(p) : '#0f172a'}
                           fillOpacity={0.95}
                           stroke={getNodeColor(p)}
-                          strokeWidth={isHovered ? 2 : 1.5}
+                          strokeWidth={isHovered ? lineThickness + 0.5 : lineThickness}
                           className="shadow-lg"
                         />
                         {/* Person Name Text */}
                         <text
                           x={textX}
-                          y={2}
+                          y={nameFontSize * 0.3}
                           textAnchor="middle"
                           fill={isHovered ? '#ffffff' : '#f8fafc'}
-                          fontSize={isRootNode ? 10 : 8}
-                          fontWeight="700"
+                          fontSize={isRootNode ? nameFontSize + 2 : nameFontSize}
+                          fontWeight={nameFontBold ? '700' : '400'}
                           fontFamily="Cairo, sans-serif"
                           className="select-none"
                         >
@@ -1024,6 +1029,53 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
               className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
             />
           </div>
+
+          {/* Line Thickness */}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-[11px] font-semibold text-slate-300">
+              <span>سمك الخطوط والإطارات</span>
+              <span className="text-emerald-400 font-bold">{lineThickness}px</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="5"
+              step="0.5"
+              value={lineThickness}
+              onChange={(e) => setLineThickness(Number(e.target.value))}
+              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+            />
+          </div>
+
+          {/* Name Font Size */}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-[11px] font-semibold text-slate-300">
+              <span>حجم خط الأسماء</span>
+              <span className="text-emerald-400 font-bold">{nameFontSize}px</span>
+            </div>
+            <input
+              type="range"
+              min="4"
+              max="18"
+              step="1"
+              value={nameFontSize}
+              onChange={(e) => setNameFontSize(Number(e.target.value))}
+              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+            />
+          </div>
+
+          {/* Bold Toggle */}
+          <button
+            onClick={() => setNameFontBold(!nameFontBold)}
+            className={`w-full py-1.5 px-2 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 ${
+              nameFontBold
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                : 'bg-slate-700/30 text-slate-400 border-slate-600/40'
+            }`}
+          >
+            <span className="text-sm font-black">B</span>
+            <span>{nameFontBold ? 'خط عريض (مفعّل)' : 'خط عريض (معطّل)'}</span>
+          </button>
 
           {/* Expand all button if collapsed */}
           {collapsedNodes.size > 0 && (
