@@ -72,8 +72,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   // Controls
   const [arcAngle, setArcAngle] = useState(360);
   const [rotationDeg, setRotationDeg] = useState(0);
-  const [branchLength, setBranchLength] = useState(80); // Base radial distance between rings
-  const [zoom, setZoom] = useState(0.85); // Comfortable default zoom
+  const [branchLength, setBranchLength] = useState(50); // Short radial distance between rings
+  const [zoom, setZoom] = useState(1.0); // 100% default zoom
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
 
@@ -346,7 +346,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
         endAngle = rotRad + 2 * Math.PI;
       }
 
-      // Calculate required radius for each depth to prevent overlap (40px per node minimum)
+      // Calculate radius per depth: keep rings tight, only expand when truly needed
       const depthNodeCounts = getDepthNodeCounts(root);
       const depthRadii = new Map<number, number>();
       depthRadii.set(0, 0);
@@ -356,10 +356,9 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
       for (let d = 1; d <= maxD; d++) {
         const countAtDepth = depthNodeCounts.get(d) || 1;
-        // R = (count * minSpacing) / (2 * PI)
-        const requiredRadius = (countAtDepth * 40) / (2 * Math.PI);
+        // Tight spacing: 10px per node minimum on circumference
+        const requiredRadius = (countAtDepth * 10) / (2 * Math.PI);
 
-        // Step is at least branchLength, but grows if the ring needs more room
         const step = Math.max(branchLength, requiredRadius - currentAccumulatedRadius);
         currentAccumulatedRadius += step;
         depthRadii.set(d, currentAccumulatedRadius);
@@ -469,13 +468,11 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   // Render Calculations
   const treeRoot = buildTree();
 
-  const canvasWidth = 4000;
-  const canvasHeight = 4000;
-  const centerX = canvasWidth / 2;
-  const centerY = canvasHeight / 2;
+  // Use a large internal coordinate space, layout will be centered here
+  const layoutCenter = 2000;
 
   if (treeRoot) {
-    computeLayout(treeRoot, centerX, centerY);
+    computeLayout(treeRoot, layoutCenter, layoutCenter);
   }
 
   const allNodes = treeRoot ? collectNodes(treeRoot).filter((n) => n.id !== -1) : [];
@@ -492,6 +489,13 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   if (treeRoot) collectBranches(treeRoot);
 
   const maxDepth = allNodes.reduce((m, n) => Math.max(m, n.depth), 0);
+  const maxRadius = allNodes.reduce((m, n) => Math.max(m, n.radius), 0);
+
+  // Dynamic viewBox: tightly fits the actual tree with padding for labels
+  const labelPadding = 120;
+  const viewSize = (maxRadius + labelPadding) * 2;
+  const viewBoxX = layoutCenter - maxRadius - labelPadding;
+  const viewBoxY = layoutCenter - maxRadius - labelPadding;
 
   // Compute depth radii for background ring circles
   const depthRadiiMap = useMemo(() => {
@@ -521,7 +525,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
 
   const getBranchWidth = (depth: number): number => {
-    return Math.max(1.2, 3 - depth * 0.25);
+    return Math.max(0.8, 2.5 - depth * 0.2);
   };
 
   const getNodeColor = (person: Person): string => {
@@ -575,7 +579,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   };
 
   const fitView = () => {
-    setZoom(0.85);
+    setZoom(1.0);
     setPanX(0);
     setPanY(0);
     setRotationDeg(0);
@@ -651,7 +655,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           ref={svgRef}
           width="100%"
           height="100%"
-          viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+          viewBox={`${viewBoxX} ${viewBoxY} ${viewSize} ${viewSize}`}
           className="select-none"
           style={{
             transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
@@ -670,7 +674,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           </defs>
 
           {/* Central background glow */}
-          <circle cx={centerX} cy={centerY} r={branchLength * 1.5} fill="url(#centerGlow)" />
+          <circle cx={layoutCenter} cy={layoutCenter} r={branchLength * 1.5} fill="url(#centerGlow)" />
 
           {/* ===== Concentric Generational Rings ===== */}
           {Array.from({ length: maxDepth + 1 }, (_, i) => i).map((depth) => {
@@ -679,37 +683,15 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             return (
               <g key={`ring-group-${depth}`}>
                 <circle
-                  cx={centerX}
-                  cy={centerY}
+                  cx={layoutCenter}
+                  cy={layoutCenter}
                   r={r}
                   fill="none"
                   stroke="#334155"
-                  strokeWidth={1.5}
-                  strokeDasharray="5,7"
-                  opacity={0.45}
+                  strokeWidth={0.8}
+                  strokeDasharray="3,5"
+                  opacity={0.35}
                 />
-                {/* Generation Tag */}
-                <rect
-                  x={centerX - 65}
-                  y={centerY - r - 12}
-                  width={130}
-                  height={24}
-                  rx={12}
-                  fill="#0f172a"
-                  stroke="#334155"
-                  strokeWidth={1}
-                />
-                <text
-                  x={centerX}
-                  y={centerY - r + 4}
-                  textAnchor="middle"
-                  fill="#94a3b8"
-                  fontSize={11}
-                  fontWeight="bold"
-                  fontFamily="Cairo, sans-serif"
-                >
-                  {getGenLabel(depth)}
-                </text>
               </g>
             );
           })}
@@ -722,7 +704,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             return (
               <path
                 key={`branch-${i}`}
-                d={generateBranchPath(parent, child, centerX, centerY)}
+                d={generateBranchPath(parent, child, layoutCenter, layoutCenter)}
                 fill="none"
                 stroke={isHoveredBranch ? '#34d399' : getBranchColor(parentDepth)}
                 strokeWidth={isHoveredBranch ? getBranchWidth(parentDepth) + 2.5 : getBranchWidth(parentDepth)}
@@ -741,7 +723,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
             const hasChildren = node.children.length > 0 || collapsedNodes.has(node.id);
             const isCollapsed = collapsedNodes.has(node.id);
 
-            const nodeRadius = isRootNode ? 18 : node.depth <= 2 ? 8 : 6;
+            const nodeRadius = isRootNode ? 14 : node.depth <= 3 ? 8 : 5;
 
             let angleDeg = ((node.angleMid * 180) / Math.PI) % 360;
             if (angleDeg < 0) angleDeg += 360;
@@ -823,8 +805,8 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 <g transform={`translate(${node.x}, ${node.y}) rotate(${textRotation})`}>
                   {(() => {
                     const name = p.first_name || 'فرد';
-                    const labelWidth = Math.max(40, name.length * 7 + 12);
-                    const offset = nodeRadius + 4;
+                    const labelWidth = Math.max(35, name.length * 6.5 + 10);
+                    const offset = nodeRadius + 3;
 
                     const rectX = flipText ? -offset - labelWidth : offset;
                     const textX = flipText ? -offset - labelWidth / 2 : offset + labelWidth / 2;
@@ -834,9 +816,9 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                         {/* Pill Background */}
                         <rect
                           x={rectX}
-                          y={-8}
+                          y={-7}
                           width={labelWidth}
-                          height={16}
+                          height={14}
                           rx={8}
                           fill={isHovered ? getNodeColor(p) : '#0f172a'}
                           fillOpacity={0.95}
@@ -847,10 +829,10 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                         {/* Person Name Text */}
                         <text
                           x={textX}
-                          y={2.5}
+                          y={2}
                           textAnchor="middle"
                           fill={isHovered ? '#ffffff' : '#f8fafc'}
-                          fontSize={isRootNode ? 11 : 9}
+                          fontSize={isRootNode ? 10 : 8}
                           fontWeight="700"
                           fontFamily="Cairo, sans-serif"
                           className="select-none"
@@ -927,7 +909,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
           {/* Center Root Ancestor Highlight Card */}
           {treeRoot && treeRoot.id !== -1 && (
-            <g transform={`translate(${centerX}, ${centerY + 55})`}>
+            <g transform={`translate(${layoutCenter}, ${layoutCenter + 30})`}>
               <rect
                 x={-130}
                 y={-20}
