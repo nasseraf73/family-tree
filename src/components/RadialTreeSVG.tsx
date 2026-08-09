@@ -778,7 +778,18 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
                 {/* Collapse / Expand Toggle Button */}
                 {hasChildren && !isRootNode && (
-                  <g onClick={(e) => toggleCollapse(node.id, e)} className="hover:scale-125 transition-transform">
+                  <g
+                    onClick={(e) => toggleCollapse(node.id, e)}
+                    onMouseEnter={(e) => e.stopPropagation()}
+                    onMouseLeave={(e) => e.stopPropagation()}
+                  >
+                    {/* Invisible larger hit area */}
+                    <circle
+                      cx={node.x - nodeRadius * 0.7}
+                      cy={node.y + nodeRadius * 0.7}
+                      r={12}
+                      fill="transparent"
+                    />
                     <circle
                       cx={node.x - nodeRadius * 0.7}
                       cy={node.y + nodeRadius * 0.7}
