@@ -439,7 +439,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     return result;
   };
 
-  // ===== Generate TRUE Radial Circular Arc Path (A r r ... L x y) =====
+  // ===== Generate smooth curved Bézier branch paths =====
   const generateBranchPath = (parent: TreeNode, child: TreeNode, centerX: number, centerY: number): string => {
     const px = parent.x;
     const py = parent.y;
@@ -447,30 +447,25 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     const cy = child.y;
 
     if (parent.radius === 0) {
-      // From root center to 1st generation ring: straight line
-      return `M ${px} ${py} L ${cx} ${cy}`;
+      // From root center: use a quadratic curve that sweeps outward toward the child
+      const midR = child.radius * 0.55;
+      const ctrlX = centerX + midR * Math.cos(child.angleMid);
+      const ctrlY = centerY + midR * Math.sin(child.angleMid);
+      return `M ${px} ${py} Q ${ctrlX} ${ctrlY} ${cx} ${cy}`;
     }
 
-    const rP = parent.radius;
-    const aP = parent.angleMid;
-    const aC = child.angleMid;
+    // Smooth cubic Bézier: control points sit at the midpoint radius
+    // but retain their respective parent/child angles.
+    // This produces an organic S-curve that sweeps from inner ring to outer ring.
+    const midR = (parent.radius + child.radius) / 2;
 
-    // Arc endpoint along parent's ring at child's angle
-    const arcX = centerX + rP * Math.cos(aC);
-    const arcY = centerY + rP * Math.sin(aC);
+    const ctrl1X = centerX + midR * Math.cos(parent.angleMid);
+    const ctrl1Y = centerY + midR * Math.sin(parent.angleMid);
 
-    // Determine SVG arc sweep flag
-    // Normalize angle difference
-    let diff = aC - aP;
-    while (diff < -Math.PI) diff += 2 * Math.PI;
-    while (diff > Math.PI) diff -= 2 * Math.PI;
+    const ctrl2X = centerX + midR * Math.cos(child.angleMid);
+    const ctrl2Y = centerY + midR * Math.sin(child.angleMid);
 
-    const sweepFlag = diff >= 0 ? 1 : 0;
-    const largeArcFlag = Math.abs(diff) > Math.PI ? 1 : 0;
-
-    // 1. Draw arc along parent's ring radius rP from parent angle to child angle
-    // 2. Draw radial straight line along child angle from rP to rC (child position)
-    return `M ${px} ${py} A ${rP} ${rP} 0 ${largeArcFlag} ${sweepFlag} ${arcX} ${arcY} L ${cx} ${cy}`;
+    return `M ${px} ${py} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${cx} ${cy}`;
   };
 
   // Render Calculations
