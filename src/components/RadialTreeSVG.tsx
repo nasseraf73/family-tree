@@ -79,6 +79,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
   const [lineThickness, setLineThickness] = useState(1.5); // Branch stroke + pill border thickness
   const [nameFontSize, setNameFontSize] = useState(8); // Name label font size
   const [nameFontBold, setNameFontBold] = useState(true); // Bold names toggle
+  const [showInfoCard, setShowInfoCard] = useState(true); // Show/hide person info card on hover
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -642,6 +643,19 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
     );
   }
 
+  // Get hovered person data for the fixed info card
+  const hoveredPersonData = useMemo(() => {
+    if (hoveredNode === null || !showInfoCard) return null;
+    const node = allNodes.find((n) => n.id === hoveredNode);
+    if (!node) return null;
+    const p = node.person;
+    const fullName = [p.first_name, p.father_name, p.grand_father_name, p.family_name]
+      .filter(Boolean)
+      .join(' ');
+    const descendantCount = getDescendantsCount(node.id);
+    return { person: p, fullName, descendantCount, depth: node.depth };
+  }, [hoveredNode, showInfoCard, allNodes]);
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-950 text-slate-100 select-none">
       {/* ===== SVG Canvas ===== */}
@@ -859,65 +873,7 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                   })()}
                 </g>
 
-                {/* Hover Full Card Tooltip */}
-                {isHovered && (() => {
-                  const fullName = [p.first_name, p.father_name, p.grand_father_name, p.family_name]
-                    .filter(Boolean)
-                    .join(' ');
-                  const tooltipWidth = Math.max(220, fullName.length * 7.5 + 30);
-                  const descendantCount = getDescendantsCount(node.id);
 
-                  return (
-                    <g className="pointer-events-none">
-                      <rect
-                        x={node.x - tooltipWidth / 2}
-                        y={node.y - nodeRadius - 85}
-                        width={tooltipWidth}
-                        height={72}
-                        rx={14}
-                        fill="#090d16"
-                        fillOpacity={0.98}
-                        stroke={getNodeColor(p)}
-                        strokeWidth={2}
-                        className="shadow-2xl"
-                      />
-                      <text
-                        x={node.x}
-                        y={node.y - nodeRadius - 62}
-                        textAnchor="middle"
-                        fill="#ffffff"
-                        fontSize={13}
-                        fontWeight="800"
-                        fontFamily="Cairo, sans-serif"
-                      >
-                        {fullName}
-                      </text>
-                      <text
-                        x={node.x}
-                        y={node.y - nodeRadius - 42}
-                        textAnchor="middle"
-                        fill="#94a3b8"
-                        fontSize={10}
-                        fontFamily="Cairo, sans-serif"
-                      >
-                        {p.gender === 'MALE' ? '👨 ذكر' : '👩 أنثى'} •{' '}
-                        {p.is_alive ? '🟢 حي يرزق' : '⚫ متوفى'}{' '}
-                        {p.birth_year ? `• مواليد ${p.birth_year}` : ''}
-                      </text>
-                      <text
-                        x={node.x}
-                        y={node.y - nodeRadius - 22}
-                        textAnchor="middle"
-                        fill="#34d399"
-                        fontSize={11}
-                        fontWeight="bold"
-                        fontFamily="Cairo, sans-serif"
-                      >
-                        {`إجمالي الذرية: ${descendantCount} فرد | الجيل ${node.depth}`}
-                      </text>
-                    </g>
-                  );
-                })()}
               </g>
             );
           })}
@@ -925,6 +881,30 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
 
         </svg>
       </div>
+
+      {/* ===== Fixed Person Info Card (بطاقة التعريف) ===== */}
+      {showInfoCard && hoveredPersonData && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+          <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl px-6 py-3 min-w-[320px] max-w-[450px] dir-rtl">
+            <div className="text-center">
+              <p className="text-white text-lg font-black font-[Cairo]">
+                {hoveredPersonData.fullName}
+              </p>
+              <div className="flex items-center justify-center gap-3 mt-1 text-sm text-slate-400 font-[Cairo]">
+                <span>{hoveredPersonData.person.gender === 'MALE' ? '👨 ذكر' : '👩 أنثى'}</span>
+                <span>•</span>
+                <span>{hoveredPersonData.person.is_alive ? '🟢 حي يرزق' : '⚫ متوفى'}</span>
+                {hoveredPersonData.person.birth_year && (
+                  <><span>•</span><span>مواليد {hoveredPersonData.person.birth_year}</span></>
+                )}
+              </div>
+              <p className="text-emerald-400 text-sm font-bold font-[Cairo] mt-1">
+                إجمالي الذرية: {hoveredPersonData.descendantCount} فرد | الجيل {hoveredPersonData.depth}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== Controls Panel (Top Right) ===== */}
       <div
@@ -1075,6 +1055,19 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
           >
             <span className="text-sm font-black">B</span>
             <span>{nameFontBold ? 'خط عريض (مفعّل)' : 'خط عريض (معطّل)'}</span>
+          </button>
+
+          {/* Info Card Toggle (بطاقة التعريف) */}
+          <button
+            onClick={() => setShowInfoCard(!showInfoCard)}
+            className={`w-full py-1.5 px-2 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 ${
+              showInfoCard
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                : 'bg-slate-700/30 text-slate-400 border-slate-600/40'
+            }`}
+          >
+            <span className="text-sm">👁</span>
+            <span>{showInfoCard ? 'بطاقة التعريف (مفعّلة)' : 'بطاقة التعريف (معطّلة)'}</span>
           </button>
 
           {/* Expand all button if collapsed */}
