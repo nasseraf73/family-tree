@@ -743,12 +743,11 @@ export const RadialTreeSVG: React.FC<RadialTreeSVGProps> = ({
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={isHovered ? nodeRadius + 5 : nodeRadius}
+                  r={nodeRadius}
                   fill={getNodeBg(p)}
-                  stroke={getNodeColor(p)}
-                  strokeWidth={isRootNode ? 4.5 : 2.5}
+                  stroke={isHovered ? '#34d399' : getNodeColor(p)}
+                  strokeWidth={isRootNode ? 4.5 : isHovered ? 3.5 : 2.5}
                   filter={isHovered ? 'url(#glow)' : undefined}
-                  className="transition-all duration-200"
                 />
 
                 {/* Root node star */}
