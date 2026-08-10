@@ -24,7 +24,7 @@ import { AuthModal } from './AuthModal';
 import { getLayoutedElements } from '../lib/layout';
 import { filterTreeByFocus, FocusMode } from '../lib/treeFilter';
 import { exportCanvasToSvg } from '../lib/exportSvg';
-import { exportTreeToJson } from '../lib/exportJson';
+import { generateTreeImagePrompt } from '../lib/exportPrompt';
 import { getPentanyicFullName } from '../lib/lineage';
 import { Person, Relationship } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -44,7 +44,7 @@ import {
   UserCheck,
   X,
   AlertCircle,
-  FileJson,
+  Wand2,
 } from 'lucide-react';
 
 const nodeTypes = {
@@ -344,17 +344,23 @@ function MyTreeCanvasContent({
     }
   };
 
-  // Export Current Tree Data to JSON File
-  const handleExportJson = () => {
+  // Generate & Copy AI Image Prompt for Ancient Family Tree
+  const handleCopyImagePrompt = () => {
+    if (!targetPersonId) {
+      showToast('يرجى اختيار شخص أولاً لتوليد البرومبت الخاص بنسبه!');
+      return;
+    }
     try {
-      const personsToExport = activePersons.length > 0 ? activePersons : rawPersons;
-      const relsToExport = activeRelationships.length > 0 ? activeRelationships : rawRelationships;
-
-      exportTreeToJson(personsToExport, relsToExport, selectedTargetPerson, focusMode, 'my-tree');
-      showToast('تم تصدير الشجرة بنجاح بصيغة ملف JSON! 📄⚡');
+      const promptText = generateTreeImagePrompt(
+        targetPersonId,
+        rawPersonsMap,
+        rawRelationships
+      );
+      navigator.clipboard.writeText(promptText);
+      showToast('تم نسخ برومبت رسم الشجرة التراثية بنجاح إلى الحافظة! 🎨📋');
     } catch (err) {
-      console.error('Failed to export JSON:', err);
-      showToast('حدث خطأ أثناء تصدير ملف JSON');
+      console.error('Failed to generate image prompt:', err);
+      showToast('حدث خطأ أثناء توليد برومبت الصورة');
     }
   };
 
@@ -452,12 +458,12 @@ function MyTreeCanvasContent({
           </button>
 
           <button
-            onClick={handleExportJson}
-            className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white border border-cyan-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
-            title="تصدير بيانات الشجرة المفلترة الحالية إلى ملف JSON"
+            onClick={handleCopyImagePrompt}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border border-amber-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
+            title="نسخ برومبت توليد صورة شجرة عائلية تراثية للأفراد والعلاقات إلى الحافظة"
           >
-            <FileJson className="w-4 h-4 text-cyan-200" />
-            تصدير JSON
+            <Wand2 className="w-4 h-4 text-amber-100" />
+            نسخ برومبت توليد صورة
           </button>
         </div>
 
