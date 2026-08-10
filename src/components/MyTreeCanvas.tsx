@@ -24,6 +24,7 @@ import { AuthModal } from './AuthModal';
 import { getLayoutedElements } from '../lib/layout';
 import { filterTreeByFocus, FocusMode } from '../lib/treeFilter';
 import { exportCanvasToSvg } from '../lib/exportSvg';
+import { exportTreeToJson } from '../lib/exportJson';
 import { getPentanyicFullName } from '../lib/lineage';
 import { Person, Relationship } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -43,6 +44,7 @@ import {
   UserCheck,
   X,
   AlertCircle,
+  FileJson,
 } from 'lucide-react';
 
 const nodeTypes = {
@@ -342,6 +344,20 @@ function MyTreeCanvasContent({
     }
   };
 
+  // Export Current Tree Data to JSON File
+  const handleExportJson = () => {
+    try {
+      const personsToExport = activePersons.length > 0 ? activePersons : rawPersons;
+      const relsToExport = activeRelationships.length > 0 ? activeRelationships : rawRelationships;
+
+      exportTreeToJson(personsToExport, relsToExport, selectedTargetPerson, focusMode, 'my-tree');
+      showToast('تم تصدير الشجرة بنجاح بصيغة ملف JSON! 📄⚡');
+    } catch (err) {
+      console.error('Failed to export JSON:', err);
+      showToast('حدث خطأ أثناء تصدير ملف JSON');
+    }
+  };
+
   // Generate & Copy Branch Share Link
   const handleShareBranchLink = () => {
     const baseUrl = window.location.origin;
@@ -433,6 +449,15 @@ function MyTreeCanvasContent({
               <Download className="w-4 h-4 text-emerald-200" />
             )}
             تصدير SVG
+          </button>
+
+          <button
+            onClick={handleExportJson}
+            className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white border border-cyan-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
+            title="تصدير بيانات الشجرة المفلترة الحالية إلى ملف JSON"
+          >
+            <FileJson className="w-4 h-4 text-cyan-200" />
+            تصدير JSON
           </button>
         </div>
 
