@@ -8,7 +8,7 @@ export interface PromptAncestryData {
 }
 
 /**
- * Ascends from target person up to the root ancestor to form top-down lineage chain
+ * Ascends from target person up to the root ancestor to form bottom-to-top lineage chain
  */
 export function getTopDownAncestryArray(
   personId: number,
@@ -61,10 +61,10 @@ export function getTopDownAncestryArray(
     break;
   }
 
-  // Reverse ascending array to get top-down order (Root ancestor to Target Person)
+  // Reverse ascending array to get Root Ancestor -> Target Person order
   const lineageChain = ancestorsAscending.reverse();
 
-  // If family_name exists and is not already the first element, prepend it
+  // If family_name exists and is not already the first element, prepend it as root family name
   const familyName = targetPerson.family_name ? targetPerson.family_name.trim() : '';
   if (familyName && lineageChain.length > 0 && lineageChain[0] !== familyName) {
     lineageChain.unshift(familyName);
@@ -88,7 +88,8 @@ export function getTopDownAncestryArray(
 }
 
 /**
- * Generates an optimized Arabic AI Image Prompt for drawing an ancient-style family tree.
+ * Generates an optimized, highly accurate Arabic AI Image Prompt for generating a vertical (9:16) ancient-style family tree.
+ * Root/Ancestor at the BOTTOM -> Growing UPWARDS -> Children/Newest generation at TOP branches.
  */
 export function generateTreeImagePrompt(
   personId: number,
@@ -101,25 +102,31 @@ export function generateTreeImagePrompt(
     relationships
   );
 
-  const lineageString = lineageChain.join(' - ');
+  const lineageString = lineageChain.join(' ← ');
   const childrenCount = childrenNames.length;
   const childrenString = childrenNames.join('، ');
 
-  let promptText = `أريد أن تقوم برسم شجرة العائلة على شكل شجرة تاريخية تراثية كما كان يرسمها الأقدمون.\n\n`;
-  promptText += `تأكد من الأسماء والتهجئة وعدد الأجيال بدقة.\n`;
-  promptText += `لا تخترع فروعاً من عندك أو أسماء من مخك، والتزم تماماً بالبيانات المرفقة.\n\n`;
-  promptText += `طريقة الرسم والتصميم:\n`;
-  promptText += `- جذر العائلة والجد الأكبر في الأعلى (أعلى الشجرة)، وتتدرج الأجيال هبوطاً نحو الأسفل حتى نصل إلى الأجيال الحديثة المعاصرة.\n`;
-  promptText += `- أسلوب فني تراثي خطي عربي على مخطوطة ورق قديم مع زخارف وتصميم شجرة الأنساب الأصيلة.\n\n`;
-  promptText += `تسلسل النسب من الجد الأكبر إلى الشخص المستهدف (من الأعلى إلى الأسفل):\n`;
-  promptText += `${lineageString}\n\n`;
+  let promptText = `صورة شجرة عائلة عربية أصيلة مرسومة بأسلوب المخطوطات التراثية القديمة.\n\n`;
+  promptText += `أبعاد الصورة المطلوب توليدها: 9:16 (عرض طولي رأسياً / Vertical 9:16).\n\n`;
+
+  promptText += `الهيكل والنمو الهندسي للشجرة:\n`;
+  promptText += `- قاعدة الشجرة وجذورها الصلبة في الأسفل تحتوي على الجد الأكبر وأصل العائلة.\n`;
+  promptText += `- يرتفع جذع الشجرة وتتصاعد الأجيال صعوداً من الأسفل إلى الأعلى حسب تسلسل النسب التاريخي.\n`;
+  promptText += `- في أعلى الشجرة تتفرع الأغصان والأوراق لتضم أحدث جيل وأبناء الشخص المستهدف.\n\n`;
+
+  promptText += `دقة البيانات والأسماء (التزام تام بالأسماء المرفقة بدون اختراع أو تغيير):\n`;
+  promptText += `- تسلسل الأنساب من قاعدة الشجرة في الأسفل صعوداً إلى أعلى الجذع:\n`;
+  promptText += `  [القاعدة في الأسفل] ${lineageString} [أعلى الجذع]\n\n`;
 
   if (childrenCount > 0) {
-    promptText += `أخيراً، ${targetPersonName} عنده (${childrenCount}) أبناء كفروع ممتدة منه في الأسفل:\n`;
-    promptText += `${childrenString}\n`;
+    promptText += `- الفروع والأغصان في أعلى الشجرة تمتد من (${targetPersonName}) وتضم أبناءه الـ (${childrenCount}):\n`;
+    promptText += `  ${childrenString}\n\n`;
   } else {
-    promptText += `الشخص المستهدف في نهاية السلسلة هو: ${targetPersonName}.\n`;
+    promptText += `- الأغصان العلوية ينتهي بها النسب عند الشخص المستهدف: ${targetPersonName}.\n\n`;
   }
+
+  promptText += `النمط الفني والجمالي:\n`;
+  promptText += `مخطوطة عربية قديمة على ورق رق عتيق مذهب، خط عربي أصيل ورسم زيتي دقيق لشجرة عريقة، زخارف إسلامية نادرة على الحواف، ألوان دافئة (ذهبي، بني عتيق، أخضر زيتي)، إضاءة تراثية دافئة، تفاصيل دقيقة جداً عالية الجودة (8K resolution, vertical aspect ratio 9:16, --ar 9:16).`;
 
   return promptText;
 }
