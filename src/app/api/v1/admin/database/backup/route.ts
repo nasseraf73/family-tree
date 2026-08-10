@@ -15,25 +15,30 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'غير مصرح: هذه الصفحة مخصصة لمدراء النظام فقط' }, { status: 403 });
     }
 
-    const backupsDir = path.join(process.cwd(), 'backups');
-    await fs.mkdir(backupsDir, { recursive: true });
-
-    const files = await fs.readdir(backupsDir);
     const backupFiles = [];
+    try {
+      const backupsDir = path.join(process.cwd(), 'backups');
+      await fs.mkdir(backupsDir, { recursive: true });
 
-    for (const f of files) {
-      if (f.endsWith('.json')) {
-        const filePath = path.join(backupsDir, f);
-        const stat = await fs.stat(filePath);
-        backupFiles.push({
-          name: f,
-          sizeBytes: stat.size,
-          createdAt: stat.birthtime.toISOString(),
-        });
+      const files = await fs.readdir(backupsDir);
+
+      for (const f of files) {
+        if (f.endsWith('.json')) {
+          const filePath = path.join(backupsDir, f);
+          const stat = await fs.stat(filePath);
+          backupFiles.push({
+            name: f,
+            sizeBytes: stat.size,
+            createdAt: stat.birthtime.toISOString(),
+          });
+        }
       }
-    }
 
-    backupFiles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      backupFiles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } catch {
+      // In serverless environments (e.g. Vercel), backups directory may not exist or be writable.
+      // Gracefully return empty array instead of 500 error.
+    }
 
     return NextResponse.json({ backups: backupFiles });
   } catch (err) {
@@ -112,11 +117,16 @@ export async function POST(request: Request) {
       },
     };
 
-    const backupsDir = path.join(process.cwd(), 'backups');
-    await fs.mkdir(backupsDir, { recursive: true });
-    const filePath = path.join(backupsDir, fileName);
-
-    await fs.writeFile(filePath, JSON.stringify(backupPayload, null, 2), 'utf8');
+    // Attempt to write to local disk (best-effort for local environment)
+    // Serverless platforms like Vercel have a read-only filesystem (/var/task)
+    try {
+      const backupsDir = path.join(process.cwd(), 'backups');
+      await fs.mkdir(backupsDir, { recursive: true });
+      const filePath = path.join(backupsDir, fileName);
+      await fs.writeFile(filePath, JSON.stringify(backupPayload, null, 2), 'utf8');
+    } catch (fsErr) {
+      console.warn('Skipped writing backup file to server disk (serverless environment):', fsErr);
+    }
 
     return NextResponse.json({
       message: `تم إنشاء النسخة الاحتياطية بنجاح: ${fileName}`,
