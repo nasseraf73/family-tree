@@ -113,16 +113,18 @@ function MyTreeCanvasContent({
   const [isSelectPersonModalOpen, setIsSelectPersonModalOpen] = useState(false);
   const [modalSearchQuery, setModalSearchQuery] = useState('');
 
+  const fullNamesMap = useMemo(() => {
+    const map = new Map<number, string>();
+    rawPersons.forEach((p) => {
+      map.set(p.id, getPentanyicFullName(p, rawPersonsMap, rawRelationships));
+    });
+    return map;
+  }, [rawPersons, rawPersonsMap, rawRelationships]);
+
   const modalSearchResults = useMemo(() => {
     if (!modalSearchQuery || !modalSearchQuery.trim()) return rawPersons.slice(0, 30);
-
-    const fullNamesMap = new Map<number, string>();
-    rawPersons.forEach((p) => {
-      fullNamesMap.set(p.id, getPentanyicFullName(p, rawPersonsMap, rawRelationships));
-    });
-
     return filterAndSortSearchResults(rawPersons, modalSearchQuery, fullNamesMap).slice(0, 30);
-  }, [rawPersons, rawPersonsMap, rawRelationships, modalSearchQuery]);
+  }, [rawPersons, modalSearchQuery, fullNamesMap]);
 
   // Toast Feedback State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -351,14 +353,8 @@ function MyTreeCanvasContent({
   // Search Results Filter
   const searchResults = useMemo(() => {
     if (!searchQuery || !searchQuery.trim()) return [];
-
-    const fullNamesMap = new Map<number, string>();
-    rawPersons.forEach((p) => {
-      fullNamesMap.set(p.id, getPentanyicFullName(p, rawPersonsMap, rawRelationships));
-    });
-
     return filterAndSortSearchResults(rawPersons, searchQuery, fullNamesMap).slice(0, 30);
-  }, [rawPersons, rawPersonsMap, rawRelationships, searchQuery]);
+  }, [rawPersons, searchQuery, fullNamesMap]);
 
   if (!mounted) {
     return (
@@ -455,21 +451,24 @@ function MyTreeCanvasContent({
 
           {searchResults.length > 0 && (
             <div className="absolute top-full mt-1 right-0 left-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden z-50 max-h-52 overflow-y-auto">
-              {searchResults.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => {
-                    handleFocusPerson(p.id);
-                    setSearchQuery('');
-                  }}
-                  className="p-2.5 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs border-b border-slate-800/50"
-                >
-                  <span className="font-bold text-slate-200 truncate max-w-[280px]" title={getPentanyicFullName(p, rawPersonsMap, rawRelationships)}>
-                    {getPentanyicFullName(p, rawPersonsMap, rawRelationships)}
-                  </span>
-                  <span className="text-slate-400 text-[11px]">({p.birth_year || 'عام مجهول'})</span>
-                </div>
-              ))}
+              {searchResults.map((p) => {
+                const fullName = fullNamesMap.get(p.id) || p.first_name;
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => {
+                      handleFocusPerson(p.id);
+                      setSearchQuery('');
+                    }}
+                    className="p-2.5 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs border-b border-slate-800/50"
+                  >
+                    <span className="font-bold text-slate-200 truncate max-w-[280px]" title={fullName}>
+                      {fullName}
+                    </span>
+                    <span className="text-slate-400 text-[11px]">({p.birth_year || 'عام مجهول'})</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -617,7 +616,7 @@ function MyTreeCanvasContent({
               <div className="max-h-64 overflow-y-auto space-y-1.5 pt-1 pr-1 dir-rtl">
                 {modalSearchResults.length > 0 ? (
                   modalSearchResults.map((p) => {
-                    const fullName = getPentanyicFullName(p, rawPersonsMap, rawRelationships);
+                    const fullName = fullNamesMap.get(p.id) || p.first_name;
                     return (
                       <div
                         key={p.id}

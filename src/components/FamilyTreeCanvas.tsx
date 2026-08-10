@@ -598,16 +598,18 @@ function FamilyTreeCanvasContent() {
     [allPersonsMap, user]
   );
 
+  const fullNamesMap = useMemo(() => {
+    const map = new Map<number, string>();
+    allPersons.forEach((p) => {
+      map.set(p.id, getPentanyicFullName(p, allPersonsMap, allRelationships));
+    });
+    return map;
+  }, [allPersons, allPersonsMap, allRelationships]);
+
   const searchResults = useMemo(() => {
     if (!searchQuery || !searchQuery.trim()) return [];
-
-    const fullNamesMap = new Map<number, string>();
-    allPersons.forEach((p) => {
-      fullNamesMap.set(p.id, getPentanyicFullName(p, allPersonsMap, allRelationships));
-    });
-
     return filterAndSortSearchResults(allPersons, searchQuery, fullNamesMap).slice(0, 30);
-  }, [allPersons, allPersonsMap, allRelationships, searchQuery]);
+  }, [allPersons, searchQuery, fullNamesMap]);
 
   if (!mounted) {
     return (
@@ -641,21 +643,24 @@ function FamilyTreeCanvasContent() {
 
           {searchResults.length > 0 && (
             <div className="absolute top-full mt-1 right-0 left-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden z-50 max-h-48 overflow-y-auto">
-              {searchResults.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => {
-                    handleFocusPerson(p.id);
-                    setSearchQuery('');
-                  }}
-                  className="p-2 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs border-b border-slate-800/50"
-                >
-                  <span className="font-bold text-slate-200 truncate max-w-[240px]" title={getPentanyicFullName(p, allPersonsMap, allRelationships)}>
-                    {getPentanyicFullName(p, allPersonsMap, allRelationships)}
-                  </span>
-                  <span className="text-slate-400 text-[11px]">({p.birth_year || 'عام مجهول'})</span>
-                </div>
-              ))}
+              {searchResults.map((p) => {
+                const fullName = fullNamesMap.get(p.id) || p.first_name;
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => {
+                      handleFocusPerson(p.id);
+                      setSearchQuery('');
+                    }}
+                    className="p-2 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs border-b border-slate-800/50"
+                  >
+                    <span className="font-bold text-slate-200 truncate max-w-[240px]" title={fullName}>
+                      {fullName}
+                    </span>
+                    <span className="text-slate-400 text-[11px]">({p.birth_year || 'عام مجهول'})</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

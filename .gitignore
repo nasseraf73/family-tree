@@ -29,3 +29,8 @@ test-results/
 playwright-report/
 blob-report/
 playwright-/.cache/
+
+# Build cache & Backups
+*.tsbuildinfo
+backups/
+

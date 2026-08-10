@@ -295,7 +295,7 @@ function SurifContent() {
                     <Building2 className="w-4 h-4" />
                     <span>رئاسة البلدية</span>
                   </div>
-                  <div className="text-slate-100 text-xs sm:text-sm font-bold">أحمد علي لافي</div>
+                  <div className="text-slate-100 text-xs sm:text-sm font-bold">الأستاذ حازم غنيمات</div>
                 </div>
               </div>
             </div>
