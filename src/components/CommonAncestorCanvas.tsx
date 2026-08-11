@@ -25,6 +25,7 @@ import { getLayoutedElements, LayoutDirection } from '../lib/layout';
 import { findCommonAncestorLineage } from '../lib/ancestorFinder';
 import { filterTreeByFocus } from '../lib/treeFilter';
 import { exportCanvasToSvg } from '../lib/exportSvg';
+import { generateCommonAncestorImagePrompt } from '../lib/exportPrompt';
 import { getPentanyicFullName } from '../lib/lineage';
 import { Person, Relationship } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -40,6 +41,8 @@ import {
   RefreshCw,
   Users,
   AlertCircle,
+  Wand2,
+  Sparkles,
 } from 'lucide-react';
 
 const nodeTypes = {
@@ -362,6 +365,27 @@ function CommonAncestorCanvasContent({
     showToast('تم نسخ رابط كشف الجد المشترك إلى الحافظة بنجاح! 🔗📋');
   };
 
+  // Generate & Copy AI Image Prompt for Common Ancestor Dual-Branch Tree
+  const handleCopyImagePrompt = () => {
+    if (!personAId || !personBId) {
+      showToast('يرجى تحديد الشخص الأول والشخص الثاني أولاً لتوليد البرومبت الخاص بالجد المشترك والفرعين!');
+      return;
+    }
+    try {
+      const promptText = generateCommonAncestorImagePrompt(
+        personAId,
+        personBId,
+        rawPersonsMap,
+        rawRelationships
+      );
+      navigator.clipboard.writeText(promptText);
+      showToast('تم نسخ برومبت شجرة الجد المشترك بنجاح إلى الحافظة! 🎨📋');
+    } catch (err: any) {
+      console.error('Failed to generate image prompt:', err);
+      showToast(err.message || 'حدث خطأ أثناء توليد برومبت الصورة');
+    }
+  };
+
   const fullNamesMap = useMemo(() => {
     const map = new Map<number, string>();
     rawPersons.forEach((p) => {
@@ -460,6 +484,28 @@ function CommonAncestorCanvasContent({
               )}
               تصدير SVG
             </button>
+
+            <div className="relative group">
+              <button
+                onClick={handleCopyImagePrompt}
+                className="px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border border-amber-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
+                title="انسخ البرومبت والصقه في نماذج الذكاء الاصطناعي (مثل ChatGPT أو Gemini) لتوليد صورة لوحة تراثية لشجرة الجد المشترك والفرعين"
+              >
+                <Wand2 className="w-4 h-4 text-amber-100" />
+                نسخ برومبت توليد صورة
+              </button>
+
+              {/* Hover Hint Tooltip Card */}
+              <div className="absolute top-full right-0 mt-2.5 w-72 p-3.5 bg-slate-900/95 backdrop-blur-md border border-amber-500/40 rounded-2xl shadow-2xl text-right text-xs dir-rtl pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 transform translate-y-1 group-hover:translate-y-0">
+                <div className="flex items-center gap-1.5 text-amber-400 font-extrabold mb-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <span>طريقة استخدام برومبت الجد المشترك</span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
+                  عند نسخ البرومبت، اذهب إلى <strong className="text-amber-300 font-bold">ChatGPT</strong> أو <strong className="text-amber-300 font-bold">Gemini</strong> وقم بلصقه لتوليد صورة شجرة تراثية توضح الجذع الموحد حتى الجد المشترك ثم انقسامها إلى الفرعين. يمكنك المحاولة أكثر من مرة للحصول على أروع نتيجة فنية.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
