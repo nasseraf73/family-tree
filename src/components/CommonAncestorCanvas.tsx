@@ -17,11 +17,10 @@ import {
 
 import { PersonNode, PersonNodeData } from './PersonNode';
 import { PersonProfileModal } from './PersonProfileModal';
-import { LayoutToolbar } from './LayoutToolbar';
 import { Navbar } from './Navbar';
 import { AuthModal } from './AuthModal';
 
-import { getLayoutedElements, LayoutDirection } from '../lib/layout';
+import { getLayoutedElements } from '../lib/layout';
 import { findCommonAncestorLineage } from '../lib/ancestorFinder';
 import { filterTreeByFocus } from '../lib/treeFilter';
 import { exportCanvasToSvg } from '../lib/exportSvg';
@@ -36,7 +35,6 @@ import {
   Share2,
   Download,
   CheckCircle,
-  Crown,
   GitMerge,
   RefreshCw,
   Users,
@@ -66,7 +64,6 @@ function CommonAncestorCanvasContent({
   const [loading, setLoading] = useState(true);
   const [exportingSvg, setExportingSvg] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [currentLayout, setCurrentLayout] = useState<LayoutDirection>('BT');
 
   // Tree Raw Data from Server API
   const [rawPersons, setRawPersons] = useState<Person[]>([]);
@@ -215,7 +212,7 @@ function CommonAncestorCanvasContent({
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         enrichedNodes,
         sanitizedEdges,
-        currentLayout
+        'BT'
       );
 
       setNodes(layoutedNodes);
@@ -295,7 +292,7 @@ function CommonAncestorCanvasContent({
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         enrichedNodes,
         sanitizedEdges,
-        currentLayout
+        'BT'
       );
 
       setNodes(layoutedNodes);
@@ -313,7 +310,6 @@ function CommonAncestorCanvasContent({
     rawRelationships,
     personAId,
     personBId,
-    currentLayout,
     reactFlowInstance,
     setNodes,
     setEdges,
@@ -322,21 +318,6 @@ function CommonAncestorCanvasContent({
   useEffect(() => {
     calculateLcaTree();
   }, [calculateLcaTree]);
-
-  // Layout Direction Switcher
-  const handleSelectLayout = useCallback(
-    (direction: LayoutDirection) => {
-      setCurrentLayout(direction);
-      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-        nodes,
-        edges,
-        direction
-      );
-      setNodes([...layoutedNodes]);
-      setEdges([...layoutedEdges]);
-    },
-    [nodes, edges, setNodes, setEdges]
-  );
 
   // SVG Export Handler
   const handleExportSvg = async () => {
@@ -430,88 +411,8 @@ function CommonAncestorCanvasContent({
       {/* Top Navbar */}
       <Navbar onOpenAuthModal={() => setIsAuthModalOpen(true)} />
 
-      {/* Dynamic Summary Metric Banner Header */}
-      <div className="bg-amber-50/50 dark:bg-slate-900 border-b border-amber-500/20 dark:border-amber-500/30 px-6 py-3 shadow-xl dir-rtl z-30">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 shrink-0">
-              <GitMerge className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-2">
-                <span>كشف الجد المشترك وسلسلة التقاء الأنساب</span>
-              </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                {degreeText}
-              </p>
-            </div>
-          </div>
-
-          {/* LCA Crown Badge Summary */}
-          {lcaNode && (
-            <div className="bg-white dark:bg-slate-950/80 border border-amber-500/30 dark:border-amber-500/40 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg text-slate-900 dark:text-white">
-              <Crown className="w-5 h-5 text-amber-500 dark:text-amber-400 animate-pulse" />
-              <div className="flex flex-col text-right">
-                <span className="text-[10px] text-amber-500 dark:text-amber-400 font-bold">الجد المشترك (LCA):</span>
-                <span className="text-xs font-extrabold">
-                  {lcaNode.first_name} {lcaNode.father_name} {lcaNode.family_name}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Actions: Share & SVG Export */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleShareLcaLink}
-              className="px-3.5 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-              title="نسخ رابط مباشر لكشف الجد المشترك ومشاركته"
-            >
-              <Share2 className="w-4 h-4 text-blue-400" />
-              مشاركة الكشف
-            </button>
-
-            <button
-              onClick={handleExportSvg}
-              disabled={exportingSvg}
-              className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-all hover:scale-105 disabled:opacity-50"
-              title="تصدير شجرة الجد المشترك المتشعبة بصيغة SVG"
-            >
-              {exportingSvg ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
-              تصدير SVG
-            </button>
-
-            <div className="relative group">
-              <button
-                onClick={handleCopyImagePrompt}
-                className="px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border border-amber-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
-                title="انسخ البرومبت والصقه في نماذج الذكاء الاصطناعي (مثل ChatGPT أو Gemini) لتوليد صورة لوحة تراثية لشجرة الجد المشترك والفرعين"
-              >
-                <Wand2 className="w-4 h-4 text-amber-100" />
-                نسخ برومبت توليد صورة
-              </button>
-
-              {/* Hover Hint Tooltip Card */}
-              <div className="absolute top-full right-0 mt-2.5 w-72 p-3.5 bg-slate-900/95 backdrop-blur-md border border-amber-500/40 rounded-2xl shadow-2xl text-right text-xs dir-rtl pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 transform translate-y-1 group-hover:translate-y-0">
-                <div className="flex items-center gap-1.5 text-amber-400 font-extrabold mb-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                  <span>طريقة استخدام برومبت الجد المشترك</span>
-                </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
-                  عند نسخ البرومبت، اذهب إلى <strong className="text-amber-300 font-bold">ChatGPT</strong> أو <strong className="text-amber-300 font-bold">Gemini</strong> وقم بلصقه لتوليد صورة شجرة تراثية توضح الجذع الموحد حتى الجد المشترك ثم انقسامها إلى الفرعين. يمكنك المحاولة أكثر من مرة للحصول على أروع نتيجة فنية.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Consolidated Single-Line Control Toolbar */}
-      <div className="bg-slate-900 border-b border-slate-800 px-4 py-2 flex flex-wrap items-center justify-between gap-3 shadow-lg dir-rtl z-40 relative pointer-events-auto">
+      {/* Unified Single-Line Control & Actions Toolbar */}
+      <div className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-md dir-rtl z-30">
         
         {/* Right Side: Dual Person Inputs & Search Button (الجهة اليمنى) */}
         <div className="flex items-center gap-2.5 flex-wrap pointer-events-auto">
@@ -601,13 +502,52 @@ function CommonAncestorCanvasContent({
           </button>
         </div>
 
-        {/* Left Side: Layout Toolbar (الجهة اليسرى) */}
-        <div className="shrink-0 pointer-events-auto">
-          <LayoutToolbar
-            activeDirection={currentLayout}
-            onSelectLayout={handleSelectLayout}
-            onFitView={() => reactFlowInstance.fitView({ padding: 0.25, duration: 600 })}
-          />
+        {/* Left Side: Three Action Buttons (الجهة اليسرى) */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleShareLcaLink}
+            className="px-3.5 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            title="نسخ رابط مباشر لكشف الجد المشترك ومشاركته"
+          >
+            <Share2 className="w-4 h-4 text-blue-400" />
+            مشاركة الكشف
+          </button>
+
+          <button
+            onClick={handleExportSvg}
+            disabled={exportingSvg}
+            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold border border-emerald-400/40 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-all hover:scale-105 disabled:opacity-50"
+            title="تصدير شجرة الجد المشترك المتشعبة بصيغة SVG"
+          >
+            {exportingSvg ? (
+              <RefreshCw className="w-4 h-4 animate-spin text-white" />
+            ) : (
+              <Download className="w-4 h-4 text-emerald-200" />
+            )}
+            تصدير SVG
+          </button>
+
+          <div className="relative group">
+            <button
+              onClick={handleCopyImagePrompt}
+              className="px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border border-amber-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
+              title="انسخ البرومبت والصقه في نماذج الذكاء الاصطناعي (مثل ChatGPT أو Gemini) لتوليد صورة لوحة تراثية لشجرة الجد المشترك والفرعين"
+            >
+              <Wand2 className="w-4 h-4 text-amber-100" />
+              نسخ برومبت توليد صورة
+            </button>
+
+            {/* Hover Hint Tooltip Card */}
+            <div className="absolute top-full right-0 mt-2.5 w-72 p-3.5 bg-slate-900/95 backdrop-blur-md border border-amber-500/40 rounded-2xl shadow-2xl text-right text-xs dir-rtl pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 transform translate-y-1 group-hover:translate-y-0">
+              <div className="flex items-center gap-1.5 text-amber-400 font-extrabold mb-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <span>طريقة استخدام برومبت الجد المشترك</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
+                عند نسخ البرومبت، اذهب إلى <strong className="text-amber-300 font-bold">ChatGPT</strong> أو <strong className="text-amber-300 font-bold">Gemini</strong> وقم بلصقه لتوليد صورة شجرة تراثية توضح الجذع الموحد حتى الجد المشترك ثم انقسامها إلى الفرعين. يمكنك المحاولة أكثر من مرة للحصول على أروع نتيجة فنية.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
