@@ -457,14 +457,27 @@ function MyTreeCanvasContent({
             تصدير SVG
           </button>
 
-          <button
-            onClick={handleCopyImagePrompt}
-            className="px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border border-amber-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
-            title="نسخ برومبت توليد صورة شجرة عائلية تراثية للأفراد والعلاقات إلى الحافظة"
-          >
-            <Wand2 className="w-4 h-4 text-amber-100" />
-            نسخ برومبت توليد صورة
-          </button>
+          <div className="relative group">
+            <button
+              onClick={handleCopyImagePrompt}
+              className="px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white border border-amber-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
+              title="انسخ البرومبت والصقه في نماذج الذكاء الاصطناعي (مثل ChatGPT أو Gemini) لتوليد صورة لوحة تراثية لشجرتك"
+            >
+              <Wand2 className="w-4 h-4 text-amber-100" />
+              نسخ برومبت توليد صورة
+            </button>
+
+            {/* Hover Hint Tooltip Card */}
+            <div className="absolute top-full right-0 mt-2.5 w-72 p-3.5 bg-slate-900/95 backdrop-blur-md border border-amber-500/40 rounded-2xl shadow-2xl text-right text-xs dir-rtl pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 transform translate-y-1 group-hover:translate-y-0">
+              <div className="flex items-center gap-1.5 text-amber-400 font-extrabold mb-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <span>طريقة استخدام برومبت الرسم</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
+                عند نسخ البرومبت، اذهب إلى نماذج الذكاء الاصطناعي مثل <strong className="text-amber-300 font-bold">ChatGPT</strong> أو <strong className="text-amber-300 font-bold">Gemini</strong> وقم بلصقه لتوليد صورة لوحة تراثية لشجرتك. يمكنك المحاولة أكثر من مرة للحصول على أجمل نتيجة فنية.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Live Search Input */}
