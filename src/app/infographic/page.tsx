@@ -521,14 +521,14 @@ function InfographicContent() {
           </div>
 
           {/* Chart Container */}
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl relative overflow-hidden">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl relative">
             {filteredGenerationalBranches.length === 0 ? (
               <div className="py-12 text-center text-slate-500 text-xs font-semibold">
                 لا توجد بيانات فروع مسجلة لهذا الجيل بعد
               </div>
             ) : (
-              <div className="overflow-x-auto pb-4 pt-8 dir-rtl flex justify-center">
-                <div className="flex items-end justify-center gap-3 sm:gap-5 min-w-full w-max mx-auto h-72 px-4 border-b border-slate-800/80 pb-2">
+              <div className="overflow-x-auto pb-4 pt-24 dir-rtl scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                <div className="flex items-end justify-center gap-3 sm:gap-5 min-w-full w-max mx-auto h-72 px-10 border-b border-slate-800/80 pb-2">
                   {filteredGenerationalBranches.map((item) => {
                     const heightPct = Math.max(12, Math.round((item.descendantsCount / maxBranchDescendants) * 100));
                     const fullName = getPentanyicFullName(item.person, personsMap, relationships);
@@ -554,10 +554,10 @@ function InfographicContent() {
                     return (
                       <div
                         key={item.person.id}
-                        className="group flex flex-col items-center gap-2 relative w-12 sm:w-16 h-full justify-end shrink-0"
+                        className="group flex flex-col items-center gap-2 relative w-12 sm:w-16 h-full justify-end shrink-0 hover:z-40 transition-all"
                       >
                         {/* Interactive Hover Tooltip */}
-                        <div className="absolute -top-24 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-30 bg-slate-950 text-white p-3 rounded-2xl border border-slate-700 shadow-2xl w-48 text-right dir-rtl">
+                        <div className="absolute -top-20 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 bg-slate-950 text-white p-3 rounded-2xl border border-slate-700 shadow-2xl w-48 text-right dir-rtl">
                           <div className="text-[11px] font-black text-amber-300 leading-tight mb-1">
                             {fullName}
                           </div>
