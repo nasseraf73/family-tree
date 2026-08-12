@@ -527,8 +527,8 @@ function InfographicContent() {
                 لا توجد بيانات فروع مسجلة لهذا الجيل بعد
               </div>
             ) : (
-              <div className="overflow-x-auto pb-4 pt-8 dir-rtl">
-                <div className="flex items-end gap-3 sm:gap-5 min-w-max h-72 px-4 border-b border-slate-800/80 pb-2">
+              <div className="overflow-x-auto pb-4 pt-8 dir-rtl flex justify-center">
+                <div className="flex items-end justify-center gap-3 sm:gap-5 min-w-full w-max mx-auto h-72 px-4 border-b border-slate-800/80 pb-2">
                   {filteredGenerationalBranches.map((item) => {
                     const heightPct = Math.max(12, Math.round((item.descendantsCount / maxBranchDescendants) * 100));
                     const fullName = getPentanyicFullName(item.person, personsMap, relationships);
