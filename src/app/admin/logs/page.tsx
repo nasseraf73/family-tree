@@ -1,4 +1,4 @@
-'use 'client';
+'use client';
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { Navbar } from '../../../components/Navbar';
@@ -41,7 +41,7 @@ function AdminLogsContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const isSuperAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
+  const isSuperAdmin = role === 'ADMIN' || (role as string) === 'SUPER_ADMIN' || (role as string) === 'ADM';
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);

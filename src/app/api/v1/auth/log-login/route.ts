@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db, client } from '../../../../db';
-import { loginLogs } from '../../../../db/schema';
+import { db, client } from '@/db';
+import { loginLogs } from '@/db/schema';
 
 let isTableChecked = false;
 

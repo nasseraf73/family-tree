@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db, client } from '../../../../../db';
-import { loginLogs, users } from '../../../../../db/schema';
+import { db, client } from '@/db';
+import { loginLogs, users } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
 
 async function checkAdminPermission(req: Request) {
