@@ -473,6 +473,8 @@ function DashboardContent() {
               <ArrowRight className="w-5 h-5 text-slate-400 mr-auto group-hover:text-blue-500 group-hover:-translate-x-1 transition-all" />
             </Link>
 
+            {/* HIDDEN_FOR_DEMO: Data management button disabled to prevent test admins from accessing database backups */}
+            {/*
             <Link
               href="/admin/database"
               className="group bg-white dark:bg-slate-900 border border-purple-500/30 rounded-2xl p-5 hover:border-purple-500/60 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 flex items-center gap-4"
@@ -486,6 +488,7 @@ function DashboardContent() {
               </div>
               <ArrowRight className="w-5 h-5 text-slate-400 mr-auto group-hover:text-purple-500 group-hover:-translate-x-1 transition-all" />
             </Link>
+            */}
           </div>
         )}
 
