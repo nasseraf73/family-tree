@@ -28,6 +28,13 @@ export interface NameFrequency {
   percentage: number;
 }
 
+export interface GenerationalBranchItem {
+  person: Person;
+  generation: number;
+  descendantsCount: number;
+  percentage: number;
+}
+
 export interface TreeAnalyticsResult {
   demographics: DemographicsData;
   records: {
@@ -44,6 +51,7 @@ export interface TreeAnalyticsResult {
     avgChildrenPerFamily: number;
     topMaleNames: NameFrequency[];
     topFemaleNames: NameFrequency[];
+    generationalBranches: GenerationalBranchItem[];
   };
 }
 
@@ -85,6 +93,7 @@ export function calculateTreeAnalytics(
         avgChildrenPerFamily: 0,
         topMaleNames: [],
         topFemaleNames: [],
+        generationalBranches: [],
       },
     };
   }
@@ -256,6 +265,43 @@ export function calculateTreeAnalytics(
   const gen3Branch = getLargestBranchForDepth(3);
   const gen4Branch = getLargestBranchForDepth(4);
 
+  // F. Collect all branch items for generations 2, 3, 4, and 5
+  const generationalBranches: GenerationalBranchItem[] = [];
+
+  persons.forEach((p) => {
+    const depth = getNodeDepth(p.id);
+    if (depth >= 2 && depth <= 5) {
+      const visitedSet = new Set<number>([p.id]);
+      const queue = [p.id];
+
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        const children = offspringMap.get(currentId);
+        if (children) {
+          children.forEach((cId) => {
+            if (!visitedSet.has(cId)) {
+              visitedSet.add(cId);
+              queue.push(cId);
+            }
+          });
+        }
+      }
+
+      const count = visitedSet.size;
+      // Include all Gen 2 nodes, and nodes with offspring for Gen 3-5
+      if (depth === 2 || count > 1) {
+        generationalBranches.push({
+          person: p,
+          generation: depth,
+          descendantsCount: count,
+          percentage: totalMembers > 0 ? Math.round((count / totalMembers) * 100) : 0,
+        });
+      }
+    }
+  });
+
+  generationalBranches.sort((a, b) => b.descendantsCount - a.descendantsCount);
+
   // Average children per parent
   const parentsWithChildrenCount = offspringMap.size;
   let totalChildrenSum = 0;
@@ -323,19 +369,19 @@ export function calculateTreeAnalytics(
         person: gen2Branch.person,
         valueText: gen2Branch.person ? `${gen2Branch.count} فرد` : 'غير محدد',
         metricLabel: 'أكبر فرع في الجيل الثاني (أبناء الجد الجامع)',
-        subText: gen2Branch.person ? `نسبة الفرع: ${Math.round((gen2Branch.count / totalMembers) * 100)}% من إجمالي الأفراد` : undefined,
+        subText: gen2Branch.person ? `نسبة الفرع: ${Math.round((gen2Branch.count / totalMembers) * 100)}% from total` : undefined,
       },
       largestBranchGen3: {
         person: gen3Branch.person,
         valueText: gen3Branch.person ? `${gen3Branch.count} فرد` : 'غير محدد',
         metricLabel: 'أكبر فرع في الجيل الثالث (أحفاد الجد الجامع)',
-        subText: gen3Branch.person ? `نسبة الفرع: ${Math.round((gen3Branch.count / totalMembers) * 100)}% من إجمالي الأفراد` : undefined,
+        subText: gen3Branch.person ? `نسبة الفرع: ${Math.round((gen3Branch.count / totalMembers) * 100)}% from total` : undefined,
       },
       largestBranchGen4: {
         person: gen4Branch.person,
         valueText: gen4Branch.person ? `${gen4Branch.count} فرد` : 'غير محدد',
         metricLabel: 'أكبر فرع في الجيل الرابع (أبناء الأحفاد)',
-        subText: gen4Branch.person ? `نسبة الفرع: ${Math.round((gen4Branch.count / totalMembers) * 100)}% من إجمالي الأفراد` : undefined,
+        subText: gen4Branch.person ? `نسبة الفرع: ${Math.round((gen4Branch.count / totalMembers) * 100)}% from total` : undefined,
       },
       mostOffspring: {
         person: mostOffspringPerson,
@@ -361,7 +407,9 @@ export function calculateTreeAnalytics(
       avgChildrenPerFamily,
       topMaleNames,
       topFemaleNames,
+      generationalBranches,
     },
   };
 }
+
 

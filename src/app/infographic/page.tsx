@@ -39,6 +39,7 @@ function InfographicContent() {
   const [personsMap, setPersonsMap] = useState<Map<number, Person>>(new Map());
   const [analytics, setAnalytics] = useState<TreeAnalyticsResult | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [activeGenTab, setActiveGenTab] = useState<'ALL' | number>(2);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -105,6 +106,16 @@ function InfographicContent() {
   }
 
   const { demographics, records, generational } = analytics;
+
+  const filteredGenerationalBranches = (generational.generationalBranches || []).filter((item) => {
+    if (activeGenTab === 'ALL') return true;
+    return item.generation === activeGenTab;
+  });
+
+  const maxBranchDescendants = Math.max(
+    1,
+    ...filteredGenerationalBranches.map((item) => item.descendantsCount)
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 dir-rtl font-sans pb-16 select-none print:bg-white print:text-black">
@@ -546,6 +557,152 @@ function InfographicContent() {
               )}
             </div>
 
+          </div>
+        </section>
+
+        {/* Section: Generational Branch Vertical Bar Chart (الرسم البياني العمودي التفاعلي للفروع والأجيال) */}
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-5 rounded-3xl shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-extrabold text-white">الرسم البياني العمودي المقارن لحجم الذرية والفروع</h2>
+                <p className="text-xs text-slate-400 mt-0.5 font-medium">مقارنة إجمالي تعداد الذرية لجميع الأبناء والأحفاد حسب الجيل</p>
+              </div>
+            </div>
+
+            {/* Generation Selector Tabs */}
+            <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto print:hidden">
+              <button
+                onClick={() => setActiveGenTab(2)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  activeGenTab === 2
+                    ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                الجيل الثاني (الأبناء)
+              </button>
+              <button
+                onClick={() => setActiveGenTab(3)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  activeGenTab === 3
+                    ? 'bg-teal-500 text-slate-950 shadow-md font-black'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                الجيل الثالث (الأحفاد)
+              </button>
+              <button
+                onClick={() => setActiveGenTab(4)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  activeGenTab === 4
+                    ? 'bg-cyan-500 text-slate-950 shadow-md font-black'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                الجيل الرابع
+              </button>
+              <button
+                onClick={() => setActiveGenTab(5)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  activeGenTab === 5
+                    ? 'bg-indigo-500 text-white shadow-md font-black'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                الجيل الخامس
+              </button>
+              <button
+                onClick={() => setActiveGenTab('ALL')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  activeGenTab === 'ALL'
+                    ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                الكل (أجيال 2-5)
+              </button>
+            </div>
+          </div>
+
+          {/* Chart Container */}
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl relative overflow-hidden">
+            {filteredGenerationalBranches.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 text-xs font-semibold">
+                لا توجد بيانات فروع مسجلة لهذا الجيل بعد
+              </div>
+            ) : (
+              <div className="overflow-x-auto pb-4 pt-8 dir-rtl">
+                <div className="flex items-end gap-3 sm:gap-5 min-w-max h-72 px-4 border-b border-slate-800/80 pb-2">
+                  {filteredGenerationalBranches.map((item) => {
+                    const heightPct = Math.max(12, Math.round((item.descendantsCount / maxBranchDescendants) * 100));
+                    const fullName = getPentanyicFullName(item.person, personsMap, relationships);
+
+                    let barGradient = 'from-emerald-500 to-teal-400';
+                    let textAccent = 'text-emerald-400';
+                    let borderAccent = 'border-emerald-500/30';
+
+                    if (item.generation === 3) {
+                      barGradient = 'from-teal-500 to-cyan-400';
+                      textAccent = 'text-teal-400';
+                      borderAccent = 'border-teal-500/30';
+                    } else if (item.generation === 4) {
+                      barGradient = 'from-cyan-500 to-blue-400';
+                      textAccent = 'text-cyan-400';
+                      borderAccent = 'border-cyan-500/30';
+                    } else if (item.generation === 5) {
+                      barGradient = 'from-indigo-500 to-purple-400';
+                      textAccent = 'text-indigo-400';
+                      borderAccent = 'border-indigo-500/30';
+                    }
+
+                    return (
+                      <div
+                        key={item.person.id}
+                        className="group flex flex-col items-center gap-2 relative w-12 sm:w-16 h-full justify-end shrink-0"
+                      >
+                        {/* Interactive Hover Tooltip */}
+                        <div className="absolute -top-24 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-30 bg-slate-950 text-white p-3 rounded-2xl border border-slate-700 shadow-2xl w-48 text-right dir-rtl">
+                          <div className="text-[11px] font-black text-amber-300 leading-tight mb-1">
+                            {fullName}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-semibold flex items-center justify-between border-t border-slate-800 pt-1 mt-1">
+                            <span>الجيل: {item.generation}</span>
+                            <span className="font-bold text-emerald-400">{item.descendantsCount} فرد ({item.percentage}%)</span>
+                          </div>
+                        </div>
+
+                        {/* Top Count Badge */}
+                        <span className={`text-[10px] font-extrabold ${textAccent} bg-slate-950 px-1.5 py-0.5 rounded-md border ${borderAccent} shadow-sm transition-transform group-hover:scale-110`}>
+                          {item.descendantsCount}
+                        </span>
+
+                        {/* Vertical Bar */}
+                        <div className="w-full bg-slate-950/80 rounded-2xl overflow-hidden p-1 border border-slate-800 flex items-end h-full shadow-inner">
+                          <div
+                            style={{ height: `${heightPct}%` }}
+                            className={`w-full rounded-xl bg-gradient-to-t ${barGradient} transition-all duration-700 group-hover:brightness-125 shadow-lg`}
+                          />
+                        </div>
+
+                        {/* Bottom Label (First Name + Gen Badge) */}
+                        <div className="text-center space-y-0.5 pt-1">
+                          <span className="text-xs font-bold text-slate-200 block truncate w-14 sm:w-16">
+                            {item.person.first_name}
+                          </span>
+                          <span className="text-[9px] font-medium text-slate-400 block bg-slate-950 px-1 rounded border border-slate-800">
+                            جـ {item.generation}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
