@@ -39,7 +39,7 @@ function InfographicContent() {
   const [personsMap, setPersonsMap] = useState<Map<number, Person>>(new Map());
   const [analytics, setAnalytics] = useState<TreeAnalyticsResult | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [activeGenTab, setActiveGenTab] = useState<'ALL' | number>(2);
+  const [activeGenTab, setActiveGenTab] = useState<number>(2);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -108,7 +108,6 @@ function InfographicContent() {
   const { demographics, records, generational } = analytics;
 
   const filteredGenerationalBranches = (generational.generationalBranches || []).filter((item) => {
-    if (activeGenTab === 'ALL') return true;
     return item.generation === activeGenTab;
   });
 
@@ -336,7 +335,7 @@ function InfographicContent() {
         </section>
 
         {/* Section 2: Hall of Fame & Record Holders (سجل الأرقام القياسية والتسجيلات الفريدة) */}
-        <section className="space-y-6">
+        <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Crown className="w-5 h-5 text-amber-400" />
@@ -347,104 +346,7 @@ function InfographicContent() {
             </span>
           </div>
 
-          {/* Sub-section: Largest Branches by Generation (أكبر فروع الشجرة حسب الأجيال) */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <GitBranch className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-sm font-extrabold text-emerald-300">أكبر فروع العائلة حسب الأجيال</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              {/* Branch Card 1: Gen 2 (Abna' Al-Jadd) */}
-              <div className="bg-gradient-to-b from-emerald-950/50 via-slate-900 to-slate-900 border border-emerald-500/40 p-5 rounded-3xl shadow-xl relative overflow-hidden group hover:border-emerald-400 transition-all">
-                <div className="absolute top-3 left-3 text-emerald-400/20 group-hover:text-emerald-400/40 transition-colors">
-                  <GitBranch className="w-12 h-12" />
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs border border-emerald-500/30">
-                    🌿 2
-                  </span>
-                  <span className="text-xs font-black text-emerald-300">أكبر فرع في الجيل الثاني (أبناء الجد)</span>
-                </div>
-
-                {records.largestBranchGen2.person ? (
-                  <div className="space-y-1.5">
-                    <h4 className="text-base font-extrabold text-white leading-tight">
-                      {getPentanyicFullName(records.largestBranchGen2.person, personsMap, relationships)}
-                    </h4>
-                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 pt-1">
-                      <Users className="w-3.5 h-3.5" />
-                      <span>تعداد الفرع: {records.largestBranchGen2.valueText}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">{records.largestBranchGen2.subText}</p>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-500">غير محدد</p>
-                )}
-              </div>
-
-              {/* Branch Card 2: Gen 3 (Ahfad Al-Jadd) */}
-              <div className="bg-gradient-to-b from-teal-950/50 via-slate-900 to-slate-900 border border-teal-500/40 p-5 rounded-3xl shadow-xl relative overflow-hidden group hover:border-teal-400 transition-all">
-                <div className="absolute top-3 left-3 text-teal-400/20 group-hover:text-teal-400/40 transition-colors">
-                  <GitBranch className="w-12 h-12" />
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="w-7 h-7 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold text-xs border border-teal-500/30">
-                    🌱 3
-                  </span>
-                  <span className="text-xs font-black text-teal-300">أكبر فرع في الجيل الثالث (أحفاد الجد)</span>
-                </div>
-
-                {records.largestBranchGen3.person ? (
-                  <div className="space-y-1.5">
-                    <h4 className="text-base font-extrabold text-white leading-tight">
-                      {getPentanyicFullName(records.largestBranchGen3.person, personsMap, relationships)}
-                    </h4>
-                    <div className="flex items-center gap-2 text-xs font-bold text-teal-400 pt-1">
-                      <Users className="w-3.5 h-3.5" />
-                      <span>تعداد الفرع: {records.largestBranchGen3.valueText}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">{records.largestBranchGen3.subText}</p>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-500">غير محدد</p>
-                )}
-              </div>
-
-              {/* Branch Card 3: Gen 4 (Abna' Ahfad) */}
-              <div className="bg-gradient-to-b from-cyan-950/50 via-slate-900 to-slate-900 border border-cyan-500/40 p-5 rounded-3xl shadow-xl relative overflow-hidden group hover:border-cyan-400 transition-all">
-                <div className="absolute top-3 left-3 text-cyan-400/20 group-hover:text-cyan-400/40 transition-colors">
-                  <GitBranch className="w-12 h-12" />
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-xs border border-cyan-500/30">
-                    🍀 4
-                  </span>
-                  <span className="text-xs font-black text-cyan-300">أكبر فرع في الجيل الرابع (أبناء الأحفاد)</span>
-                </div>
-
-                {records.largestBranchGen4.person ? (
-                  <div className="space-y-1.5">
-                    <h4 className="text-base font-extrabold text-white leading-tight">
-                      {getPentanyicFullName(records.largestBranchGen4.person, personsMap, relationships)}
-                    </h4>
-                    <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 pt-1">
-                      <Users className="w-3.5 h-3.5" />
-                      <span>تعداد الفرع: {records.largestBranchGen4.valueText}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">{records.largestBranchGen4.subText}</p>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-500">غير محدد</p>
-                )}
-              </div>
-
-            </div>
-          </div>
-
-          {/* Sub-section: Other Record Holders */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Record 1: Oldest Living Member */}
             <div className="bg-gradient-to-b from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/40 p-5 rounded-3xl shadow-xl relative overflow-hidden group hover:border-amber-400 transition-all">
@@ -614,16 +516,6 @@ function InfographicContent() {
                 }`}
               >
                 الجيل الخامس
-              </button>
-              <button
-                onClick={() => setActiveGenTab('ALL')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  activeGenTab === 'ALL'
-                    ? 'bg-amber-500 text-slate-950 shadow-md font-black'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                الكل (أجيال 2-5)
               </button>
             </div>
           </div>
