@@ -528,10 +528,11 @@ function InfographicContent() {
               </div>
             ) : (
               <div className="overflow-x-auto pb-4 pt-24 dir-rtl scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-                <div className="flex items-end justify-center gap-3 sm:gap-5 min-w-full w-max mx-auto h-72 px-10 border-b border-slate-800/80 pb-2">
-                  {filteredGenerationalBranches.map((item) => {
+                <div className="flex items-end justify-center gap-3 sm:gap-5 min-w-full w-max mx-auto h-72 px-12 sm:px-16 border-b border-slate-800/80 pb-2">
+                  {filteredGenerationalBranches.map((item, idx) => {
                     const heightPct = Math.max(12, Math.round((item.descendantsCount / maxBranchDescendants) * 100));
                     const fullName = getPentanyicFullName(item.person, personsMap, relationships);
+                    const totalItems = filteredGenerationalBranches.length;
 
                     let barGradient = 'from-emerald-500 to-teal-400';
                     let textAccent = 'text-emerald-400';
@@ -551,13 +552,21 @@ function InfographicContent() {
                       borderAccent = 'border-indigo-500/30';
                     }
 
+                    // Smart tooltip positioning to prevent clipping on right/left edges in RTL
+                    let tooltipPosClass = 'left-1/2 -translate-x-1/2';
+                    if (idx <= 1) {
+                      tooltipPosClass = 'right-0';
+                    } else if (idx >= totalItems - 2) {
+                      tooltipPosClass = 'left-0';
+                    }
+
                     return (
                       <div
                         key={item.person.id}
                         className="group flex flex-col items-center gap-2 relative w-12 sm:w-16 h-full justify-end shrink-0 hover:z-40 transition-all"
                       >
                         {/* Interactive Hover Tooltip */}
-                        <div className="absolute -top-20 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 bg-slate-950 text-white p-3 rounded-2xl border border-slate-700 shadow-2xl w-48 text-right dir-rtl">
+                        <div className={`absolute -top-20 ${tooltipPosClass} opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 bg-slate-950 text-white p-3 rounded-2xl border border-slate-700 shadow-2xl w-48 sm:w-56 text-right dir-rtl`}>
                           <div className="text-[11px] font-black text-amber-300 leading-tight mb-1">
                             {fullName}
                           </div>
