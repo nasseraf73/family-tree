@@ -132,7 +132,7 @@ function InfographicContent() {
       {/* Hero Infographic Banner */}
       <div className="relative bg-gradient-to-b from-amber-950/60 via-slate-900 to-slate-950 border-b border-amber-500/20 px-6 py-8 shadow-2xl">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          
+
           <div className="flex items-center gap-4">
             <div className="relative w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-400 p-0.5 shadow-2xl shadow-amber-500/20 shrink-0">
               <div className="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center">
@@ -147,7 +147,7 @@ function InfographicContent() {
                 <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                إنفوجرافيك وإحصائيات شجرة العائلة
+                شجرة العائلة في أرقام
               </h1>
               <p className="text-xs text-slate-400 mt-1 font-medium max-w-xl">
                 مؤشرات تفاعلية شاملة توثق ديموغرافيا النسب، سجلات الأرقام القياسية، وتوزيع الأجيال والأسماء الأكثر انتشاراً.
@@ -162,7 +162,7 @@ function InfographicContent() {
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-blue-300 border border-blue-500/30 rounded-xl text-xs font-bold flex items-center gap-2 transition-all hover:scale-105 shadow-md"
             >
               <Share2 className="w-4 h-4 text-blue-400" />
-              مشاركة الإنفوجرافيك
+              مشاركة التقرير
             </button>
             <button
               onClick={handlePrintReport}
@@ -191,7 +191,7 @@ function InfographicContent() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[11px] text-slate-400 font-semibold block">الأحياء بحفظ الله</span>
+              <span className="text-[11px] text-slate-400 font-semibold block">الأحياء  </span>
               <span className="text-xl font-black text-blue-400">{demographics.livingCount} <span className="text-xs font-bold text-slate-400">({demographics.livingPct}%)</span></span>
             </div>
           </div>
@@ -201,7 +201,7 @@ function InfographicContent() {
               <Heart className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[11px] text-slate-400 font-semibold block">سجلات المصاهرة والزواج</span>
+              <span className="text-[11px] text-slate-400 font-semibold block">المتزوجون  </span>
               <span className="text-xl font-black text-pink-400">{demographics.totalSpouses} <span className="text-xs font-bold text-slate-400">عقد</span></span>
             </div>
           </div>
@@ -244,11 +244,11 @@ function InfographicContent() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
+
             {/* Males vs Females */}
             <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-slate-300">النوع الاجتماعي (الذكور والإناث)</span>
+                <span className="text-xs font-extrabold text-slate-300"> نسبة الذكور الى الإناث</span>
                 <span className="text-[11px] text-slate-400 font-bold">{demographics.totalMembers} عضو</span>
               </div>
 
@@ -283,8 +283,8 @@ function InfographicContent() {
             {/* Vital Status (Living vs Deceased) */}
             <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-4 shadow-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-slate-300">الحالة الحيوية (الأحياء والمتوفون)</span>
-                <span className="text-[11px] text-slate-400 font-bold">رحمة الله للمتوفين</span>
+                <span className="text-xs font-extrabold text-slate-300">نسبه االحياء الى المتوفين</span>
+                <span className="text-[11px] text-slate-400 font-bold"></span>
               </div>
 
               <div className="w-full h-4 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800">
@@ -347,7 +347,7 @@ function InfographicContent() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
+
             {/* Record 1: Oldest Living Member */}
             <div className="bg-gradient-to-b from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/40 p-5 rounded-3xl shadow-xl relative overflow-hidden group hover:border-amber-400 transition-all">
               <div className="absolute top-3 left-3 text-amber-400/20 group-hover:text-amber-400/40 transition-colors">
@@ -470,7 +470,7 @@ function InfographicContent() {
                 <BarChart3 className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-extrabold text-white">الرسم البياني العمودي المقارن لحجم الذرية والفروع</h2>
+                <h2 className="text-base font-extrabold text-white">الرسم البياني المقارن لحجم الذرية والفروع</h2>
                 <p className="text-xs text-slate-400 mt-0.5 font-medium">مقارنة إجمالي تعداد الذرية لجميع الأبناء والأحفاد حسب الجيل</p>
               </div>
             </div>
@@ -479,41 +479,37 @@ function InfographicContent() {
             <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto print:hidden">
               <button
                 onClick={() => setActiveGenTab(2)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  activeGenTab === 2
-                    ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeGenTab === 2
+                  ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 الجيل الثاني (الأبناء)
               </button>
               <button
                 onClick={() => setActiveGenTab(3)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  activeGenTab === 3
-                    ? 'bg-teal-500 text-slate-950 shadow-md font-black'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeGenTab === 3
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-black'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 الجيل الثالث (الأحفاد)
               </button>
               <button
                 onClick={() => setActiveGenTab(4)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  activeGenTab === 4
-                    ? 'bg-cyan-500 text-slate-950 shadow-md font-black'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeGenTab === 4
+                  ? 'bg-cyan-500 text-slate-950 shadow-md font-black'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 الجيل الرابع
               </button>
               <button
                 onClick={() => setActiveGenTab(5)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  activeGenTab === 5
-                    ? 'bg-indigo-500 text-white shadow-md font-black'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeGenTab === 5
+                  ? 'bg-indigo-500 text-white shadow-md font-black'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 الجيل الخامس
               </button>
@@ -615,7 +611,7 @@ function InfographicContent() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             {/* Top 5 Male Names */}
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">

@@ -76,7 +76,7 @@ function SurifContent() {
       textColor: 'text-purple-700 dark:text-purple-300'
     },
     {
-      title: 'نسبة الإلمام بالقراءة (القرائية)',
+      title: 'نسبة المتعلمين',
       value: '94.4%',
       unit: 'نسبة الأمية 5.6% فقط',
       icon: GraduationCap,
@@ -250,7 +250,7 @@ function SurifContent() {
             <div className="lg:col-span-7 space-y-6 text-right">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-bold backdrop-blur-md">
                 <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span>دليل إنفوجرافيك القرية والتاريخ</span>
+                <span>صوريف بين الذاكره والحاضر</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
@@ -339,11 +339,10 @@ function SurifContent() {
           <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-3 no-scrollbar">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-                activeTab === 'overview'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'overview'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
             >
               <Compass className="w-4 h-4" />
               <span>نظرة عامة وإحصائيات</span>
@@ -351,11 +350,10 @@ function SurifContent() {
 
             <button
               onClick={() => setActiveTab('charts')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-                activeTab === 'charts'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'charts'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
             >
               <PieChart className="w-4 h-4" />
               <span>الرسوم البيانية</span>
@@ -363,11 +361,10 @@ function SurifContent() {
 
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-                activeTab === 'history'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'history'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
             >
               <History className="w-4 h-4" />
               <span>الخط الزمني التاريخي</span>
@@ -375,11 +372,10 @@ function SurifContent() {
 
             <button
               onClick={() => setActiveTab('landmarks')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-                activeTab === 'landmarks'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'landmarks'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
             >
               <Landmark className="w-4 h-4" />
               <span>المعالم والتراث</span>
@@ -387,11 +383,10 @@ function SurifContent() {
 
             <button
               onClick={() => setActiveTab('gallery')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-                activeTab === 'gallery'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'gallery'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
             >
               <Maximize2 className="w-4 h-4" />
               <span>معرض الصور</span>
@@ -399,11 +394,10 @@ function SurifContent() {
 
             <button
               onClick={() => setActiveTab('development')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-                activeTab === 'development'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'development'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
             >
               <TrendingUp className="w-4 h-4" />
               <span>التحديات والتنمية</span>
@@ -611,41 +605,37 @@ function SurifContent() {
               <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
                 <button
                   onClick={() => setTimelineFilter('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                    timelineFilter === 'all'
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${timelineFilter === 'all'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
+                    }`}
                 >
                   الكل
                 </button>
                 <button
                   onClick={() => setTimelineFilter('ancient')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                    timelineFilter === 'ancient'
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${timelineFilter === 'ancient'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
+                    }`}
                 >
                   التاريخ القديم
                 </button>
                 <button
                   onClick={() => setTimelineFilter('mandate')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                    timelineFilter === 'mandate'
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${timelineFilter === 'mandate'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
+                    }`}
                 >
                   الانتداب والأردن
                 </button>
                 <button
                   onClick={() => setTimelineFilter('modern')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                    timelineFilter === 'modern'
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${timelineFilter === 'modern'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
+                    }`}
                 >
                   العصر الحديث
                 </button>
