@@ -32,7 +32,9 @@ export interface TreeAnalyticsResult {
   demographics: DemographicsData;
   records: {
     oldestLiving: RecordHolder;
-    largestBranch: RecordHolder;
+    largestBranchGen2: RecordHolder;
+    largestBranchGen3: RecordHolder;
+    largestBranchGen4: RecordHolder;
     mostOffspring: RecordHolder;
     mostSpouses: RecordHolder;
     newestMember: RecordHolder;
@@ -71,7 +73,9 @@ export function calculateTreeAnalytics(
       },
       records: {
         oldestLiving: { person: null, valueText: 'لا يوجد', metricLabel: 'عميد العائلة' },
-        largestBranch: { person: null, valueText: '0 فرد', metricLabel: 'أكبر فرع' },
+        largestBranchGen2: { person: null, valueText: '0 فرد', metricLabel: 'أكبر فرع (الجيل الثاني)' },
+        largestBranchGen3: { person: null, valueText: '0 فرد', metricLabel: 'أكبر فرع (الجيل الثالث)' },
+        largestBranchGen4: { person: null, valueText: '0 فرد', metricLabel: 'أكبر فرع (الجيل الرابع)' },
         mostOffspring: { person: null, valueText: '0 أطفال', metricLabel: 'الأكثر إنجاباً' },
         mostSpouses: { person: null, valueText: '0 زوجات', metricLabel: 'الأكثر زواجاً' },
         newestMember: { person: null, valueText: 'لا يوجد', metricLabel: 'أحدث مولود' },
@@ -146,7 +150,38 @@ export function calculateTreeAnalytics(
     }
   });
 
-  // 3. Records Calculations
+  // 3. Generational Calculations & Max Depth
+  const depthMemo = new Map<number, number>();
+
+  function getNodeDepth(personId: number, visited = new Set<number>()): number {
+    if (depthMemo.has(personId)) return depthMemo.get(personId)!;
+    if (visited.has(personId)) return 1;
+
+    visited.add(personId);
+    const parents = parentMap.get(personId);
+    if (!parents || parents.size === 0) {
+      depthMemo.set(personId, 1);
+      return 1;
+    }
+
+    let maxParentDepth = 0;
+    parents.forEach((pId) => {
+      const d = getNodeDepth(pId, new Set(visited));
+      if (d > maxParentDepth) maxParentDepth = d;
+    });
+
+    const depth = maxParentDepth + 1;
+    depthMemo.set(personId, depth);
+    return depth;
+  }
+
+  let maxDepth = 0;
+  persons.forEach((p) => {
+    const d = getNodeDepth(p.id);
+    if (d > maxDepth) maxDepth = d;
+  });
+
+  // 4. Records Calculations
 
   // A. Oldest Living Member (عميد العائلة)
   const livingWithBirthYear = persons.filter((p) => p.is_alive && p.birth_year && p.birth_year > 1800);
@@ -183,66 +218,43 @@ export function calculateTreeAnalytics(
     }
   });
 
-  // E. Largest Root Branch (أكبر فرع في العائلة)
-  const rootAncestors = persons.filter((p) => !parentMap.has(p.id) || parentMap.get(p.id)!.size === 0);
+  // E. Largest Branch per Generation (أكبر فرع في الجيل 2، والجيل 3، والجيل 4)
+  function getLargestBranchForDepth(targetDepth: number): { person: Person | null; count: number } {
+    let bestPerson: Person | null = null;
+    let maxDescendantCount = 0;
 
-  let largestBranchRoot: Person | null = null;
-  let maxDescendantCount = 0;
+    persons.forEach((p) => {
+      if (getNodeDepth(p.id) === targetDepth) {
+        const visitedSet = new Set<number>([p.id]);
+        const queue = [p.id];
 
-  rootAncestors.forEach((root) => {
-    const visitedSet = new Set<number>([root.id]);
-    const queue = [root.id];
-
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-      const children = offspringMap.get(currentId);
-      if (children) {
-        children.forEach((cId) => {
-          if (!visitedSet.has(cId)) {
-            visitedSet.add(cId);
-            queue.push(cId);
+        while (queue.length > 0) {
+          const currentId = queue.shift()!;
+          const children = offspringMap.get(currentId);
+          if (children) {
+            children.forEach((cId) => {
+              if (!visitedSet.has(cId)) {
+                visitedSet.add(cId);
+                queue.push(cId);
+              }
+            });
           }
-        });
+        }
+
+        const count = visitedSet.size;
+        if (count > maxDescendantCount) {
+          maxDescendantCount = count;
+          bestPerson = p;
+        }
       }
-    }
-
-    const descendantCount = visitedSet.size;
-    if (descendantCount > maxDescendantCount) {
-      maxDescendantCount = descendantCount;
-      largestBranchRoot = root;
-    }
-  });
-
-  // 4. Generational Calculations & Max Depth
-  const depthMemo = new Map<number, number>();
-
-  function getNodeDepth(personId: number, visited = new Set<number>()): number {
-    if (depthMemo.has(personId)) return depthMemo.get(personId)!;
-    if (visited.has(personId)) return 1;
-
-    visited.add(personId);
-    const parents = parentMap.get(personId);
-    if (!parents || parents.size === 0) {
-      depthMemo.set(personId, 1);
-      return 1;
-    }
-
-    let maxParentDepth = 0;
-    parents.forEach((pId) => {
-      const d = getNodeDepth(pId, new Set(visited));
-      if (d > maxParentDepth) maxParentDepth = d;
     });
 
-    const depth = maxParentDepth + 1;
-    depthMemo.set(personId, depth);
-    return depth;
+    return { person: bestPerson, count: maxDescendantCount };
   }
 
-  let maxDepth = 0;
-  persons.forEach((p) => {
-    const d = getNodeDepth(p.id);
-    if (d > maxDepth) maxDepth = d;
-  });
+  const gen2Branch = getLargestBranchForDepth(2);
+  const gen3Branch = getLargestBranchForDepth(3);
+  const gen4Branch = getLargestBranchForDepth(4);
 
   // Average children per parent
   const parentsWithChildrenCount = offspringMap.size;
@@ -307,11 +319,23 @@ export function calculateTreeAnalytics(
         metricLabel: 'عميد العائلة (الأكبر سناً)',
         subText: oldestPerson ? `العمر التقديري: ${new Date().getFullYear() - oldestPerson.birth_year!} سنة` : undefined,
       },
-      largestBranch: {
-        person: largestBranchRoot,
-        valueText: `${maxDescendantCount} فرد`,
-        metricLabel: 'أكبر فرع شجرة في العائلة',
-        subText: `نسبة الفرع: ${Math.round((maxDescendantCount / totalMembers) * 100)}% من إجمالي الأفراد`,
+      largestBranchGen2: {
+        person: gen2Branch.person,
+        valueText: gen2Branch.person ? `${gen2Branch.count} فرد` : 'غير محدد',
+        metricLabel: 'أكبر فرع في الجيل الثاني (أبناء الجد الجامع)',
+        subText: gen2Branch.person ? `نسبة الفرع: ${Math.round((gen2Branch.count / totalMembers) * 100)}% من إجمالي الأفراد` : undefined,
+      },
+      largestBranchGen3: {
+        person: gen3Branch.person,
+        valueText: gen3Branch.person ? `${gen3Branch.count} فرد` : 'غير محدد',
+        metricLabel: 'أكبر فرع في الجيل الثالث (أحفاد الجد الجامع)',
+        subText: gen3Branch.person ? `نسبة الفرع: ${Math.round((gen3Branch.count / totalMembers) * 100)}% من إجمالي الأفراد` : undefined,
+      },
+      largestBranchGen4: {
+        person: gen4Branch.person,
+        valueText: gen4Branch.person ? `${gen4Branch.count} فرد` : 'غير محدد',
+        metricLabel: 'أكبر فرع في الجيل الرابع (أبناء الأحفاد)',
+        subText: gen4Branch.person ? `نسبة الفرع: ${Math.round((gen4Branch.count / totalMembers) * 100)}% من إجمالي الأفراد` : undefined,
       },
       mostOffspring: {
         person: mostOffspringPerson,
@@ -340,3 +364,4 @@ export function calculateTreeAnalytics(
     },
   };
 }
+

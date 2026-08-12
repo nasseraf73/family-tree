@@ -31,12 +31,16 @@ describe('اختبارات تحليلات وتصفية الشجرة (Tree Analyt
     expect(result.demographics.femalesPct).toBe(40);
   });
 
-  it('يجب التعرف على أكبر الأفراد حياً والأسماء الأكثر تكراراً', () => {
+  it('يجب التعرف على أكبر الأفراد حياً والأسماء الأكثر تكراراً وأكبر الفروع حسب الأجيال', () => {
     const result = calculateTreeAnalytics(samplePersons, sampleRelationships);
 
     expect(result.records.oldestLiving.person).not.toBeNull();
     expect(result.records.oldestLiving.person?.id).toBe(1); // 1950 is oldest living
     expect(result.generational.topMaleNames[0].name).toBe('محمد');
+
+    // Gen 2 branch test (Node 1 "محمد" is Gen 2, child of Node 5 "علي")
+    expect(result.records.largestBranchGen2.person?.id).toBe(1);
+    expect(result.records.largestBranchGen2.valueText).toBe('3 فرد');
   });
 
   it('يجب تصفية الشجرة بناءً على النمط والتركيز (Tree Focus Filtering)', () => {
