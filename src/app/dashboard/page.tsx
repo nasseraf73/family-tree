@@ -473,6 +473,20 @@ function DashboardContent() {
               <ArrowRight className="w-5 h-5 text-slate-400 mr-auto group-hover:text-blue-500 group-hover:-translate-x-1 transition-all" />
             </Link>
 
+            <Link
+              href="/admin/logs"
+              className="group bg-white dark:bg-slate-900 border border-emerald-500/30 rounded-2xl p-5 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 flex items-center gap-4"
+            >
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <ShieldCheck className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">سجل عمليات الدخول</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">متابعة سجلات وأمان الدخول، عناوين IP، والتوقيت</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-slate-400 mr-auto group-hover:text-emerald-500 group-hover:-translate-x-1 transition-all" />
+            </Link>
+
             {/* HIDDEN_FOR_DEMO: Data management button disabled to prevent test admins from accessing database backups */}
             {/*
             <Link

@@ -95,6 +95,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (foundUser) {
+      if (!isRestore) {
+        // Log login audit event (IP, Name, Email, Timestamp)
+        fetch('/api/v1/auth/log-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: cleanEmail,
+            full_name: foundUser.full_name,
+            user_id: foundUser.id,
+            status: 'SUCCESS',
+          }),
+        }).catch(() => {});
+      }
+
       const mockSupabaseUser = {
         id: foundUser.id.toString(),
         email: foundUser.email,
@@ -123,6 +137,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (res.ok && data.user) {
         setDbUser(data.user);
         setRole(mapUserRole(data.user.role));
+
+        // Log registration/login event
+        fetch('/api/v1/auth/log-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            full_name: fullName,
+            user_id: data.user.id,
+            status: 'REGISTER_SUCCESS',
+          }),
+        }).catch(() => {});
 
         const mockSupabaseUser = {
           id: data.user.id.toString(),

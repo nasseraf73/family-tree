@@ -87,3 +87,15 @@ export const marriages = pgTable('marriages', {
   created_by_user_id: bigint('created_by_user_id', { mode: 'number' }).references(() => users.id, { onDelete: 'set null' }),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
+
+// 2.7 Login Audit Logs Table (login_logs)
+export const loginLogs = pgTable('login_logs', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  user_id: bigint('user_id', { mode: 'number' }).references(() => users.id, { onDelete: 'set null' }),
+  email: varchar('email', { length: 255 }).notNull(),
+  full_name: varchar('full_name', { length: 255 }),
+  ip_address: varchar('ip_address', { length: 100 }),
+  user_agent: text('user_agent'),
+  status: varchar('status', { length: 20 }).default('SUCCESS').notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
