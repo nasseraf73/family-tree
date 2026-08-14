@@ -465,7 +465,7 @@ function LandingPageContent() {
             <span className="font-extrabold text-slate-700 dark:text-slate-200 text-sm">منصة شجرة العائلة الكبرى</span>
           </div>
           <p className="text-center sm:text-right">
-            جميع الحقوق محفوظة © {new Date().getFullYear()} — منصة توثيق الأنساب الجماعية
+            جميع الحقوق محفوظة © {new Date().getFullYear()} — منصة توثيق الأنساب لعائلة أبو فاره
           </p>
         </div>
       </footer>
