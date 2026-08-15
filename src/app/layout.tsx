@@ -3,8 +3,8 @@ import '@xyflow/react/dist/style.css';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'منصة شجرة العائلة الكبرى | Crowdsourced Grand Family Tree Platform',
-  description: 'منصة ويب تفاعلية موحدة لتوثيق أنساب العائلة الكبرى باستعمال الكانفاس اللانهائي ومحرك الذكاء لمنع التكرار.',
+  title: 'شجرة عائلة أبو فاره | المنظومة الرقمية لتوثيق الأنساب',
+  description: 'منصة ويب تفاعلية موحدة لتوثيق أنساب وسلالة عائلة أبو فاره باستعمال الكانفاس اللانهائي ومحرك الذكاء لمنع التكرار.',
 };
 
 export default function RootLayout({

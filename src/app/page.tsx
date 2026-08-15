@@ -61,17 +61,17 @@ function LandingPageContent() {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-bold shadow-sm">
                 <Sparkles className="w-4 h-4 text-emerald-500 animate-pulse" />
-                <span>منظومة رقمية شاملة لتوثيق الأنساب وبناء شجرة العائلة تشاركياً</span>
+                <span>منظومة رقمية شاملة لتوثيق أنساب وسلالة عائلة أبو فاره تشاركياً</span>
               </div>
 
               {/* Headline */}
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white leading-[1.25] tracking-tight">
-                منصة <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-300 bg-clip-text text-transparent">شجرة العائلة</span> الكبرى
+                منصة شجرة <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-300 bg-clip-text text-transparent">عائلة أبو فاره</span>
               </h1>
 
               {/* Subtitle */}
               <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                منظومة تشاركية موحّدة تجمع أبناء العائلة لبناء وتوثيق سلالتهم على كانفاس تفاعلي غير محدود، مع عرض دائري للشجرة، إنفوجرافيك إحصائي، كشف الجد المشترك، ونظام حوكمة واعتماد صارم لحفظ النسب بدقة.
+                منظومة تشاركية موحّدة تجمع أبناء عائلة أبو فاره لتوثيق فروع الشجرة وسلسلة الأنساب على كانفاس تفاعلي غير محدود، مع عرض دائري، إنفوجرافيك إحصائي، كشف الجد المشترك، ونظام حوكمة واعتماد صارم لحفظ النسب بدقة.
               </p>
 
               {/* 3 CTA Buttons */}
@@ -82,7 +82,7 @@ function LandingPageContent() {
                   className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-600/25 flex items-center justify-center gap-3 text-base transition-all hover:scale-105"
                 >
                   <GitBranch className="w-5 h-5" />
-                  <span>الدخول لشجرة العائلة</span>
+                  <span>تصفح شجرة عائلة أبو فاره</span>
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
 
@@ -103,7 +103,7 @@ function LandingPageContent() {
                 </div>
                 <div>
                   <span className="block text-xl sm:text-2xl font-black text-teal-600 dark:text-teal-400">تشاركي</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">لجميع أفراد العائلة</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">لجميع أبناء عائلة أبو فاره</span>
                 </div>
                 <div>
                   <span className="block text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">حوكمة</span>
@@ -119,15 +119,15 @@ function LandingPageContent() {
                   <div className="relative w-36 h-36 sm:w-44 sm:h-44 transform group-hover:scale-105 transition-transform duration-500 drop-shadow-xl">
                     <Image
                       src="/images/logo/family_tree_logo_M.png"
-                      alt="لوجو شجرة العائلة"
+                      alt="لوجو شجرة عائلة أبو فاره"
                       fill
                       className="object-contain"
                       priority
                     />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">منصة شجرة العائلة الكبرى</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">تكاتف الأجيال وحفظ السلالة</p>
+                    <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">شجرة عائلة أبو فاره</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">صلة الأرحام وتوثيق تاريخ الأجيال</p>
                   </div>
                 </div>
               </div>
@@ -156,15 +156,15 @@ function LandingPageContent() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            {/* Card 1: شجرة العائلة الكبرى */}
+            {/* Card 1: شجرة عائلة أبو فاره */}
             <Link href="/tree" onClick={handleProtectedClick} className="group relative bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 transition-all hover:shadow-xl hover:shadow-emerald-500/5">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <GitBranch className="w-6 h-6" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">شجرة العائلة الكبرى</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">الكانفاس التفاعلي الرئيسي لبناء وتحرير الشجرة وإضافة الأفراد والعلاقات بكافة أنواعها.</p>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">شجرة عائلة أبو فاره التفاعلية</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">الكانفاس التفاعلي الرئيسي لبناء وتحرير الشجرة وإضافة أفراد العائلة والعلاقات بكافة فروعها.</p>
                 </div>
               </div>
               <div className="mt-4"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">يتطلب تسجيل دخول</span></div>
@@ -220,7 +220,7 @@ function LandingPageContent() {
                 </div>
                 <div className="space-y-1.5">
                   <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">إنفوجرافيك وإحصائيات</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">لوحة تحليلية شاملة تعرض ديموغرافيا العائلة، الأرقام القياسية، وتوزيع الأجيال والأسماء.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">لوحة تحليلية شاملة تعرض ديموغرافيا وإحصائيات عائلة أبو فاره، وسجلات الأجيال وتوزيع الأسماء.</p>
                 </div>
               </div>
               <div className="mt-4"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">متاح للجميع</span></div>
@@ -254,7 +254,7 @@ function LandingPageContent() {
               عن المنظومة والهدف منها
             </h2>
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-              تطبيق <strong className="text-emerald-600 dark:text-emerald-400">&quot;شجرة العائلة&quot;</strong> هو منصة رقمية تفاعلية وتشاركية تُبنى وتنمو بجهود جميع أفراد العائلة. بدلاً من الاعتماد على شخص واحد لتدوين النسب، يُتيح التطبيق لكل فرد المساهمة في إضافة وتحديث بيانات الأقارب وتوثيق العلاقات النسبية والسير الشخصية.
+              منصة <strong className="text-emerald-600 dark:text-emerald-400">&quot;شجرة عائلة أبو فاره&quot;</strong> هي مبادرة عائلية رقمية تفاعلية وتشاركية تُبنى وتنمو بجهود جميع أبناء وبنات العائلة. بدلاً من الاعتماد على شخص واحد لتدوين النسب، يُتيح التطبيق لكل فرد المساهمة في إضافة وتحديث بيانات الأقارب وتوثيق العلاقات النسبية والسير الشخصية.
             </p>
           </div>
 
@@ -265,7 +265,7 @@ function LandingPageContent() {
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">التكاتف التشاركي</h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                تتيح لكافة أبناء العائلة إضافة الأقارب والسير الشخصية ليكون العمل مجهوداً عائلياً مشتركاً يربط الفروع ويصل الأجيال.
+                تتيح لكافة أبناء وفروع عائلة أبو فاره إضافة الأقارب والسير الشخصية ليكون العمل مجهوداً عائلياً مشتركاً يربط الفروع ويصل الأجيال.
               </p>
             </div>
 
@@ -285,7 +285,7 @@ function LandingPageContent() {
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">حفظ التراث والأنساب</h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                توثيق رقمي دائم للسير الشخصية والأصول النسبية وحفظ تاريخ الآباء والأجداد لتتعرف عليه الأجيال القادمة بسهولة.
+                توثيق رقمي دائم للسير الشخصية والأصول النسبية وحفظ تاريخ آباء وأجداد عائلة أبو فاره لتتعرف عليه الأجيال القادمة بسهولة.
               </p>
             </div>
           </div>
@@ -305,7 +305,7 @@ function LandingPageContent() {
               جميع خصائص وميزات المنظومة
             </h2>
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              تعرّف على كافة الأدوات الذكية المتوفرة لبناء شجرتك العائلية وتحليلها واستكشاف علاقات النسب.
+              تعرّف على كافة الأدوات الذكية المتوفرة لبناء شجرة عائلة أبو فاره وتحليلها واستكشاف علاقات النسب.
             </p>
           </div>
 
@@ -317,7 +317,7 @@ function LandingPageContent() {
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform"><GitBranch className="w-5 h-5" /></div>
                 <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">البناء والتكافل التشاركي</h3>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">تمكين جميع أفراد العائلة من إدخال بيانات الأقارب وربط صلات النسب (آباء، أبناء، أزواج متعددين) بشكل جماعي على كانفاس تفاعلي غير محدود.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">تمكين جميع أبناء عائلة أبو فاره من إدخال بيانات الأقارب وربط صلات النسب (آباء، أبناء، أزواج متعددين) بشكل جماعي على كانفاس تفاعلي غير محدود.</p>
             </div>
 
             {/* Feature 2 */}
@@ -371,7 +371,7 @@ function LandingPageContent() {
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform"><BarChart3 className="w-5 h-5" /></div>
                 <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">إنفوجرافيك وإحصائيات تحليلية</h3>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">لوحة تحليلية شاملة: ديموغرافيا العائلة، سجلات الأرقام القياسية، توزيع الأجيال، أكثر 5 أسماء تكراراً للذكور والإناث.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">لوحة تحليلية شاملة: ديموغرافيا وإحصائيات عائلة أبو فاره، سجلات الأرقام القياسية، توزيع الأجيال، وأكثر الأسماء تكراراً.</p>
             </div>
 
             {/* Feature 8: كشف التكرارات */}
@@ -434,15 +434,15 @@ function LandingPageContent() {
           </div>
           <div className="space-y-3">
             <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-              جاهز لبناء وتوثيق شجرة عائلتك؟
+              جاهز لتوثيق والمساهمة في شجرة عائلة أبو فاره؟
             </h2>
             <p className="text-emerald-100/80 text-sm sm:text-lg max-w-2xl mx-auto">
-              انتقل الآن إلى الكانفاس التفاعلي وابدأ بإضافة الأقارب، أو استعرض الشجرة الدائرية والإحصائيات مباشرة.
+              انتقل الآن إلى الكانفاس التفاعلي وابدأ بإضافة وتحديث الأقارب، أو استعرض الشجرة الدائرية والإحصائيات مباشرة.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link href="/tree" onClick={handleProtectedClick} className="inline-flex items-center gap-3 px-10 py-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl shadow-2xl shadow-emerald-500/30 text-lg transition-all hover:scale-105">
-              <span>الانتقال لشجرة العائلة</span>
+              <span>الانتقال لشجرة عائلة أبو فاره</span>
               <ArrowLeft className="w-6 h-6" />
             </Link>
             <Link href="/radial-tree" className="inline-flex items-center gap-3 px-8 py-5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl border border-white/20 text-base transition-all hover:scale-105">
@@ -460,9 +460,9 @@ function LandingPageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 p-0.5 flex items-center justify-center">
-              <Image src="/images/logo/family_tree_logo_XS.png" alt="شعار شجرة العائلة" width={32} height={32} className="object-contain" />
+              <Image src="/images/logo/family_tree_logo_XS.png" alt="شعار شجرة عائلة أبو فاره" width={32} height={32} className="object-contain" />
             </div>
-            <span className="font-extrabold text-slate-700 dark:text-slate-200 text-sm">منصة شجرة العائلة الكبرى</span>
+            <span className="font-extrabold text-slate-700 dark:text-slate-200 text-sm">منصة شجرة عائلة أبو فاره</span>
           </div>
           <p className="text-center sm:text-right">
             جميع الحقوق محفوظة © {new Date().getFullYear()} — منصة توثيق الأنساب لعائلة أبو فاره

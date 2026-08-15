@@ -30,26 +30,26 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = user
     ? [
-        { name: 'الرئيسية', href: '/' },
-        { name: 'شجرة العائلة', href: '/tree' },
-        { name: 'الشجرة الدائرية', href: '/radial-tree' },
-        { name: 'شجرتي', href: '/my-tree' },
-        { name: 'الجد المشترك', href: '/common-ancestor' },
-        { name: 'إنفوجرافيك الشجرة', href: '/infographic' },
-        { name: 'عن صوريف', href: '/surif' },
-      ]
+      { name: 'الرئيسية', href: '/' },
+      { name: 'شجرة العائلة', href: '/tree' },
+      { name: 'الشجرة الدائرية', href: '/radial-tree' },
+      { name: 'شجرتي', href: '/my-tree' },
+      { name: 'الجد المشترك', href: '/common-ancestor' },
+      { name: 'إنفوجرافيك الشجرة', href: '/infographic' },
+      { name: 'عن صوريف', href: '/surif' },
+    ]
     : [
-        { name: 'الرئيسية', href: '/' },
-        { name: 'الشجرة الدائرية', href: '/radial-tree' },
-        { name: 'إنفوجرافيك الشجرة', href: '/infographic' },
-        { name: 'عن صوريف', href: '/surif' },
-      ];
+      { name: 'الرئيسية', href: '/' },
+      { name: 'الشجرة الدائرية', href: '/radial-tree' },
+      { name: 'إنفوجرافيك الشجرة', href: '/infographic' },
+      { name: 'عن صوريف', href: '/surif' },
+    ];
 
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/90 dark:bg-slate-950/90 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300 dir-rtl shadow-sm dark:shadow-slate-950/50">
       {/* Tier 1: Top Bar - Logo on Right, User & Controls on Left */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/60">
-        
+
         {/* Right Side: Logo & Title */}
         <Link href="/" className="flex items-center gap-3 group focus:outline-none shrink-0">
           <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl overflow-hidden bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-500/30 p-1 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
@@ -64,10 +64,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="text-base sm:text-lg font-extrabold bg-gradient-to-r from-emerald-700 to-teal-700 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent tracking-tight leading-tight">
-              شجرة العائلة
+              شجرة عائلة أبو فاره
             </span>
             <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
-              منصة توثيق الأنساب الجماعية
+              منصة توثيق الأنساب والتاريخ العائلي
             </span>
           </div>
         </Link>
@@ -104,8 +104,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {role === 'ADMIN'
                       ? 'مدير النظام'
                       : role === 'REVIEWER'
-                      ? 'ناظر فرع (راجع)'
-                      : 'عضو عائلة'}
+                        ? 'ناظر فرع (راجع)'
+                        : 'عضو عائلة'}
                   </span>
                 </div>
               </div>
@@ -114,11 +114,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Link
                 href="/dashboard"
                 title="لوحة التحكم والإعدادات"
-                className={`px-3 py-1.5 rounded-xl border transition-colors text-xs font-extrabold flex items-center gap-1.5 shrink-0 ${
-                  pathname === '/dashboard'
+                className={`px-3 py-1.5 rounded-xl border transition-colors text-xs font-extrabold flex items-center gap-1.5 shrink-0 ${pathname === '/dashboard'
                     ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/50'
                     : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                }`}
+                  }`}
               >
                 <LayoutDashboard className="w-4 h-4 text-emerald-500" />
                 <span>لوحة التحكم</span>
@@ -162,11 +161,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-1.5 rounded-xl text-xs lg:text-sm font-bold transition-all duration-200 ${
-                  isActive
+                className={`px-4 py-1.5 rounded-xl text-xs lg:text-sm font-bold transition-all duration-200 ${isActive
                     ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/20 border border-emerald-400/30'
                     : 'text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-900/80'
-                }`}
+                  }`}
               >
                 {link.name}
               </Link>
@@ -183,11 +181,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className={`block px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                pathname === link.href
+              className={`block px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${pathname === link.href
                   ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold'
                   : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'
-              }`}
+                }`}
             >
               {link.name}
             </Link>
