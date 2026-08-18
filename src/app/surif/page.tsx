@@ -174,22 +174,22 @@ function NammariyahContent() {
   // Gallery items (معرض صور تجريبي عالي الجودة)
   const galleryItems = [
     {
-      src: '/images/surif/surif-hero.png',
+      src: '/images/nammari/nammari-hero.jpg',
       title: 'مشهد بانورامي لديار النمّاري',
       desc: 'إطلالة علوية على تلال ديار النمّاري والمباني الحجرية العريقة المحاطة بالخضرة والينابيع.'
     },
     {
-      src: '/images/surif/surif-landscape.png',
+      src: '/images/nammari/nammari-landscape.jpg',
       title: 'بساتين النخيل والزيتون المباركة',
       desc: 'مساحات زراعية غناء تمتد على آلاف الدونمات وتعتبر رمزاً لأصالة وعطاء الأرض المباركة.'
     },
     {
-      src: '/images/surif/surif-landmarks.png',
+      src: '/images/nammari/nammari-landmarks.jpg',
       title: 'ديوان النمّاري والبلدة التراثية',
       desc: 'طراز معماري عريق وشواهد تاريخية تجسد كرم الضيافة وأصالة الأجداد على مر العصور.'
     },
     {
-      src: '/images/surif/surif-culture.png',
+      src: '/images/nammari/nammari-culture.jpg',
       title: 'التكافل الاجتماعي والمناسبات الجامعة',
       desc: 'أجواء اللقاءات العائلية السنوية ومواسم الحصاد والتلاحم بين مختلف أجيال العائلة.'
     },
@@ -286,7 +286,7 @@ function NammariyahContent() {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/30 shadow-2xl shadow-emerald-950/80 group">
                 <Image
-                  src="/images/surif/surif-hero.png"
+                  src="/images/nammari/nammari-hero.jpg"
                   alt="ديار النمّاري - التلال والطبيعة"
                   width={700}
                   height={500}
@@ -300,7 +300,7 @@ function NammariyahContent() {
                 </div>
                 <button
                   onClick={() => setSelectedImage({
-                    src: '/images/surif/surif-hero.png',
+                    src: '/images/nammari/nammari-hero.jpg',
                     title: 'مشهد بانورامي لديار النمّاري',
                     desc: 'طبيعة خلابة وبساتين خضراء وأبنية تراثية تمتد عبر ربوع ديار النمّاري العامرة.'
                   })}
