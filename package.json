@@ -1,0 +1,52 @@
+{
+  "name": "family-tree",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate-names": "node --import tsx --env-file=.env.local src/db/migrate_names.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.8",
+    "@types/dagre": "^0.7.54",
+    "@types/react-dom": "^18.3.1",
+    "@xyflow/react": "^12.11.2",
+    "autoprefixer": "^10.4.20",
+    "clsx": "^2.1.1",
+    "dagre": "^0.8.5",
+    "drizzle-orm": "^0.45.2",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "levenshtein": "^1.0.5",
+    "lucide-react": "^1.26.0",
+    "next": "^14.2.18",
+    "nodemailer": "^9.0.5",
+    "pdfmake": "^0.3.11",
+    "postcss": "^8.4.49",
+    "postgres": "^3.4.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^3.4.17"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "26.1.1",
+    "@types/nodemailer": "^8.0.1",
+    "@types/react": "^18.3.12",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitejs/plugin-react": "^6.0.4",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.18",
+    "typescript": "^5.5.3",
+    "vitest": "^4.1.10"
+  }
+}
