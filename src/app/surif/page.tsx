@@ -18,7 +18,7 @@ import {
   Activity,
   History,
   Sparkles,
-  ShieldAlert,
+  ShieldCheck,
   Droplets,
   ArrowRight,
   Maximize2,
@@ -29,65 +29,66 @@ import {
   Compass,
   Calendar,
   Layers,
-  PieChart
+  PieChart,
+  Sun
 } from 'lucide-react';
 
-function SurifContent() {
+function NammariyahContent() {
   const [activeTab, setActiveTab] = useState<'overview' | 'charts' | 'history' | 'landmarks' | 'gallery' | 'development'>('overview');
   const [selectedImage, setSelectedImage] = useState<{ src: string; title: string; desc: string } | null>(null);
-  const [timelineFilter, setTimelineFilter] = useState<'all' | 'ancient' | 'mandate' | 'modern'>('all');
+  const [timelineFilter, setTimelineFilter] = useState<'all' | 'ancient' | 'renaissance' | 'modern'>('all');
 
-  // Key Statistics
+  // Key Mock Statistics (إحصائيات نموذجية تجريبية)
   const stats = [
     {
-      title: 'إجمالي مساحة الأراضي',
-      value: '31,600',
-      unit: 'دونم (31.6 كم²)',
+      title: 'إجمالي مساحة الأراضي والضواحي',
+      value: '28,500',
+      unit: 'دونم (28.5 كم²)',
       icon: Map,
       color: 'from-emerald-500 to-teal-600',
       bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/50',
       textColor: 'text-emerald-700 dark:text-emerald-300'
     },
     {
-      title: 'التعداد السكاني التقديري (2021)',
-      value: '19,013',
-      unit: 'نسمة',
+      title: 'التعداد السكاني التقديري',
+      value: '16,850',
+      unit: 'نسمة (بيانات تجريبية)',
       icon: Users,
       color: 'from-blue-500 to-cyan-600',
       bg: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50',
       textColor: 'text-blue-700 dark:text-blue-300'
     },
     {
-      title: 'الأراضي المزروعة بالزيتون',
-      value: '6,035',
-      unit: 'دونم زيتون بعلي',
+      title: 'البساتين والمساحات الخضراء',
+      value: '7,200',
+      unit: 'دونم أشجار مثمرة وزيتون ونخيل',
       icon: Trees,
       color: 'from-amber-500 to-yellow-600',
       bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/50',
       textColor: 'text-amber-700 dark:text-amber-300'
     },
     {
-      title: 'المباني القديمة والأثرية',
-      value: '548',
-      unit: 'مبنى تاريخي (>400 عام)',
+      title: 'المعالم والأبنية التراثية',
+      value: '380',
+      unit: 'بيت وقصر تاريخي موثق',
       icon: Landmark,
       color: 'from-purple-500 to-indigo-600',
       bg: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800/50',
       textColor: 'text-purple-700 dark:text-purple-300'
     },
     {
-      title: 'نسبة المتعلمين',
-      value: '94.4%',
-      unit: 'نسبة الأمية 5.6% فقط',
+      title: 'نسبة التعليم وحملة الشهادات',
+      value: '96.8%',
+      unit: 'مؤشر تعليمي نموذجي متقدم',
       icon: GraduationCap,
       color: 'from-indigo-500 to-blue-600',
       bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800/50',
       textColor: 'text-indigo-700 dark:text-indigo-300'
     },
     {
-      title: 'تغطية شبكتي المياه والكهرباء',
-      value: '95% / 93%',
-      unit: 'خدمة منازل البلدة',
+      title: 'تغطية البنية التحتية الذكية',
+      value: '98%',
+      unit: 'طاقة نظيفة ومياه وإنترنت فائق',
       icon: Droplets,
       color: 'from-cyan-500 to-teal-600',
       bg: 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-200 dark:border-cyan-800/50',
@@ -95,92 +96,73 @@ function SurifContent() {
     },
   ];
 
-  // Population history data
+  // Population history data (نمو سكاني تجريبي)
   const popHistory = [
-    { year: '1922', pop: 1265, source: 'تعداد الانتداب البريطاني' },
-    { year: '1931', pop: 1640, source: 'تعداد الانتداب البريطاني' },
-    { year: '1945', pop: 2190, source: 'سجل فلسطين الرسمي' },
-    { year: '1961', pop: 2827, source: 'تعداد المملكة الأردنية' },
-    { year: '1997', pop: 9649, source: 'التعداد الفلسطيني الأول' },
-    { year: '2007', pop: 13365, source: 'التعداد الفلسطيني الثاني' },
-    { year: '2017', pop: 17287, source: 'التعداد الفلسطيني الثالث' },
-    { year: '2021', pop: 19013, source: 'تقدير جهاز الإحصاء (PCBS)' },
+    { year: '1920', pop: 1100, source: 'سجلات التوثيق القديمة (تجريبي)' },
+    { year: '1940', pop: 1850, source: 'سجل العائلات التاريخي' },
+    { year: '1960', pop: 3200, source: 'إحصاء القرى والبلدات' },
+    { year: '1980', pop: 5900, source: 'المسح التنموي الشامل' },
+    { year: '2000', pop: 9400, source: 'التعداد الميداني الأول' },
+    { year: '2015', pop: 13800, source: 'التعداد الإحصائي التقديري' },
+    { year: '2024', pop: 16850, source: 'المنظومة الرقمية الموحدة (محدث)' },
   ];
-  const maxPop = 20000;
+  const maxPop = 18000;
 
   // Land Usage data
   const landUsage = [
-    { name: 'أراضٍ مزروعة حالياً', area: 8457, percentage: 26.8, color: 'bg-emerald-500', text: 'زيتون، حبوب، فواكه وبقوليات' },
-    { name: 'مناطق معمارية ومباني', area: 8000, percentage: 25.3, color: 'bg-blue-500', text: 'المركز التاريخي والأحياء الحديثة' },
-    { name: 'أراضٍ غير مزروعة (بور)', area: 5043, percentage: 16.0, color: 'bg-amber-500', text: 'صالحة للزراعة وتحتاج استصلاح' },
-    { name: 'أراضٍ عارية ورعوية أخرى', area: 9700, percentage: 30.6, color: 'bg-slate-400 dark:bg-slate-600', text: 'تضاريس وجبال ومراعي' },
-    { name: 'غابات ومساحات خضراء', area: 400, percentage: 1.3, color: 'bg-teal-600', text: 'محميات وغابات طبيعية' },
+    { name: 'بساتين زراعية ومزارع نخيل', area: 7200, percentage: 25.3, color: 'bg-emerald-500', text: 'أشجار الزيتون والنخيل والمحاصيل الموسمية' },
+    { name: 'أحياء سكنية وعمران حديث', area: 6800, percentage: 23.9, color: 'bg-blue-500', text: 'البلدة القديمة والمجمعات السكنية الجديدة' },
+    { name: 'محميات طبيعية ومساحات خضراء', area: 3500, percentage: 12.3, color: 'bg-teal-600', text: 'متنزهات بيئية وتلال طبيعية خضراء' },
+    { name: 'أراضٍ مخصصة للتوسع التنموي', area: 5200, percentage: 18.2, color: 'bg-amber-500', text: 'مخططات مستقبلية للمرافق والمشاريع' },
+    { name: 'تضاريس ومرتفعات جبلية', area: 5800, percentage: 20.3, color: 'bg-slate-400 dark:bg-slate-600', text: 'مرتفعات طبيعية وإطلالات خلابة' },
   ];
 
   // Economic workforce distribution
   const workforce = [
-    { sector: 'العمل داخل الخط الأخضر', percentage: 55, color: 'bg-blue-600', icon: Briefcase },
-    { sector: 'القطاع الزراعي ورعاية الأراضي', percentage: 20, color: 'bg-emerald-600', icon: Trees },
-    { sector: 'التجارة والتوزيع والخدمات', percentage: 12, color: 'bg-purple-600', icon: Building2 },
-    { sector: 'الصناعات الحرفية والمقالع', percentage: 3, color: 'bg-amber-600', icon: Layers },
-    { sector: 'الوظائف الحكومية والقطاعات الأخرى', percentage: 10, color: 'bg-slate-600', icon: GraduationCap },
+    { sector: 'القطاع الهندسي والتقني والوظائف الحديثة', percentage: 38, color: 'bg-blue-600', icon: Briefcase },
+    { sector: 'ريادة الأعمال والتجارة والاستثمار', percentage: 26, color: 'bg-emerald-600', icon: Building2 },
+    { sector: 'الإنتاج الزراعي والصناعات الغذائية', percentage: 18, color: 'bg-teal-600', icon: Trees },
+    { sector: 'التعليم والقطاع الأكاديمي والبحثي', percentage: 12, color: 'bg-purple-600', icon: GraduationCap },
+    { sector: 'الحرف التراثية والفنون العائلية', percentage: 6, color: 'bg-amber-600', icon: Layers },
   ];
 
-  // Timeline Events
+  // Timeline Events (تسلسل زمني تجريبي متناسق مع العائلة)
   const timelineEvents = [
     {
-      year: '1838',
+      year: '1850',
       era: 'ancient',
-      title: 'التوثيق في كتابات الرحالة روبنسون',
-      desc: 'سجل الرحالة روبنسون صوريف كقرية مسلمة تابعة لقضاء الخليل تقع على مرتفع جبل زراعي.'
+      title: 'تأسيس ديار النمّاري واستقرار الجد حزام',
+      desc: 'استقرار الجد حزام النمّاري في الواحة الخصبة ووضع اللبنة الأولى لفرع العائلة وتشييد أولى البيوت الحجرية والآبار.'
     },
     {
-      year: '1863',
+      year: '1895',
       era: 'ancient',
-      title: 'زيارة الفرنسي فيكتور جويران وآثار العملات الرومانية',
-      desc: 'لاحظ وجود محطة سابقة لصك النقود الرومانية وأبئار قديمة وعدد سكان يقارب 700 نسمة.'
+      title: 'بناء ديوان العائلة والمسجد التراثي',
+      desc: 'اكتمال بناء ديوان النمّاري المركزي ليكون ملتقى الصلح والضيافة والمناسبات وتدارس شؤون القبيلة والعائلة.'
     },
     {
-      year: '1883',
-      era: 'ancient',
-      title: 'مسح صندوق استكشاف فلسطين (PEF)',
-      desc: 'وُصفت بأنها "قرية قمة تل منخفض تحيط بها أشجار الزيتون من الجنوب والمزارع الخصبة".'
+      year: '1935',
+      era: 'renaissance',
+      title: 'توسع البساتين وحفر قنوات الري الحجرية',
+      desc: 'غرس آلاف أشجار النخيل والزيتون وبناء قنوات مائية دقيقة اعتمدت على الينابيع الجوفية العذبة بالمنطقة.'
     },
     {
-      year: '1922 - 1945',
-      era: 'mandate',
-      title: 'فترة الانتداب البريطاني والنمو السكاني',
-      desc: 'ارتفع عدد السكان من 1,265 نسمة سنة 1922 إلى 2,190 نسمة سنة 1945 بتوسع في غرس أشجار الزيتون.'
+      year: '1970',
+      era: 'renaissance',
+      title: 'نهضة التعليم وتأسيس أول مجمع مدرسي',
+      desc: 'افتتاح المجمع التعليمي التأسيسي وتخريج أولى الأفواج الأكاديمية التي ساهمت في نهضة البلدة والوطن.'
     },
     {
-      year: '1945',
-      era: 'mandate',
-      title: 'بناء المسجد العمري الكبير',
-      desc: 'تشييد المسجد العمري الكبير في قلب البلدة، والذي شهد بعد ذلك عمليات توسعة شاملة عام 1970.'
-    },
-    {
-      year: '1948 - 1961',
-      era: 'mandate',
-      title: 'الإدارة الأردنية وتعداد 1961',
-      desc: 'خضعت صوريف للإدارة الأردنية بعد حرب 1948 وسُجل بها 2,827 نسمة في إحصاء عام 1961.'
-    },
-    {
-      year: '1997',
+      year: '2005',
       era: 'modern',
-      title: 'تأسيس بلدية صوريف الرسمية',
-      desc: 'إنشاء مجلس بلدي مستقل لصوريف يتولى تنظيم الخدمات والبنية التحتية وتطوير المؤسسات.'
+      title: 'تأسيس مجلس أمناء ديار النمّاري',
+      desc: 'هيكلة الصندوق الخيري التكافلي وإطلاق جائزة التفوق العلمي السنوية لأبناء وبنات عائلة النمّاري.'
     },
     {
-      year: '2004',
+      year: '2024',
       era: 'modern',
-      title: 'جدار الفصل وتأثيرات الاحتلال',
-      desc: 'بدء بناء جدار الفصل العنصري مما أدى لعزل نحو 1,300 دونم ومصادرة أراضٍ زراعية.'
-    },
-    {
-      year: '2017 - 2025',
-      era: 'modern',
-      title: 'التعداد الحديث والدعم التنموي',
-      desc: 'وصل التعداد السكاني إلى 17,287 (2017) و19,000+ حالياً مع صمود الأهالي وتطوير المؤسسات المحلية.'
+      title: 'إطلاق المنظومة الرقمية لشجرة العائلة',
+      desc: 'تدشين المنصة الرقمية التفاعلية لربط الأنساب وتوثيق السلالات بنظام حوكمة ذكي وكشف الجد المشترك.'
     },
   ];
 
@@ -189,38 +171,38 @@ function SurifContent() {
     return ev.era === timelineFilter;
   });
 
-  // Gallery items
+  // Gallery items (معرض صور تجريبي عالي الجودة)
   const galleryItems = [
     {
       src: '/images/surif/surif-hero.png',
-      title: 'مشهد بانورامي لبلدة صوريف',
-      desc: 'إطلالة ساحرة على التلال والمباني السكنية المحاطة بالوديان والأشجار الخضراء.'
+      title: 'مشهد بانورامي لديار النمّاري',
+      desc: 'إطلالة علوية على تلال ديار النمّاري والمباني الحجرية العريقة المحاطة بالخضرة والينابيع.'
     },
     {
       src: '/images/surif/surif-landscape.png',
-      title: 'جبال صوريف وأراضيها الزراعية',
-      desc: 'سلسلة التلال الزراعية وبساتين الزيتون المباركة التي تغطي آلاف الدونمات.'
+      title: 'بساتين النخيل والزيتون المباركة',
+      desc: 'مساحات زراعية غناء تمتد على آلاف الدونمات وتعتبر رمزاً لأصالة وعطاء الأرض المباركة.'
     },
     {
       src: '/images/surif/surif-landmarks.png',
-      title: 'الأصالة والتراث المعماري',
-      desc: 'المباني التاريخية والحجارة العريقة في البلدة القديمة والمعالم الدينية.'
+      title: 'ديوان النمّاري والبلدة التراثية',
+      desc: 'طراز معماري عريق وشواهد تاريخية تجسد كرم الضيافة وأصالة الأجداد على مر العصور.'
     },
     {
       src: '/images/surif/surif-culture.png',
-      title: 'التراث الشعبي وحصاد الزيتون',
-      desc: 'الموروث الثقافي الأصيل وحرفة نسيج المزاود والتلاحم العائلي في موسم القطاف.'
+      title: 'التكافل الاجتماعي والمناسبات الجامعة',
+      desc: 'أجواء اللقاءات العائلية السنوية ومواسم الحصاد والتلاحم بين مختلف أجيال العائلة.'
     },
   ];
 
-  // Development Priorities
+  // Development Priorities (مشاريع تنموية نموذجية للعرض)
   const devPriorities = [
-    { title: 'تعبيد الطرق وتوسيع الشبكة', count: '35 كم', desc: 'فتح ورصف طرق رئيسية وزراعية لتسهيل وصول الأهالي والمزارعين للأراضي.', icon: Map, color: 'text-amber-500 bg-amber-500/10 border-amber-500/30' },
-    { title: 'تأهيل وتوسعة شبكة المياه', count: '32 كم', desc: 'بناء خزانات مياه مرتفعة وزيادة الضغط للتغلب على انقطاع المياه في المناطق العالية.', icon: Droplets, color: 'text-blue-500 bg-blue-500/10 border-blue-500/30' },
-    { title: 'إنشاء مركز صحي متكامل', count: 'مركز شامل', desc: 'تزويد البلدة بمركز صحي متطور وتأمين عيادات طوارئ تقلل الاعتماد على مستشفيات المدن.', icon: Activity, color: 'text-rose-500 bg-rose-500/10 border-rose-500/30' },
-    { title: 'بناء مدرسة ابتدائية جديدة للبنين', count: 'مدرسة جديدة', desc: 'تخفيف الاكتظاظ المدرسي وتطوير الغرف الصفية في المدارس الـ 9 القائمة بالبلدة.', icon: GraduationCap, color: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/30' },
-    { title: 'استصلاح الأراضي والجدران الاستنادية', count: '8,000 دونم', desc: 'بناء السلاسل الحجرية وترميم التربة لحماية الأراضي من المصادرة ودعم الزراعة.', icon: Trees, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30' },
-    { title: 'إدارة الصرف الصحي والمخلفات', count: 'شبكة مركزية', desc: 'استبدال الحفر الامتصاصية بشبكة صرف صحي حماية للمياه الجوفية والتصدي لمخلفات المستوطنات.', icon: ShieldAlert, color: 'text-purple-500 bg-purple-500/10 border-purple-500/30' },
+    { title: 'تطوير ديوان ومتحف النمّاري التراثي', count: 'مشروع رئيسي', desc: 'إنشاء قاعة توثيق رقمية ومتحف للمقتنيات والوثائق التاريخية للأجداد.', icon: Landmark, color: 'text-amber-500 bg-amber-500/10 border-amber-500/30' },
+    { title: 'واحة الطاقة المتجددة والمياه الذكية', count: 'بنية خضراء', desc: 'تزويد الآبار والمرافق بأنظمة طاقة شمسية وشبكات ري حديثة موفرة للمياه.', icon: Droplets, color: 'text-blue-500 bg-blue-500/10 border-blue-500/30' },
+    { title: 'مركز النمّاري للابتكار وتنمية المهارات', count: 'حاضنة أعمال', desc: 'مساحة تدريبية وتطويرية لدعم الشباب وتأهيلهم في مجالات التقنية وريادة الأعمال.', icon: GraduationCap, color: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/30' },
+    { title: 'المتنزه البيئي الترفيهي العائلي', count: '250 دونم', desc: 'تهيئة مساحات خضراء ومسارات مشي وإطلالات جبلية لعائلات وزوار البلدة.', icon: Trees, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30' },
+    { title: 'الصندوق التكافلي للرعاية والمنح الدراسية', count: 'برنامج مستمر', desc: 'دعم الطلبة المتفوقين وتقديم الرعاية الاجتماعية للأسر لتعزيز الترابط العائلي.', icon: ShieldCheck, color: 'text-purple-500 bg-purple-500/10 border-purple-500/30' },
+    { title: 'توسعة وتحديث البوابة الرقمية الموحدة', count: 'إصدار 2.0', desc: 'تطوير تطبيق الهواتف الذكية وتوسيع قاعدة بيانات شجرة العائلة بتقنيات الذكاء الاصطناعي.', icon: Sparkles, color: 'text-cyan-500 bg-cyan-500/10 border-cyan-500/30' },
   ];
 
   return (
@@ -242,7 +224,7 @@ function SurifContent() {
               <span>الرئيسية</span>
             </Link>
             <ChevronLeft className="w-4 h-4 text-emerald-600" />
-            <span className="text-slate-300 font-bold">عن بلدة صوريف</span>
+            <span className="text-slate-300 font-bold">عن ديار النمّاري (نسخة تجريبية)</span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -250,18 +232,18 @@ function SurifContent() {
             <div className="lg:col-span-7 space-y-6 text-right">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-bold backdrop-blur-md">
                 <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span>صوريف بين الذاكره والحاضر</span>
+                <span>ديار النمّاري — أصالة وتاريخ واعد</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
-                بلدة صوريف <br />
+                ديار النمّاري <br />
                 <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent">
-                  عراقة التاريخ وأصالة الأرض
+                  واحة التاريخ ونبض الأجيال
                 </span>
               </h1>
 
               <p className="text-slate-300 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl font-normal">
-                صوريف بلدة فلسطينية تقع في شمال غرب محافظة الخليل، ترتفع نحو 600 متر عن سطح البحر وتمتد على مساحة 31,600 دونم من التلال الخضراء وأشجار الزيتون التليدة. تُعد نموذجاً أصيلاً للصمود، وتزخر بتاريخ حافل ومعالم عريقة وعائلات متجذرة.
+                بلدة نموذجية وموطن عريق لفرع عائلة النمّاري، تمتد على تلال وبساتين خضراء بمساحة 28,500 دونم. تجمع بين عبق التراث والأبنية التاريخية الأصيلة ومشاريع التطور الحديثة، لتشكل نموذجاً مشرفاً للتكافل والترابط العائلي والمجتمعي.
               </p>
 
               {/* Badges Bar */}
@@ -269,9 +251,9 @@ function SurifContent() {
                 <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-sm">
                   <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold mb-1">
                     <MapPin className="w-4 h-4" />
-                    <span>الموقع الإداري</span>
+                    <span>الموقع الجغرافي</span>
                   </div>
-                  <div className="text-slate-100 text-xs sm:text-sm font-bold">شمال الخليل (25 كم)</div>
+                  <div className="text-slate-100 text-xs sm:text-sm font-bold">المنطقة الوسطى (واحة النمّارية)</div>
                 </div>
 
                 <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-sm">
@@ -279,23 +261,23 @@ function SurifContent() {
                     <Mountain className="w-4 h-4" />
                     <span>الارتفاع عن البحر</span>
                   </div>
-                  <div className="text-slate-100 text-xs sm:text-sm font-bold">600 متر</div>
+                  <div className="text-slate-100 text-xs sm:text-sm font-bold">620 متر</div>
                 </div>
 
                 <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-sm">
                   <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold mb-1">
                     <Map className="w-4 h-4" />
-                    <span>مساحة الأراضي</span>
+                    <span>إجمالي المساحة</span>
                   </div>
-                  <div className="text-slate-100 text-xs sm:text-sm font-bold">31,600 دونم</div>
+                  <div className="text-slate-100 text-xs sm:text-sm font-bold">28,500 دونم</div>
                 </div>
 
                 <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-sm">
                   <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold mb-1">
                     <Building2 className="w-4 h-4" />
-                    <span>رئاسة البلدية</span>
+                    <span>مجلس الإدارة والوجهاء</span>
                   </div>
-                  <div className="text-slate-100 text-xs sm:text-sm font-bold">الأستاذ حازم غنيمات</div>
+                  <div className="text-slate-100 text-xs sm:text-sm font-bold">مجلس أمناء عائلة النمّاري</div>
                 </div>
               </div>
             </div>
@@ -305,7 +287,7 @@ function SurifContent() {
               <div className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/30 shadow-2xl shadow-emerald-950/80 group">
                 <Image
                   src="/images/surif/surif-hero.png"
-                  alt="صوريف - التلال والأراضي الزراعية"
+                  alt="ديار النمّاري - التلال والطبيعة"
                   width={700}
                   height={500}
                   className="w-full h-80 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700"
@@ -313,14 +295,14 @@ function SurifContent() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
                 <div className="absolute bottom-4 right-4 left-4 text-right">
-                  <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">مشهد بانورامي لبلدة صوريف</span>
-                  <h3 className="text-white font-extrabold text-base sm:text-lg">طبيعة صوريف الخلابة ومبانيها الممتدة على قمم الجبال</h3>
+                  <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">مشهد بانورامي لديار النمّاري</span>
+                  <h3 className="text-white font-extrabold text-base sm:text-lg">طبيعة خلابة وتراث عمراني متجذر يمتد عبر الأجيال</h3>
                 </div>
                 <button
                   onClick={() => setSelectedImage({
                     src: '/images/surif/surif-hero.png',
-                    title: 'مشهد بانورامي لبلدة صوريف',
-                    desc: 'طبيعة صوريف الخلابة ومبانيها الممتدة على قمم الجبال المحاطة ببساتين الزيتون.'
+                    title: 'مشهد بانورامي لديار النمّاري',
+                    desc: 'طبيعة خلابة وبساتين خضراء وأبنية تراثية تمتد عبر ربوع ديار النمّاري العامرة.'
                   })}
                   className="absolute top-4 left-4 p-2 bg-slate-900/80 hover:bg-emerald-600 text-white rounded-xl backdrop-blur-md border border-slate-700 transition-colors"
                   title="تكبير الصورة"
@@ -400,7 +382,7 @@ function SurifContent() {
                 }`}
             >
               <TrendingUp className="w-4 h-4" />
-              <span>التحديات والتنمية</span>
+              <span>المشاريع والتنمية</span>
             </button>
           </div>
         </div>
@@ -409,7 +391,7 @@ function SurifContent() {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
 
-        {/* Section 1: Overview & Numerical Statistics */}
+        {/* Section 1: Overview & Key Statistics */}
         {(activeTab === 'overview' || activeTab === 'charts') && (
           <section className="space-y-8">
             <div className="flex items-center justify-between">
@@ -418,9 +400,9 @@ function SurifContent() {
                   <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/30">
                     <Activity className="w-5 h-5" />
                   </div>
-                  <span>الأرقام والإحصائيات الرئيسية</span>
+                  <span>الأرقام والمؤشرات الرئيسية (بيانات نموذجية)</span>
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">مؤشرات ديموغرافية وجغرافية وبنية تحتية موثقة من الجهاز المركزي للإحصاء الفلسطيني ووزارة الزراعة</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">مؤشرات ديموغرافية وجغرافية وتنموية مجهزة للعرض التجريبي لبيئة العائلة والبلدة</p>
               </div>
             </div>
 
@@ -462,7 +444,7 @@ function SurifContent() {
                 </div>
                 <span>الرسوم البيانية والمخططات التفاعلية</span>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">تتبع التطور السكاني واستخدامات الأراضي والقطاعات الاقتصادية في صوريف</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">تتبع التطور السكاني وتوزيع استخدامات الأراضي والأنشطة الاقتصادية في ديار النمّاري</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -472,11 +454,11 @@ function SurifContent() {
                   <div>
                     <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-emerald-500" />
-                      <span>نمو التعداد السكاني في صوريف (1922 - 2021)</span>
+                      <span>نمو التعداد السكاني في ديار النمّاري (1920 - 2024)</span>
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">تضاعف عدد السكان أكثر من 15 ضعفاً خلال قرن من الزمن</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">توسع مجتمعي مبارك ونمو متواصل للأسر والأجيال</p>
                   </div>
-                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-full">تعداد رسمي</span>
+                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-full">بيانات تجريبية</span>
                 </div>
 
                 {/* Bars Visualizer */}
@@ -502,8 +484,8 @@ function SurifContent() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  <span>المصدر: الجهاز المركزي للإحصاء الفلسطيني والسجل التاريخي</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">النمو السنوي: ~2.8%</span>
+                  <span>المصدر: السجل الرقمي التاريخي لعائلة النمّاري</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">معدل النمو السنوي: ~2.9%</span>
                 </div>
               </div>
 
@@ -514,9 +496,9 @@ function SurifContent() {
                     <div>
                       <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         <Briefcase className="w-5 h-5 text-blue-500" />
-                        <span>توزيع القطاعات الاقتصادية والقوى العاملة</span>
+                        <span>توزيع المجالات المهنية والأنشطة</span>
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">مصادر دخل السكان والنشاط العملي</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">تنوع التخصصات العلمية والعملية لأبناء العائلة</p>
                     </div>
                   </div>
 
@@ -542,7 +524,7 @@ function SurifContent() {
                 </div>
 
                 <div className="mt-6 p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 text-xs text-emerald-800 dark:text-emerald-300 font-semibold">
-                  💡 تُشكل العمالة والزراعة ركيزتين رئيسيتين لاقتصاد البلدة مع زيادة الاهتمام بالمشاريع التجارية المحلية.
+                  💡 تمتاز ديار النمّاري بارتفاع نسبة الكفاءات الأكاديمية والتقنية وأصحاب المبادرات الريادية.
                 </div>
               </div>
             </div>
@@ -552,9 +534,9 @@ function SurifContent() {
               <div className="mb-6">
                 <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <Map className="w-5 h-5 text-amber-500" />
-                  <span>توزيع استخدامات الأرض في صوريف (إجمالي 31,600 دونم)</span>
+                  <span>توزيع استخدامات الأراضي في ديار النمّاري (إجمالي 28,500 دونم)</span>
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">تنوع جغرافي بين الأراضي الزراعية والمناطق المعمارية والغابات</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">توازن بيئي نموذجي بين المزارع والمناطق السكنية والمحميات الطبيعية</p>
               </div>
 
               {/* Combined Progress Bar */}
@@ -596,9 +578,9 @@ function SurifContent() {
                   <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/30">
                     <History className="w-5 h-5" />
                   </div>
-                  <span>الخط الزمني لتاريخ صوريف المحطات الرئيسية</span>
+                  <span>الخط الزمني لتاريخ ديار النمّاري المحطات الكبرى</span>
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">مسيرة البلدة عبر العصور من الاستكشافات القديمة حتى العصر الحديث</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">تتبع مسيرة الآباء والأجداد من النشأة الأولى حتى إطلاق المنظومة الرقمية الحديثة</p>
               </div>
 
               {/* Filters */}
@@ -619,16 +601,16 @@ function SurifContent() {
                     : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
                     }`}
                 >
-                  التاريخ القديم
+                  التأسيس والنشأة
                 </button>
                 <button
-                  onClick={() => setTimelineFilter('mandate')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${timelineFilter === 'mandate'
+                  onClick={() => setTimelineFilter('renaissance')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${timelineFilter === 'renaissance'
                     ? 'bg-purple-600 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:text-purple-500'
                     }`}
                 >
-                  الانتداب والأردن
+                  النهضة والتوسع
                 </button>
                 <button
                   onClick={() => setTimelineFilter('modern')}
@@ -653,9 +635,9 @@ function SurifContent() {
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                       <span className="px-3 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-300 text-xs font-extrabold rounded-xl border border-purple-500/30 flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5" />
-                        <span>عام {item.year}</span>
+                        <span>عام {item.year}م</span>
                       </span>
-                      <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">محطة تاريخية</span>
+                      <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">محطة مضيئة</span>
                     </div>
 
                     <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">{item.title}</h3>
@@ -675,9 +657,9 @@ function SurifContent() {
                 <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/30">
                   <Landmark className="w-5 h-5" />
                 </div>
-                <span>المعالم التاريخية والتراث السائد</span>
+                <span>المعالم التراثية والرموز العائلية الأصيلة</span>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">أبرز المعالم الروحية والتاريخية والحرف التقليدية التي تمتاز بها صوريف</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">أبرز المعالم المعمارية والمرافق الجامعة التي تميز ديار النمّاري</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -686,9 +668,9 @@ function SurifContent() {
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/30 mb-4 font-bold">
                   <Landmark className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">المسجد العمري الكبير (1945م)</h3>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">ديوان وقصر الجد حزام التراثي</h3>
                 <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  يقع في قلب صوريف القديمة، شُيد عام 1945م وتمت توسعته عام 1970م. يُعد مركز التجمع الديني والاجتماعي في الأعياد والمناسبات الوطنية.
+                  الصرح التاريخي الأبرز في قلب البلدة، شُيد بالحجارة المنحوتة الأصيلة، ويحتضن اجتماعات العائلة السنوية ومجالس التشاور والصلح.
                 </p>
               </div>
 
@@ -697,9 +679,9 @@ function SurifContent() {
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/30 mb-4 font-bold">
                   <Compass className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">مقام أبو عبيدة (خربة جمرين)</h3>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">عين ماء النمّارية العذبة</h3>
                 <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  مقام الصحابي الجليل أبو عبيدة عامر بن الجراح جنوب البلدة بخربة جمرين، معلم ديني وتاريخي بارز يرتاده الأهالي والزوار.
+                  نبع مائي تاريخي متدفق كان المصدر الأساسي لسقاية القوافل وبساتين النخيل، ويحيط به متنزه بيئي حديث مخصص لجلسات العائلة.
                 </p>
               </div>
 
@@ -708,9 +690,9 @@ function SurifContent() {
                 <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/30 mb-4 font-bold">
                   <Building2 className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">البلدة القديمة (548 مبنى أثري)</h3>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">حي النمّاري العتيق (380 مبنى)</h3>
                 <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  تضم أكثر من 548 ييت ومبنى أثري يعود تاريخ بعضها لأكثر من 400 عام، وتتميز بالطراز المعماري الفلسطيني الكنعاني والعثماني.
+                  أزقة ومبانٍ حجرية ساحرة تحتفظ بالعمارة التقليدية والقباب والأقواس، وتعد شاهداً حياً على تتابع الأجيال عبر القرون.
                 </p>
               </div>
 
@@ -719,9 +701,9 @@ function SurifContent() {
                 <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/30 mb-4 font-bold">
                   <Layers className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">حرفة نسيج المزاود والسجاد</h3>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">حرف النسيج والصناعات التراثية</h3>
                 <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  تعتز صوريف بحرفها التقليدية التراثية كنسيج المفروشات (المزاود) اليدوية والأعمال الصوفية وصناعة الألبان البلدي.
+                  توارث أبناء وبنات العائلة صناعة السجاد اليدوي وصياغة المشغولات الفضية والأواني النحاسية المنقوشة بزخارف العائلة.
                 </p>
               </div>
 
@@ -730,9 +712,9 @@ function SurifContent() {
                 <div className="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/30 mb-4 font-bold">
                   <Trees className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">موسم حصاد الزيتون والعادات الاجتماعية</h3>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-2">مهرجان الحصاد والتكافل العائلي السنوي</h3>
                 <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  يُشكل موسم قطاف الزيتون احتفالية كبرى تجمع كل عوائل صوريف وفي مقدمتها عائلة **الغنيمات** والعوائل البارزة. تتجلى فيه أهازيج الفلكلور والتلاحم الأسري والارتباط الوثيق بالأرض والأشجار المعمرة.
+                  احتفالية كبرى تنظم سنوياً في موسم جني التمور والزيتون، يلتقي فيها كبار وشباب عائلة **النمّاري** في أجواء من الألفة والتعاون وتوزيع التمور والخيرات على الأسر المستحقة.
                 </p>
               </div>
             </div>
@@ -747,9 +729,9 @@ function SurifContent() {
                 <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/30">
                   <Maximize2 className="w-5 h-5" />
                 </div>
-                <span>معرض الصور البانورامي لبلدة صوريف</span>
+                <span>معرض الصور البانورامي لديار النمّاري</span>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">اضغط على أي صورة لمشاهدتها بالحجم الكامل ومعاينة تفاصيلها</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">اضغط على أي صورة لتكبيرها واستعراض التفاصيل البصرية</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -782,7 +764,7 @@ function SurifContent() {
           </section>
         )}
 
-        {/* Section 6: Development Priorities & Challenges */}
+        {/* Section 6: Development Projects & Future Visions */}
         {(activeTab === 'overview' || activeTab === 'development') && (
           <section className="space-y-8 pt-6 border-t border-slate-200 dark:border-slate-800">
             <div>
@@ -790,20 +772,20 @@ function SurifContent() {
                 <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30">
                   <TrendingUp className="w-5 h-5" />
                 </div>
-                <span>الأولويات التنموية والتحديات المعاصرة</span>
+                <span>المبادرات التنموية والمشاريع المستقبلية</span>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">تحديد الاحتياجات الأولوية لتطوير صوريف وتلبية تطلعات الساكنين</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">خارطة المبادرات التطويرية لخدمة أبناء العائلة ودعم الاستدامة والتميز</p>
             </div>
 
-            {/* Impact Banner */}
-            <div className="bg-rose-500/10 border border-rose-500/30 rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-rose-800 dark:text-rose-300">
-              <div className="p-3 bg-rose-500 text-white rounded-2xl shrink-0">
-                <ShieldAlert className="w-6 h-6" />
+            {/* Vision Banner */}
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-emerald-800 dark:text-emerald-300">
+              <div className="p-3 bg-emerald-600 text-white rounded-2xl shrink-0 shadow-md">
+                <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-extrabold text-base mb-1">تحديات الجدار والاستيطان</h3>
+                <h3 className="font-extrabold text-base mb-1">رؤية ديار النمّاري 2030</h3>
                 <p className="text-xs sm:text-sm font-medium leading-relaxed">
-                  تم مصادرة ما يقارب 1,213 دونماً من أراضي صوريف منذ انتفاضة الأقصى عام 2000، كما أن جدار الفصل العنصري (بدأ 2004) يعزل حوالي 1,300 دونم خلف سواتره الأمنية، مما يتطلب استمرار استصلاح الأراضي ودعم صمود المزارعين.
+                  تهدف المبادرات إلى ترسيخ مكانة ديار النمّاري كنموذج استثنائي للقرى والبلدات الذكية، من خلال توظيف التقنيات الحديثة، والتحول للطاقة النظيفة، وتمكين الأجيال الشابة وتوثيق الأنساب تشاركياً.
                 </p>
               </div>
             </div>
@@ -867,11 +849,11 @@ function SurifContent() {
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
               <Compass className="w-5 h-5" />
             </div>
-            <span className="text-lg font-black text-white">صوريف - عراقة وتاريخ</span>
+            <span className="text-lg font-black text-white">ديار النمّاري — عراقة وتاريخ</span>
           </div>
 
           <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
-            منصة توثيق أنساب العائلة والتراث المحلي. جميع الإحصاءات مستمدة من التعدادات الرسمية والمسوح الموثوقة.
+            منظومة توثيق أنساب عائلة النمّاري والتراث العائلي النموذجي. صفحة مخصصة للعرض التجريبي واستعراض إمكانيات المنظومة.
           </p>
 
           <div className="flex items-center justify-center gap-4 pt-2">
@@ -896,18 +878,18 @@ function SurifContent() {
   );
 }
 
-export default function SurifPage() {
+export default function NammariyahPage() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <Suspense
           fallback={
             <div className="w-screen h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-sm dir-rtl">
-              جاري تحميل دليل صوريف...
+              جاري تحميل دليل ديار النمّاري...
             </div>
           }
         >
-          <SurifContent />
+          <NammariyahContent />
         </Suspense>
       </AuthProvider>
     </ThemeProvider>

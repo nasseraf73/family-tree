@@ -36,11 +36,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       { name: 'شجرتي', href: '/my-tree' },
       { name: 'الجد المشترك', href: '/common-ancestor' },
       { name: 'إنفوجرافيك الشجرة', href: '/infographic' },
+      { name: 'ديار النمّاري', href: '/surif' },
     ]
     : [
       { name: 'الرئيسية', href: '/' },
       { name: 'الشجرة الدائرية', href: '/radial-tree' },
       { name: 'إنفوجرافيك الشجرة', href: '/infographic' },
+      { name: 'ديار النمّاري', href: '/surif' },
     ];
 
   return (
