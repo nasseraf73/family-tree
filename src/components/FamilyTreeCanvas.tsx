@@ -58,7 +58,7 @@ function FamilyTreeCanvasContent() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const hasAutoCenteredRef = useRef(false);
-  const [currentLayout, setCurrentLayout] = useState<LayoutDirection>('BT');
+  const [currentLayout, setCurrentLayout] = useState<LayoutDirection>('TB');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
