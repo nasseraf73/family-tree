@@ -27,6 +27,7 @@ import {
   Share2,
   CircleDot,
   Crown,
+  Scroll,
 } from 'lucide-react';
 
 function LandingPageContent() {
@@ -212,21 +213,35 @@ function LandingPageContent() {
               <div className="mt-4"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">يتطلب تسجيل دخول</span></div>
             </Link>
 
-            {/* Card 5: إنفوجرافيك */}
+            {/* Card 5: العائلة في أرقام */}
             <Link href="/infographic" className="group relative bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all hover:shadow-xl hover:shadow-purple-500/5">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <BarChart3 className="w-6 h-6" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">إنفوجرافيك وإحصائيات</h3>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">العائلة في أرقام</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">لوحة تحليلية شاملة تعرض ديموغرافيا وإحصائيات عائلة النمّاري، وسجلات الأجيال وتوزيع الأسماء.</p>
                 </div>
               </div>
               <div className="mt-4"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">متاح للجميع</span></div>
             </Link>
 
-            {/* Card 6: لوحة المراجعة */}
+            {/* Card 6: المتحف والوثائق */}
+            <Link href="/archive" className="group relative bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all hover:shadow-xl hover:shadow-amber-500/5">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <Scroll className="w-6 h-6" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">المتحف والوثائق التاريخية</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">أرشيف شواهد الأصالة: صكوك طابو عثمانية، أختام قديمة، خرائط أراضٍ تاريخية، وشواهد معمارية.</p>
+                </div>
+              </div>
+              <div className="mt-4"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">متاح للجميع</span></div>
+            </Link>
+
+            {/* Card 7: لوحة المراجعة */}
             <Link href="/tree" onClick={handleProtectedClick} className="group relative bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 hover:border-rose-500/50 dark:hover:border-rose-500/50 transition-all hover:shadow-xl hover:shadow-rose-500/5">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
@@ -369,7 +384,7 @@ function LandingPageContent() {
             <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-3 hover:border-purple-500/40 transition-all group">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform"><BarChart3 className="w-5 h-5" /></div>
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">إنفوجرافيك وإحصائيات تحليلية</h3>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">العائلة في أرقام — إحصائيات تحليلية</h3>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">لوحة تحليلية شاملة: ديموغرافيا وإحصائيات عائلة النمّاري، سجلات الأرقام القياسية، توزيع الأجيال، وأكثر الأسماء تكراراً.</p>
             </div>

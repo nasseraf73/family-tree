@@ -35,13 +35,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       { name: 'الشجرة الدائرية', href: '/radial-tree' },
       { name: 'شجرتي', href: '/my-tree' },
       { name: 'الجد المشترك', href: '/common-ancestor' },
-      { name: 'إنفوجرافيك الشجرة', href: '/infographic' },
+      { name: 'العائلة في أرقام', href: '/infographic' },
+      { name: 'المتحف والوثائق', href: '/archive' },
       { name: 'ديار النمّاري', href: '/surif' },
     ]
     : [
       { name: 'الرئيسية', href: '/' },
       { name: 'الشجرة الدائرية', href: '/radial-tree' },
-      { name: 'إنفوجرافيك الشجرة', href: '/infographic' },
+      { name: 'العائلة في أرقام', href: '/infographic' },
+      { name: 'المتحف والوثائق', href: '/archive' },
       { name: 'ديار النمّاري', href: '/surif' },
     ];
 
