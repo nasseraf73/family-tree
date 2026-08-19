@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Check, X, GitMerge, Clock, UserCheck, AlertCircle, Users, UserPlus, Trash2, Plus, RefreshCw, Shield } from 'lucide-react';
 import { Person, Relationship, MergeRequest } from '../types';
 import { normalizeForSearch } from '../lib/dedup';
+import { resolveParentAndChildIds } from '../lib/lineage';
 
 interface StewardDashboardProps {
   isOpen: boolean;
@@ -409,19 +410,28 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
                 </div>
               ) : (
                 pendingRelationships.map(rel => {
-                  const person = allPersonsMap.get(rel.person_id);
-                  const relatedPerson = allPersonsMap.get(rel.related_person_id);
+                  let name1_4 = '';
+                  let name2_4 = '';
+                  let relLabel = '';
 
-                  if (!person || !relatedPerson) return null;
+                  if (rel.relationship_type === 'SPOUSE') {
+                    const person = allPersonsMap.get(rel.person_id);
+                    const relatedPerson = allPersonsMap.get(rel.related_person_id);
+                    if (!person || !relatedPerson) return null;
+                    name1_4 = get4PartName(person);
+                    name2_4 = get4PartName(relatedPerson);
+                    relLabel = 'زوج / زوجة لـ';
+                  } else {
+                    const resolved = resolveParentAndChildIds(rel, allPersonsMap);
+                    if (!resolved) return null;
+                    const childPerson = allPersonsMap.get(resolved.childId);
+                    const parentPerson = allPersonsMap.get(resolved.parentId);
+                    if (!childPerson || !parentPerson) return null;
 
-                  const name1_4 = get4PartName(person);
-                  const name2_4 = get4PartName(relatedPerson);
-
-                  const relLabel = rel.relationship_type === 'PARENT'
-                    ? 'ابن / ابنة لـ'
-                    : rel.relationship_type === 'CHILD'
-                    ? 'أب / أم لـ'
-                    : 'زوج / زوجة لـ';
+                    name1_4 = get4PartName(childPerson);
+                    name2_4 = get4PartName(parentPerson);
+                    relLabel = childPerson.gender === 'FEMALE' ? 'ابنة لـ' : 'ابن لـ';
+                  }
 
                   return (
                     <div

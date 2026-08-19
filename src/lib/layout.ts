@@ -46,15 +46,7 @@ export function getLayoutedElements(
     const relType = edge.data?.relationship_type;
     if (relType === 'SPOUSE') return;
 
-    let sourceId = edge.source;
-    let targetId = edge.target;
-
-    if (relType === 'CHILD') {
-      sourceId = edge.target;
-      targetId = edge.source;
-    }
-
-    g.setEdge(sourceId, targetId);
+    g.setEdge(edge.source, edge.target);
   });
 
   dagre.layout(g);

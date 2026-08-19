@@ -74,6 +74,7 @@ export async function GET(request: Request) {
         biography: p.biography || undefined,
         created_by_user_id: p.created_by_user_id || undefined,
         claimed_by_user_id: p.claimed_by_user_id || undefined,
+        claim_status: (p.claim_status as 'PENDING' | 'APPROVED' | 'REJECTED') || undefined,
         created_at: p.created_at ? p.created_at.toISOString() : new Date().toISOString(),
       }));
 
@@ -232,23 +233,43 @@ export async function GET(request: Request) {
   }
 
   const visibleNodeIds = new Set(nodes.map(n => n.id));
+  const personMap = new Map<number, Person>();
+  persons.forEach(p => personMap.set(p.id, p));
 
   const edges: CanvasEdge[] = visibleRelationships
-    .filter(rel => {
-      const src = rel.relationship_type === 'PARENT' ? rel.related_person_id.toString() : rel.person_id.toString();
-      const tgt = rel.relationship_type === 'PARENT' ? rel.person_id.toString() : rel.related_person_id.toString();
-      return visibleNodeIds.has(src) || visibleNodeIds.has(tgt);
-    })
     .map(rel => {
-      let sourceId = rel.person_id.toString();
-      let targetId = rel.related_person_id.toString();
+      let sourceId: string;
+      let targetId: string;
 
-      if (rel.relationship_type === 'PARENT') {
-        sourceId = rel.related_person_id.toString();
-        targetId = rel.person_id.toString();
-      } else if (rel.relationship_type === 'CHILD') {
+      if (rel.relationship_type === 'SPOUSE') {
         sourceId = rel.person_id.toString();
         targetId = rel.related_person_id.toString();
+      } else {
+        // Lineage hierarchy: Parent is always the source (top) and Child is always the target (bottom)
+        const p1 = personMap.get(rel.person_id);
+        const p2 = personMap.get(rel.related_person_id);
+
+        let parentId = rel.related_person_id;
+        let childId = rel.person_id;
+
+        if (p1 && p2 && p1.father_name && p2.first_name && p1.father_name.trim() === p2.first_name.trim()) {
+          // p2 is the father of p1
+          parentId = rel.related_person_id;
+          childId = rel.person_id;
+        } else if (p1 && p2 && p2.father_name && p1.first_name && p2.father_name.trim() === p1.first_name.trim()) {
+          // p1 is the father of p2
+          parentId = rel.person_id;
+          childId = rel.related_person_id;
+        } else if (rel.relationship_type === 'CHILD') {
+          parentId = rel.related_person_id;
+          childId = rel.person_id;
+        } else {
+          parentId = rel.related_person_id;
+          childId = rel.person_id;
+        }
+
+        sourceId = parentId.toString();
+        targetId = childId.toString();
       }
 
       return {
@@ -267,7 +288,8 @@ export async function GET(request: Request) {
           status: rel.status,
         },
       };
-    });
+    })
+    .filter(edge => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target));
 
   return NextResponse.json({
     nodes,

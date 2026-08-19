@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Copy, Check, Edit3, User, Calendar, MapPin, Heart, FileText, Sparkles, Users, Baby, Download, Loader2, ShieldCheck } from 'lucide-react';
 import { Person, Relationship } from '../types';
-import { generateFullLineage } from '../lib/lineage';
+import { generateFullLineage, resolveParentAndChildIds } from '../lib/lineage';
 import { exportCustomProfilePdf } from '../lib/lineagePdfExport';
 
 interface PersonProfileModalProps {
@@ -21,7 +21,7 @@ interface PersonProfileModalProps {
 }
 
 /**
- * Derives brothers and sisters (siblings) of targetPersonId from the relationships graph
+ * Derives full siblings of targetPersonId by finding parents and then their children
  */
 const getSiblings = (
   targetPersonId: number,
@@ -33,10 +33,9 @@ const getSiblings = (
   // 1. Get all parent IDs of targetPersonId
   const parentIds = new Set<number>();
   validRels.forEach((r) => {
-    if (r.relationship_type === 'PARENT' && r.person_id === targetPersonId) {
-      parentIds.add(r.related_person_id);
-    } else if (r.relationship_type === 'CHILD' && r.related_person_id === targetPersonId) {
-      parentIds.add(r.person_id);
+    const resolved = resolveParentAndChildIds(r, allPersonsMap);
+    if (resolved && resolved.childId === targetPersonId) {
+      parentIds.add(resolved.parentId);
     }
   });
 
@@ -45,19 +44,9 @@ const getSiblings = (
   // 2. Find all children of these parents (excluding targetPersonId)
   const siblingIds = new Set<number>();
   validRels.forEach((r) => {
-    let pId: number | null = null;
-    let cId: number | null = null;
-
-    if (r.relationship_type === 'PARENT') {
-      pId = r.related_person_id;
-      cId = r.person_id;
-    } else if (r.relationship_type === 'CHILD') {
-      pId = r.person_id;
-      cId = r.related_person_id;
-    }
-
-    if (pId && cId && parentIds.has(pId) && cId !== targetPersonId) {
-      siblingIds.add(cId);
+    const resolved = resolveParentAndChildIds(r, allPersonsMap);
+    if (resolved && parentIds.has(resolved.parentId) && resolved.childId !== targetPersonId) {
+      siblingIds.add(resolved.childId);
     }
   });
 
@@ -78,10 +67,9 @@ const getDirectChildren = (
 
   const childIds = new Set<number>();
   validRels.forEach((r) => {
-    if (r.relationship_type === 'PARENT' && r.related_person_id === targetPersonId) {
-      childIds.add(r.person_id);
-    } else if (r.relationship_type === 'CHILD' && r.person_id === targetPersonId) {
-      childIds.add(r.related_person_id);
+    const resolved = resolveParentAndChildIds(r, allPersonsMap);
+    if (resolved && resolved.parentId === targetPersonId) {
+      childIds.add(resolved.childId);
     }
   });
 

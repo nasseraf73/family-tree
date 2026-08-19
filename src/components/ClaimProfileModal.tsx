@@ -236,7 +236,7 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
                 className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
               >
                 {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                إرسال طلب المطالبة (CLAIM_PENDING)
+                إرسال طلب المطالبة للمشرفين
               </button>
             )}
           </div>

@@ -22,9 +22,8 @@ export async function GET(request: Request) {
     }
 
     try {
-      // Auto-migrate claim_status column in PostgreSQL and update all existing claims to APPROVED
-      await db.execute(sql`ALTER TABLE persons ADD COLUMN IF NOT EXISTS claim_status varchar(20) DEFAULT 'APPROVED';`).catch(() => {});
-      await db.execute(sql`UPDATE persons SET claim_status = 'APPROVED' WHERE claimed_by_user_id IS NOT NULL AND (claim_status IS NULL OR claim_status = 'PENDING');`).catch(() => {});
+      // Auto-migrate claim_status column in PostgreSQL if missing
+      await db.execute(sql`ALTER TABLE persons ADD COLUMN IF NOT EXISTS claim_status varchar(20) DEFAULT 'PENDING';`).catch(() => {});
 
       const dbClaims = await db
         .select({
@@ -48,7 +47,7 @@ export async function GET(request: Request) {
       if (dbClaims.length > 0) {
         const formatted = dbClaims.map(c => ({
           ...c,
-          claim_status: c.claim_status || 'APPROVED',
+          claim_status: c.claim_status || 'PENDING',
         }));
         return NextResponse.json({ claims: formatted });
       }
@@ -70,7 +69,7 @@ export async function GET(request: Request) {
         family_name: p.family_name,
         birth_year: p.birth_year,
         claimed_by_user_id: p.claimed_by_user_id,
-        claim_status: p.claim_status || 'APPROVED',
+        claim_status: p.claim_status || 'PENDING',
         created_at: p.created_at,
         user_full_name: u?.full_name || 'مستخدم',
         user_email: u?.email || 'غير متاح',

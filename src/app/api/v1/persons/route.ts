@@ -567,6 +567,7 @@ export async function PUT(request: Request) {
           photo_url: p.photo_url || undefined,
           created_by_user_id: p.created_by_user_id || undefined,
           claimed_by_user_id: p.claimed_by_user_id || undefined,
+          claim_status: (p.claim_status as 'PENDING' | 'APPROVED' | 'REJECTED') || undefined,
           created_at: p.created_at ? p.created_at.toISOString() : new Date().toISOString(),
         };
       }
@@ -709,6 +710,7 @@ export async function DELETE(request: Request) {
           is_alive: p.is_alive,
           created_by_user_id: p.created_by_user_id || undefined,
           claimed_by_user_id: p.claimed_by_user_id || undefined,
+          claim_status: (p.claim_status as 'PENDING' | 'APPROVED' | 'REJECTED') || undefined,
           created_at: p.created_at ? p.created_at.toISOString() : new Date().toISOString(),
         };
       }

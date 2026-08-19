@@ -27,6 +27,8 @@ export interface PersonNodeData extends Person {
   generationLevel?: number;
   isMarried?: boolean;
   activeFilter?: 'ALL' | 'LIVING' | 'MARRIED';
+  isBottomToTop?: boolean;
+  layoutDirection?: 'TB' | 'BT' | 'LR' | 'COMPACT' | 'RADIAL';
   // Hover card stats
   fullAncestorName?: string;
   grandchildrenCount?: number;
@@ -46,9 +48,11 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
   const currentYear = 2026;
   const isLiving = data.is_alive;
   const isPending = data.isPendingStatus;
-  const isClaimed = !!data.claimed_by_user_id;
+  const isClaimApproved = Boolean(data.claimed_by_user_id && data.claim_status === 'APPROVED');
+  const isClaimPending = Boolean(data.claimed_by_user_id && (data.claim_status === 'PENDING' || !data.claim_status));
   const isLca = data.isLcaNode ?? false;
   const isSelfNode = data.isSelfNode ?? false;
+  const isBottomToTop = Boolean(data.isBottomToTop || data.layoutDirection === 'BT');
 
   const isMarried = data.isMarried ?? (data.spouses && data.spouses.length > 0);
   const genLevel = data.generationLevel ?? 1;
@@ -121,23 +125,35 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
         isFilteredOut ? 'opacity-35 scale-95 pointer-events-none' : ''
       }`}
     >
-      {/* React Flow Handles for dynamic connections (Drag & drop active ONLY on pink circle handle on RIGHT side) */}
-      <Handle type="target" position={Position.Top} isConnectable={false} className="!bg-emerald-500 !w-3.5 !h-3.5 !opacity-0" />
-      <Handle type="source" position={Position.Bottom} isConnectable={false} className="!bg-emerald-500 !w-3.5 !h-3.5 !opacity-0" />
+      {/* React Flow Handles for dynamic connections (Direction aware: TB vs BT) */}
+      <Handle
+        type="target"
+        position={isBottomToTop ? Position.Bottom : Position.Top}
+        isConnectable={false}
+        className="!bg-emerald-500 !w-3.5 !h-3.5 !opacity-0"
+      />
+      <Handle
+        type="source"
+        position={isBottomToTop ? Position.Top : Position.Bottom}
+        isConnectable={false}
+        className="!bg-emerald-500 !w-3.5 !h-3.5 !opacity-0"
+      />
       <Handle type="target" position={Position.Left} id="left-handle" isConnectable={false} className="!bg-pink-500 !w-3.5 !h-3.5 !opacity-0" />
       <Handle type="source" position={Position.Right} id="right-handle" isConnectable={true} className="!bg-pink-500 !w-4 !h-4 !z-10 border-2 border-white shadow-md cursor-crosshair" />
 
       {/* Contextual Directional (+) Action Buttons */}
       {!data.isReadOnly && (
         <>
-          {/* Add Child (+) button placed at Top Center (replacing top green circle) */}
+          {/* Add Child (+) button */}
           <button
             title="إضافة ابن / ابنة"
             onClick={(e) => {
               e.stopPropagation();
               data.onAddRelation?.(data, 'CHILD');
             }}
-            className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20 w-7 h-7 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 border-2 border-slate-900"
+            className={`absolute ${
+              isBottomToTop ? '-bottom-3.5' : '-top-3.5'
+            } left-1/2 -translate-x-1/2 z-20 w-7 h-7 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 border-2 border-slate-900`}
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -169,7 +185,9 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
             data.onToggleCollapse?.(data.id);
           }}
           title={isCollapsed ? 'توسيع فرع الأبناء' : 'طي فرع الأبناء'}
-          className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-30 p-1 bg-slate-900 hover:bg-slate-800 border-2 border-amber-500/70 rounded-full shadow-2xl transition-transform hover:scale-115 flex items-center justify-center"
+          className={`absolute ${
+            isBottomToTop ? '-top-4' : '-bottom-4'
+          } left-1/2 -translate-x-1/2 z-30 p-1 bg-slate-900 hover:bg-slate-800 border-2 border-amber-500/70 rounded-full shadow-2xl transition-transform hover:scale-115 flex items-center justify-center`}
         >
           <img
             src={isCollapsed ? '/icons/expand-icon.png' : '/icons/collapse-icon.png'}
@@ -200,8 +218,13 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
               <Clock className="w-3 h-3 animate-pulse" />
               معلق
             </span>
-          ) : isClaimed ? (
-            <span className="flex items-center gap-1 text-[10px] bg-slate-950/90 text-white border border-cyan-400/80 px-2 py-0.5 rounded-full font-extrabold shadow-md" title="ملف موثق ومطالب به">
+          ) : isClaimPending ? (
+            <span className="flex items-center gap-1 text-[10px] bg-amber-950/90 text-amber-200 border border-amber-400/80 px-2 py-0.5 rounded-full font-bold shadow-md" title="طلب التوثيق قيد المراجعة والاعتماد من المشرف">
+              <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
+              <span>توثيق قيد المراجعة</span>
+            </span>
+          ) : isClaimApproved ? (
+            <span className="flex items-center gap-1 text-[10px] bg-slate-950/90 text-white border border-cyan-400/80 px-2 py-0.5 rounded-full font-extrabold shadow-md" title="ملف موثق ومطالب به رسميًا">
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
               <span>موثق</span>
             </span>
@@ -361,17 +384,24 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
         )}
 
         {/* Claim Profile Action Button if not claimed */}
-        {!data.isReadOnly && !isClaimed && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              data.onClaimProfile?.(data);
-            }}
-            className="w-full mt-1 py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-blue-300 border border-blue-500/30 rounded-lg flex items-center justify-center gap-1.5 transition-colors text-[11px] font-semibold"
-          >
-            <UserCheck className="w-3.5 h-3.5 text-blue-400" />
-            هذا أنا (مطالبة بالملف)
-          </button>
+        {!data.isReadOnly && !isClaimApproved && (
+          isClaimPending ? (
+            <div className="w-full mt-1 py-1.5 px-2 bg-amber-950/50 text-amber-300 border border-amber-500/40 rounded-lg flex items-center justify-center gap-1.5 text-[11px] font-semibold">
+              <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>طلب التوثيق قيد المراجعة</span>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onClaimProfile?.(data);
+              }}
+              className="w-full mt-1 py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-blue-300 border border-blue-500/30 rounded-lg flex items-center justify-center gap-1.5 transition-colors text-[11px] font-semibold"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-blue-400" />
+              <span>هذا أنا (مطالبة بالملف)</span>
+            </button>
+          )
         )}
       </div>
 

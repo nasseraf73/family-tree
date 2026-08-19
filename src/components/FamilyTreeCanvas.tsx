@@ -216,18 +216,8 @@ function FamilyTreeCanvasContent() {
         // Ignore SPOUSE edges when constructing parent->child lineage hierarchy
         if (relType === 'SPOUSE') return;
 
-        let parentId: string;
-        let childId: string;
-
-        if (relType === 'CHILD') {
-          // For CHILD relationship: target is parent, source is child
-          parentId = e.target;
-          childId = e.source;
-        } else {
-          // For PARENT relationship (default): source is parent, target is child
-          parentId = e.source;
-          childId = e.target;
-        }
+        const parentId = e.source;
+        const childId = e.target;
 
         if (!parentMap.has(childId)) parentMap.set(childId, []);
         parentMap.get(childId)!.push(parentId);
@@ -305,6 +295,8 @@ function FamilyTreeCanvasContent() {
             directChildrenCount: childrenList.length,
             isCollapsed: collapsedSet.has(pIdNum),
             activeFilter: filterMode,
+            isBottomToTop: layoutDir === 'BT',
+            layoutDirection: layoutDir,
             onToggleCollapse: handleToggleCollapseNode,
             onAddRelation: (person: Person, relType: RelationshipType) => {
               if (!user) {
@@ -674,9 +666,6 @@ function FamilyTreeCanvasContent() {
           onSelectFilter={setActiveFilter}
           onToggleExpandAll={handleToggleExpandAll}
           isAllCollapsed={collapsedNodes.size > 0}
-          onFitView={() => reactFlowInstance?.fitView({ padding: 0.2, duration: 600 })}
-          onToggleFullscreen={toggleFullscreen}
-          isFullscreen={isFullscreen}
         />
       </div>
 
@@ -811,11 +800,11 @@ function FamilyTreeCanvasContent() {
           </ReactFlow>
         )}
 
-        {/* Prominent Floating Fullscreen Button (Bottom-Left) */}
+        {/* Prominent Floating Fullscreen Button (Positioned above Controls at Bottom-Left to prevent overlap) */}
         <button
           type="button"
           onClick={toggleFullscreen}
-          className={`fixed bottom-6 left-6 z-50 px-4 py-3 rounded-2xl font-black text-xs border shadow-2xl backdrop-blur-xl transition-all duration-300 flex items-center gap-2.5 dir-rtl hover:scale-105 ${
+          className={`fixed bottom-36 left-4 z-40 px-3.5 py-2.5 rounded-xl font-bold text-xs border shadow-2xl backdrop-blur-xl transition-all duration-300 flex items-center gap-2 dir-rtl hover:scale-105 ${
             isFullscreen
               ? 'bg-amber-950/90 text-amber-300 border-amber-500/50 shadow-amber-950/50 ring-2 ring-amber-500/30'
               : 'bg-slate-900/95 text-emerald-300 border-emerald-500/40 shadow-emerald-950/50 ring-2 ring-emerald-500/30 hover:border-emerald-400'
@@ -823,12 +812,12 @@ function FamilyTreeCanvasContent() {
         >
           {isFullscreen ? (
             <>
-              <Minimize className="w-4.5 h-4.5 text-amber-400 animate-pulse" />
+              <Minimize className="w-4 h-4 text-amber-400 animate-pulse" />
               <span>إنهاء ملء الشاشة</span>
             </>
           ) : (
             <>
-              <Maximize className="w-4.5 h-4.5 text-emerald-400 animate-pulse" />
+              <Maximize className="w-4 h-4 text-emerald-400 animate-pulse" />
               <span>عرض ملء الشاشة (Full Screen)</span>
             </>
           )}

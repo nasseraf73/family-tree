@@ -1,4 +1,5 @@
 import { Person, Relationship } from '../types';
+import { resolveParentAndChildIds } from './lineage';
 
 export type FocusMode = 'branch' | 'spine' | 'household' | 'full';
 
@@ -64,14 +65,13 @@ export function filterTreeByFocus(
   allRelationships.forEach(rel => {
     if (rel.status === 'REJECTED') return;
 
-    if (rel.relationship_type === 'PARENT') {
-      // related_person_id is parent, person_id is child
-      addParentChild(rel.related_person_id, rel.person_id);
-    } else if (rel.relationship_type === 'CHILD') {
-      // person_id is parent, related_person_id is child
-      addParentChild(rel.person_id, rel.related_person_id);
-    } else if (rel.relationship_type === 'SPOUSE') {
+    if (rel.relationship_type === 'SPOUSE') {
       addSpouse(rel.person_id, rel.related_person_id);
+    } else {
+      const resolved = resolveParentAndChildIds(rel, personsMap);
+      if (resolved) {
+        addParentChild(resolved.parentId, resolved.childId);
+      }
     }
   });
 

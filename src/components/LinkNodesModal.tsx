@@ -33,10 +33,35 @@ export const LinkNodesModal: React.FC<LinkNodesModalProps> = ({
     try {
       const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
 
+      // Standardize so child is always existing_person_id (person_id) and parent is related_person_id
+      let pId = sourcePerson.id;
+      let rId = targetPerson.id;
+      let relType: 'PARENT' | 'SPOUSE' | 'SIBLING' = 'PARENT';
+
+      if (relationshipType === 'PARENT') {
+        // sourcePerson is PARENT of targetPerson (target is child, source is parent)
+        pId = targetPerson.id;
+        rId = sourcePerson.id;
+        relType = 'PARENT';
+      } else if (relationshipType === 'CHILD') {
+        // sourcePerson is CHILD of targetPerson (source is child, target is parent)
+        pId = sourcePerson.id;
+        rId = targetPerson.id;
+        relType = 'PARENT';
+      } else if (relationshipType === 'SPOUSE') {
+        pId = sourcePerson.id;
+        rId = targetPerson.id;
+        relType = 'SPOUSE';
+      } else if (relationshipType === 'SIBLING') {
+        pId = sourcePerson.id;
+        rId = targetPerson.id;
+        relType = 'SIBLING';
+      }
+
       const payload: any = {
-        related_person_id: targetPerson.id,
-        existing_person_id: sourcePerson.id,
-        relationship_type: relationshipType === 'SIBLING' ? 'SIBLING' : relationshipType,
+        related_person_id: rId,
+        existing_person_id: pId,
+        relationship_type: relType,
         user_role: userRole,
       };
 

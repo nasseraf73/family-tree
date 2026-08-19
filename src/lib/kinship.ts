@@ -1,29 +1,34 @@
 import { Person, Relationship, RelationshipType } from '@/types';
+import { resolveParentAndChildIds } from './lineage';
 
 /**
  * Get all verified direct parent IDs for a person
  */
-export function getParentIds(personId: number, relationships: Relationship[]): number[] {
-  return relationships
-    .filter(r => 
-      ((r.person_id === personId && r.relationship_type === 'PARENT') ||
-       (r.related_person_id === personId && r.relationship_type === 'CHILD')) &&
-      r.status === 'VERIFIED'
-    )
-    .map(r => r.person_id === personId ? r.related_person_id : r.person_id);
+export function getParentIds(personId: number, relationships: Relationship[], personsMap?: Map<number, Person>): number[] {
+  const result: number[] = [];
+  relationships.forEach(r => {
+    if (r.status !== 'VERIFIED') return;
+    const resolved = resolveParentAndChildIds(r, personsMap);
+    if (resolved && resolved.childId === personId) {
+      if (!result.includes(resolved.parentId)) result.push(resolved.parentId);
+    }
+  });
+  return result;
 }
 
 /**
  * Get all verified direct child IDs for a person
  */
-export function getChildIds(personId: number, relationships: Relationship[]): number[] {
-  return relationships
-    .filter(r => 
-      ((r.person_id === personId && r.relationship_type === 'CHILD') ||
-       (r.related_person_id === personId && r.relationship_type === 'PARENT')) &&
-      r.status === 'VERIFIED'
-    )
-    .map(r => r.person_id === personId ? r.related_person_id : r.person_id);
+export function getChildIds(personId: number, relationships: Relationship[], personsMap?: Map<number, Person>): number[] {
+  const result: number[] = [];
+  relationships.forEach(r => {
+    if (r.status !== 'VERIFIED') return;
+    const resolved = resolveParentAndChildIds(r, personsMap);
+    if (resolved && resolved.parentId === personId) {
+      if (!result.includes(resolved.childId)) result.push(resolved.childId);
+    }
+  });
+  return result;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { Person, Relationship } from '../types';
+import { resolveParentAndChildIds } from './lineage';
 
 export interface AncestorFinderResult {
   nodes: Person[];
@@ -62,19 +63,10 @@ export function findCommonAncestorLineage(
   const parentsMap = new Map<number, number[]>();
 
   allRelationships.forEach(rel => {
-    if (rel.status === 'REJECTED') return;
+    const resolved = resolveParentAndChildIds(rel, personsMap);
+    if (!resolved) return;
 
-    let parentId: number | null = null;
-    let childId: number | null = null;
-
-    if (rel.relationship_type === 'PARENT') {
-      parentId = rel.related_person_id;
-      childId = rel.person_id;
-    } else if (rel.relationship_type === 'CHILD') {
-      parentId = rel.person_id;
-      childId = rel.related_person_id;
-    }
-
+    const { parentId, childId } = resolved;
     if (parentId && childId && personsMap.has(parentId) && personsMap.has(childId)) {
       if (!parentsMap.has(childId)) parentsMap.set(childId, []);
       const pList = parentsMap.get(childId)!;

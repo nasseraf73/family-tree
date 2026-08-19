@@ -1,4 +1,5 @@
 import { Person, Relationship } from '../types';
+import { resolveParentAndChildIds } from './lineage';
 
 export interface DemographicsData {
   totalMembers: number;
@@ -135,21 +136,14 @@ export function calculateTreeAnalytics(
   // 2. Offspring map calculation (Parent -> Children)
   const offspringMap = new Map<number, Set<number>>();
   const parentMap = new Map<number, Set<number>>();
+  const personsMap = new Map<number, Person>();
+  persons.forEach((p) => personsMap.set(p.id, p));
 
   relationships.forEach((r) => {
-    if (r.status === 'REJECTED' || r.person_id === r.related_person_id) return;
+    const resolved = resolveParentAndChildIds(r, personsMap);
+    if (!resolved) return;
 
-    let parentId: number | null = null;
-    let childId: number | null = null;
-
-    if (r.relationship_type === 'PARENT') {
-      parentId = r.related_person_id;
-      childId = r.person_id;
-    } else if (r.relationship_type === 'CHILD') {
-      parentId = r.person_id;
-      childId = r.related_person_id;
-    }
-
+    const { parentId, childId } = resolved;
     if (parentId !== null && childId !== null) {
       if (!offspringMap.has(parentId)) offspringMap.set(parentId, new Set());
       offspringMap.get(parentId)!.add(childId);
