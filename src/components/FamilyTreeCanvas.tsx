@@ -421,46 +421,51 @@ function FamilyTreeCanvasContent() {
     }
   }, [role, applyGraphLayout]);
 
-  // Auto-focus camera on logged-in user's node upon opening the tree
+  // Auto-focus camera on logged-in user's node or Root ancestor node upon opening the tree
   useEffect(() => {
     // Wait until tree nodes are loaded AND auth state has settled
-    if (hasAutoCenteredRef.current || nodes.length === 0 || authLoading || !dbUser) return;
+    if (hasAutoCenteredRef.current || nodes.length === 0 || authLoading) return;
 
-    // Search for logged in user's person node strictly by ID or multi-part name (first + father + grandfather)
-    const nameWords = (dbUser.full_name || '').trim().split(/\s+/).filter(Boolean);
-    const uFirst = nameWords[0] ? normalizeForSearch(nameWords[0]) : '';
-    const uFather = nameWords[1] ? normalizeForSearch(nameWords[1]) : '';
-    const uGrand = nameWords[2] ? normalizeForSearch(nameWords[2]) : '';
+    let userNode: Node | undefined = undefined;
 
-    const userNode = nodes.find((n) => {
-      const p = n.data as unknown as Person;
-      if (!p || !p.first_name) return false;
+    if (dbUser) {
+      // Search for logged in user's person node strictly by ID or multi-part name (first + father + grandfather)
+      const nameWords = (dbUser.full_name || '').trim().split(/\s+/).filter(Boolean);
+      const uFirst = nameWords[0] ? normalizeForSearch(nameWords[0]) : '';
+      const uFather = nameWords[1] ? normalizeForSearch(nameWords[1]) : '';
+      const uGrand = nameWords[2] ? normalizeForSearch(nameWords[2]) : '';
 
-      // 1. Claimed profile ID match (highest priority)
-      if (p.claimed_by_user_id && Number(p.claimed_by_user_id) === Number(dbUser.id)) return true;
+      userNode = nodes.find((n) => {
+        const p = n.data as unknown as Person;
+        if (!p || !p.first_name) return false;
 
-      // 2. Full combined string match
-      const pFullClean = normalizeForSearch(`${p.first_name}${p.father_name || ''}${p.grand_father_name || ''}${p.family_name || ''}`);
-      const userFullNameClean = normalizeForSearch(dbUser.full_name || '');
-      if (userFullNameClean.length >= 6 && (pFullClean.includes(userFullNameClean) || userFullNameClean.includes(pFullClean))) return true;
+        // 1. Claimed profile ID match (highest priority)
+        if (p.claimed_by_user_id && Number(p.claimed_by_user_id) === Number(dbUser.id)) return true;
 
-      // 3. Strict multi-part match: first_name AND father_name AND (grand_father_name OR family_name)
-      const pFirst = normalizeForSearch(p.first_name);
-      const pFather = normalizeForSearch(p.father_name || '');
-      const pGrand = normalizeForSearch(p.grand_father_name || '');
+        // 2. Full combined string match
+        const pFullClean = normalizeForSearch(`${p.first_name}${p.father_name || ''}${p.grand_father_name || ''}${p.family_name || ''}`);
+        const userFullNameClean = normalizeForSearch(dbUser.full_name || '');
+        if (userFullNameClean.length >= 6 && (pFullClean.includes(userFullNameClean) || userFullNameClean.includes(pFullClean))) return true;
 
-      if (uFirst && pFirst === uFirst) {
-        if (uFather && pFather === uFather) {
-          if (!uGrand || pGrand === uGrand) {
-            return true;
+        // 3. Strict multi-part match: first_name AND father_name AND (grand_father_name OR family_name)
+        const pFirst = normalizeForSearch(p.first_name);
+        const pFather = normalizeForSearch(p.father_name || '');
+        const pGrand = normalizeForSearch(p.grand_father_name || '');
+
+        if (uFirst && pFirst === uFirst) {
+          if (uFather && pFather === uFather) {
+            if (!uGrand || pGrand === uGrand) {
+              return true;
+            }
           }
         }
-      }
 
-      return false;
-    });
+        return false;
+      });
+    }
 
     if (userNode) {
+      // Case 1: Logged-in user has a verified/claimed profile -> Focus directly on their card with zoom 1.2
       hasAutoCenteredRef.current = true;
       const targetX = userNode.position.x + 140;
       const targetY = userNode.position.y + 70;
@@ -468,8 +473,28 @@ function FamilyTreeCanvasContent() {
       setTimeout(() => {
         reactFlowInstance.setCenter(targetX, targetY, { zoom: 1.2, duration: 0 });
       }, 350);
+    } else {
+      // Case 2: Visitor or unverified user without a claimed profile -> Focus on First Ancestor (الجد الأول) with moderate zoom showing 3-4 generations
+      hasAutoCenteredRef.current = true;
+
+      const rootNodes = nodes.filter((n) => {
+        const pData = n.data as any;
+        return pData?.generationLevel === 1;
+      });
+      const rootNode = rootNodes.find((n) => (n.data as any)?.hasChildren) || rootNodes[0] || nodes[0];
+
+      if (rootNode) {
+        const isBT = currentLayout === 'BT';
+        const targetX = rootNode.position.x + 140;
+        // In TB layout (default), offset downward so the root ancestor is at the top of the view and 3-4 generations are visible
+        const targetY = isBT ? rootNode.position.y - 260 : rootNode.position.y + 260;
+
+        setTimeout(() => {
+          reactFlowInstance.setCenter(targetX, targetY, { zoom: 0.68, duration: 0 });
+        }, 350);
+      }
     }
-  }, [dbUser, user, authLoading, nodes, reactFlowInstance]);
+  }, [dbUser, user, authLoading, nodes, reactFlowInstance, currentLayout]);
 
   // Re-apply graph layout whenever direction, collapsed nodes, or filter change
   useEffect(() => {
