@@ -29,29 +29,6 @@ import { LayoutToolbar, VisualFilter } from './LayoutToolbar';
 import { Navbar } from './Navbar';
 
 import { getLayoutedElements, LayoutDirection } from '../lib/layout';
-import { getLayoutedElementsAsync } from '../lib/layout-client';
-
-// P4.4: Viewport culling helper - keeps DOM size manageable
-// for large trees by only rendering nodes within the visible area.
-function cullToViewport(nodes: any[], reactFlowInstance: any, buffer = 400): any[] {
-  if (typeof window === 'undefined' || nodes.length < 200) return nodes;
-  try {
-    const vp = reactFlowInstance.getViewport();
-    const xMin = -vp.x / vp.zoom - buffer;
-    const xMax = (-vp.x + window.innerWidth) / vp.zoom + buffer;
-    const yMin = -vp.y / vp.zoom - buffer;
-    const yMax = (-vp.y + window.innerHeight) / vp.zoom + buffer;
-    return nodes.filter(
-      (n) =>
-        n.position.x >= xMin &&
-        n.position.x <= xMax &&
-        n.position.y >= yMin &&
-        n.position.y <= yMax
-    );
-  } catch {
-    return nodes;
-  }
-}
 import { getPentanyicFullName } from '../lib/lineage';
 import { Person, Relationship, RelationshipType, MergeRequest } from '../types';
 import { createClient } from '../lib/supabase/client';
@@ -364,63 +341,45 @@ function FamilyTreeCanvasContent() {
         };
       });
 
-      // 6. Compute layout positioning (P4.3: off main thread via Web Worker)
-      getLayoutedElementsAsync(
+      // 6. Compute layout positioning
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
         enrichedNodes,
         activeRawEdges,
         layoutDir,
         { nodesep: ns, ranksep: rs }
-      ).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-        // P4.4: Viewport culling — DISABLED on initial load because:
-        // (a) The initial camera is at (0,0,zoom=1) and nodes may be far away
-        // (b) Auto-focus/fitView below must complete BEFORE we can cull
-        // (c) At 200 nodes per batch, culling has no measurable benefit
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
+      );
 
-        // Auto-focus camera on target parent node after branch collapse/expand
-        if (pendingFocusNodeIdRef.current !== null) {
-          const focusId = pendingFocusNodeIdRef.current;
-          pendingFocusNodeIdRef.current = null;
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
 
-          const targetNode = layoutedNodes.find((n) => n.id === focusId.toString());
-          if (targetNode) {
-            setTimeout(() => {
-              const currentViewport = reactFlowInstance.getViewport();
-              const currentZoom = currentViewport?.zoom || 1.1;
-              const targetZoom = currentZoom > 0.4 ? Math.min(currentZoom, 1.2) : 1.1;
+      // Auto-focus camera on target parent node after branch collapse/expand
+      if (pendingFocusNodeIdRef.current !== null) {
+        const focusId = pendingFocusNodeIdRef.current;
+        pendingFocusNodeIdRef.current = null;
 
-              reactFlowInstance.setCenter(
-                targetNode.position.x + 140,
-                targetNode.position.y + 70,
-                { zoom: targetZoom, duration: 800 }
-              );
-            }, 50);
-          }
+        const targetNode = layoutedNodes.find((n) => n.id === focusId.toString());
+        if (targetNode) {
+          setTimeout(() => {
+            const currentViewport = reactFlowInstance.getViewport();
+            const currentZoom = currentViewport?.zoom || 1.1;
+            const targetZoom = currentZoom > 0.4 ? Math.min(currentZoom, 1.2) : 1.1;
+
+            reactFlowInstance.setCenter(
+              targetNode.position.x + 140,
+              targetNode.position.y + 70,
+              { zoom: targetZoom, duration: 800 }
+            );
+          }, 50);
         }
-      }).catch((err) => {
-        console.error('[P4.3] Worker layout failed, falling back to sync:', err);
-        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-          enrichedNodes,
-          activeRawEdges,
-          layoutDir,
-          { nodesep: ns, ranksep: rs }
-        );
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
-      });
+      }
     },
     [user, handleFocusPerson, handleToggleCollapseNode, setNodes, setEdges, reactFlowInstance]
   );
 
   // Load Tree Data from Backend API
-  // P4.1: Load in batches of INITIAL_BATCH_SIZE for faster first paint.
-  const INITIAL_BATCH_SIZE = 200;
   const fetchTreeData = useCallback(async () => {
     try {
-      // P4.1: First request gets only the first batch.
-      // Subsequent batches (if any) can be loaded on demand via loadMoreNodes.
-      const res = await fetch(`/api/v1/tree/canvas?role=${role}&offset=0&limit=${INITIAL_BATCH_SIZE}`);
+      const res = await fetch(`/api/v1/tree/canvas?role=${role}`);
       const data = await res.json();
 
       if (data.nodes && data.edges) {
@@ -455,13 +414,6 @@ function FamilyTreeCanvasContent() {
 
         const pend = parsedRels.filter((r) => r.status === 'PENDING');
         setPendingRelationships(pend);
-
-        // P4.1: If server reports more data available, log a hint.
-        // Full progressive loading would queue another fetch; for now we
-        // surface the count so the user can decide.
-        if (data.hasMore) {
-          console.log(`[P4.1] ${data.totalPersons - data.offset - data.limit} more persons available.`);
-        }
       }
     } catch (err) {
       console.error('Failed to fetch tree data', err);
