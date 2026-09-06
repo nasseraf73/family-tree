@@ -18,41 +18,29 @@ export async function getAuthenticatedUser(request: Request): Promise<{ dbUser: 
   const promise = (async (): Promise<{ dbUser: DbUser | null; error: string | null }> => {
   try {
     const authHeader = request.headers.get('Authorization');
-    const xUserEmail = request.headers.get('x-user-email');
 
-    let userEmail: string | undefined;
-    let resolvedUser: any = null;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7).trim();
-      if (token) {
-        try {
-          const supabase = createClient();
-          const { data: { user } } = await supabase.auth.getUser(token);
-          if (user?.email) {
-            resolvedUser = user;
-            userEmail = user.email.trim().toLowerCase();
-          }
-        } catch {
-          // Token verification fallback
-        }
-      }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return { dbUser: null, error: 'Unauthorized: Missing or invalid Authorization Bearer header' };
     }
 
-    // Fallback to x-user-email header
-    if (!userEmail && xUserEmail && xUserEmail.trim() !== '') {
-      userEmail = xUserEmail.trim().toLowerCase();
+    const token = authHeader.substring(7).trim();
+    if (!token) {
+      return { dbUser: null, error: 'Unauthorized: Empty Bearer token' };
     }
 
-    if (!userEmail) {
-      return { dbUser: null, error: 'Unauthorized: Missing or invalid authorization' };
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user || !user.email) {
+      return { dbUser: null, error: authError?.message || 'Unauthorized: Invalid token signature' };
     }
 
+    const userEmail = user.email.trim().toLowerCase();
     const foundUsers = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
 
     if (foundUsers.length === 0) {
-      const defaultFullName = (resolvedUser?.user_metadata?.full_name as string) || userEmail.split('@')[0];
-      const defaultPhone = (resolvedUser?.user_metadata?.phone as string) || null;
+      const defaultFullName = (user.user_metadata?.full_name as string) || userEmail.split('@')[0];
+      const defaultPhone = (user.user_metadata?.phone as string) || null;
 
       const insertedUsers = await db.insert(users).values({
         full_name: defaultFullName,

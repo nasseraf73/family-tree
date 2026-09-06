@@ -61,64 +61,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (session?.access_token) {
       headers.set('Authorization', `Bearer ${session.access_token}`);
     }
-    const currentEmail = user?.email || dbUser?.email || (typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '');
-    if (currentEmail) {
-      headers.set('x-user-email', currentEmail);
-    }
     return fetch(url, {
       ...init,
       headers,
     });
-  }, [session?.access_token, user?.email, dbUser?.email]);
-
-  const handleLocalSignIn = useCallback(async (rawEmail: string, pass?: string, isRestore = false) => {
-    if (!rawEmail || !rawEmail.trim()) {
-      return { error: 'يرجى إدخال البريد الإلكتروني أو اسم المستخدم' };
-    }
-    const cleanEmail = rawEmail.trim().toLowerCase();
-
-    try {
-      const res = await fetch(`/api/v1/auth/user?email=${encodeURIComponent(cleanEmail)}`);
-      const data = await res.json();
-
-      if (res.ok && data.user) {
-        setDbUser(data.user);
-        setRole(mapUserRole(data.user.role));
-
-        const mockUser = {
-          id: data.user.id.toString(),
-          email: data.user.email,
-          app_metadata: {},
-          user_metadata: { full_name: data.user.full_name },
-          aud: 'authenticated',
-          created_at: data.user.created_at || new Date().toISOString(),
-        } as unknown as User;
-
-        setUser(mockUser);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('family_tree_user_email', cleanEmail);
-        }
-
-        if (!isRestore) {
-          fetch('/api/v1/auth/log-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-user-email': cleanEmail },
-            body: JSON.stringify({
-              email: cleanEmail,
-              full_name: data.user.full_name,
-              user_id: data.user.id,
-              status: 'SUCCESS',
-            }),
-          }).catch(() => {});
-        }
-
-        return { error: null };
-      }
-      return { error: 'تعذر العثور على الحساب، يرجى التأكد من البريد الإلكتروني وكلمة المرور' };
-    } catch (err) {
-      return { error: (err as Error).message };
-    }
-  }, []);
+  }, [session?.access_token]);
 
   useEffect(() => {
     let isMounted = true;
@@ -136,23 +83,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (initialSession.access_token) {
             await fetchDbUserProfile(initialSession.access_token);
           }
-        } else {
-          // Restore local saved session
-          if (typeof window !== 'undefined') {
-            const savedEmail = localStorage.getItem('family_tree_user_email');
-            if (savedEmail) {
-              await handleLocalSignIn(savedEmail, undefined, true);
-            }
-          }
         }
       } catch (err) {
         console.error('Auth initialization error:', err);
-        if (typeof window !== 'undefined') {
-          const savedEmail = localStorage.getItem('family_tree_user_email');
-          if (savedEmail) {
-            await handleLocalSignIn(savedEmail, undefined, true);
-          }
-        }
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -172,14 +105,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await fetchDbUserProfile(currentSession.access_token);
         }
       } else {
-        // If not in Supabase, check local saved session before clearing
-        const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') : null;
-        if (!savedEmail) {
-          setSession(null);
-          setUser(null);
-          setDbUser(null);
-          setRole('USER');
-        }
+        setSession(null);
+        setUser(null);
+        setDbUser(null);
+        setRole('USER');
       }
       setLoading(false);
     });
@@ -188,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, fetchDbUserProfile, handleLocalSignIn]);
+  }, [supabase, fetchDbUserProfile]);
 
   const signIn = async (email: string, pass: string) => {
     if (!email || !email.trim()) {
@@ -204,12 +133,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password: pass,
       });
 
-      if (!error && data.session) {
+      if (error) {
+        return { error: error.message || 'فشل تسجيل الدخول، يرجى التأكد من البريد وكلمة المرور' };
+      }
+
+      if (data.session) {
         setSession(data.session);
         setUser(data.user);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('family_tree_user_email', email.trim().toLowerCase());
-        }
         if (data.session.access_token) {
           const profile = await fetchDbUserProfile(data.session.access_token);
           if (profile) {
@@ -228,13 +158,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }).catch(() => {});
           }
         }
-        return { error: null };
       }
 
-      // Fallback: Check local PostgreSQL database user
-      return await handleLocalSignIn(email, pass);
-    } catch {
-      return await handleLocalSignIn(email, pass);
+      return { error: null };
+    } catch (err) {
+      return { error: (err as Error).message || 'حدث خطأ غير متوقع أثناء تسجيل الدخول' };
     }
   };
 
@@ -286,16 +214,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (err) {
       console.error('Error signing out:', err);
     }
+
+    if (typeof document !== 'undefined') {
+      document.cookie.split(';').forEach((c) => {
+        const key = c.split('=')[0].trim();
+        if (key.startsWith('sb-')) {
+          document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+      });
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('family_tree_user_email');
+      Object.keys(localStorage).forEach((k) => {
+        if (k.startsWith('sb-')) {
+          localStorage.removeItem(k);
+        }
+      });
+    }
+
     setUser(null);
     setSession(null);
     setDbUser(null);
     setRole('USER');
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
       window.location.href = '/';
     }
   };
