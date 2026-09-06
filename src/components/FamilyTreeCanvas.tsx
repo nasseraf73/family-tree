@@ -30,6 +30,28 @@ import { Navbar } from './Navbar';
 
 import { getLayoutedElements, LayoutDirection } from '../lib/layout';
 import { getLayoutedElementsAsync } from '../lib/layout-client';
+
+// P4.4: Viewport culling helper - keeps DOM size manageable
+// for large trees by only rendering nodes within the visible area.
+function cullToViewport(nodes: any[], reactFlowInstance: any, buffer = 400): any[] {
+  if (typeof window === 'undefined' || nodes.length < 200) return nodes;
+  try {
+    const vp = reactFlowInstance.getViewport();
+    const xMin = -vp.x / vp.zoom - buffer;
+    const xMax = (-vp.x + window.innerWidth) / vp.zoom + buffer;
+    const yMin = -vp.y / vp.zoom - buffer;
+    const yMax = (-vp.y + window.innerHeight) / vp.zoom + buffer;
+    return nodes.filter(
+      (n) =>
+        n.position.x >= xMin &&
+        n.position.x <= xMax &&
+        n.position.y >= yMin &&
+        n.position.y <= yMax
+    );
+  } catch {
+    return nodes;
+  }
+}
 import { getPentanyicFullName } from '../lib/lineage';
 import { Person, Relationship, RelationshipType, MergeRequest } from '../types';
 import { createClient } from '../lib/supabase/client';
@@ -349,8 +371,17 @@ function FamilyTreeCanvasContent() {
         layoutDir,
         { nodesep: ns, ranksep: rs }
       ).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
+        // P4.4: Viewport culling - skip if graph is small (< 200)
+        const visibleNodes = layoutedNodes.length < 200
+          ? layoutedNodes
+          : cullToViewport(layoutedNodes, reactFlowInstance, 400);
+        const visibleNodeIds = new Set(visibleNodes.map((n) => n.id));
+        const visibleEdges = layoutedEdges.filter(
+          (e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target)
+        );
+
+        setNodes(visibleNodes);
+        setEdges(visibleEdges);
 
         // Auto-focus camera on target parent node after branch collapse/expand
         if (pendingFocusNodeIdRef.current !== null) {
@@ -380,8 +411,16 @@ function FamilyTreeCanvasContent() {
           layoutDir,
           { nodesep: ns, ranksep: rs }
         );
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
+        // P4.4: Viewport culling
+        const visibleNodes = layoutedNodes.length < 200
+          ? layoutedNodes
+          : cullToViewport(layoutedNodes, reactFlowInstance, 400);
+        const visibleNodeIds = new Set(visibleNodes.map((n) => n.id));
+        const visibleEdges = layoutedEdges.filter(
+          (e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target)
+        );
+        setNodes(visibleNodes);
+        setEdges(visibleEdges);
       });
     },
     [user, handleFocusPerson, handleToggleCollapseNode, setNodes, setEdges, reactFlowInstance]

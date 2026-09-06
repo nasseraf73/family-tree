@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { persons as personsTable, relationships as relsTable, marriages as marriagesTable } from '@/db/schema';
 import { Person, Relationship, RelationshipType, RelationshipStatus, Gender } from '@/types';
 import { getTreeSnapshot, treeCacheKey, getTreeCacheStats } from '@/lib/cache';
+import { logSlowQuery } from '@/lib/slow-query';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,9 @@ export async function GET(request: Request) {
   const cacheKey = treeCacheKey({ role: userRole, xMin, yMin, xMax, yMax });
 
   try {
-    const snapshot = await getTreeSnapshot(cacheKey);
+    const snapshot = await logSlowQuery('tree/canvas.getTreeSnapshot', () =>
+      getTreeSnapshot(cacheKey)
+    );
     const dbPersons = snapshot.persons;
     const dbRels = snapshot.relationships;
     const dbMarriages = snapshot.marriages;
