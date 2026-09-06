@@ -47,7 +47,7 @@ interface UserAuditData {
 }
 
 function AdminUsersContent() {
-  const { user, dbUser, role, loading: authLoading } = useAuth();
+  const { user, dbUser, role, loading: authLoading, authFetch } = useAuth();
   const isAdmin = role === 'ADMIN' || (role as string) === 'ADM';
 
   const [usersList, setUsersList] = useState<DbUser[]>([]);
@@ -75,15 +75,11 @@ function AdminUsersContent() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || dbUser?.email || user?.email || '' : user?.email || '';
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch('/api/v1/admin/users', {
-        headers: { 'x-user-email': savedEmail },
-      });
+      const res = await authFetch('/api/v1/admin/users');
       const data = await res.json();
       if (res.ok && data.users) {
         setUsersList(data.users);
@@ -95,7 +91,7 @@ function AdminUsersContent() {
     } finally {
       setLoading(false);
     }
-  }, [savedEmail, dbUser?.email, user?.email]);
+  }, [authFetch]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -130,9 +126,7 @@ function AdminUsersContent() {
     setLoadingInspection(true);
 
     try {
-      const res = await fetch(`/api/v1/admin/users/inspect?id=${u.id}`, {
-        headers: { 'x-user-email': savedEmail },
-      });
+      const res = await authFetch(`/api/v1/admin/users/inspect?id=${u.id}`);
       const data = await res.json();
       if (res.ok && data.audit) {
         setInspectionData(data);
@@ -159,11 +153,10 @@ function AdminUsersContent() {
     try {
       if (editingUser) {
         // Update user
-        const res = await fetch('/api/v1/admin/users', {
+        const res = await authFetch('/api/v1/admin/users', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'x-user-email': savedEmail,
           },
           body: JSON.stringify({
             user_id: editingUser.id,
@@ -183,11 +176,10 @@ function AdminUsersContent() {
         }
       } else {
         // Create new user
-        const res = await fetch('/api/v1/admin/users', {
+        const res = await authFetch('/api/v1/admin/users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-user-email': savedEmail,
           },
           body: JSON.stringify(formData),
         });
@@ -211,9 +203,8 @@ function AdminUsersContent() {
     if (!deletingUser) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/v1/admin/users?id=${deletingUser.id}`, {
+      const res = await authFetch(`/api/v1/admin/users?id=${deletingUser.id}`, {
         method: 'DELETE',
-        headers: { 'x-user-email': savedEmail },
       });
       const data = await res.json();
       if (res.ok) {

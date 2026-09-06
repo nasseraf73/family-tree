@@ -45,7 +45,7 @@ interface BackupFile {
 }
 
 function AdminDatabaseContent() {
-  const { user, dbUser, role, loading: authLoading } = useAuth();
+  const { user, dbUser, role, loading: authLoading, authFetch } = useAuth();
   const isAdmin = role === 'ADMIN' || (role as string) === 'ADM';
 
   const [loading, setLoading] = useState(true);
@@ -60,16 +60,12 @@ function AdminDatabaseContent() {
   const [confirmModal, setConfirmModal] = useState<'pull' | 'push' | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || dbUser?.email || user?.email || '' : user?.email || '';
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     setMessage(null);
     try {
       // 1. Fetch Stats
-      const statsRes = await fetch('/api/v1/admin/database/stats', {
-        headers: { 'x-user-email': savedEmail },
-      });
+      const statsRes = await authFetch('/api/v1/admin/database/stats');
       const statsData = await statsRes.json();
 
       if (statsRes.ok) {
@@ -81,9 +77,7 @@ function AdminDatabaseContent() {
       }
 
       // 2. Fetch Backups
-      const backupRes = await fetch('/api/v1/admin/database/backup', {
-        headers: { 'x-user-email': savedEmail },
-      });
+      const backupRes = await authFetch('/api/v1/admin/database/backup');
       const backupData = await backupRes.json();
       if (backupRes.ok && backupData.backups) {
         setBackups(backupData.backups);
@@ -93,7 +87,7 @@ function AdminDatabaseContent() {
     } finally {
       setLoading(false);
     }
-  }, [savedEmail, dbUser?.email, user?.email]);
+  }, [authFetch]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -107,11 +101,10 @@ function AdminDatabaseContent() {
     setMessage(null);
 
     try {
-      const res = await fetch('/api/v1/admin/database/sync', {
+      const res = await authFetch('/api/v1/admin/database/sync', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({ action }),
       });
@@ -138,11 +131,10 @@ function AdminDatabaseContent() {
     setMessage(null);
 
     try {
-      const res = await fetch('/api/v1/admin/database/backup', {
+      const res = await authFetch('/api/v1/admin/database/backup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({ source }),
       });

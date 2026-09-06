@@ -24,7 +24,7 @@ import {
 
 function AdminCountriesContent() {
   const router = useRouter();
-  const { user, dbUser, role, loading: authLoading } = useAuth();
+  const { user, dbUser, role, loading: authLoading, authFetch } = useAuth();
   const isAdmin = role === 'ADMIN' || (role as string) === 'ADM';
 
   const [countries, setCountries] = useState<Country[]>([]);
@@ -46,10 +46,7 @@ function AdminCountriesContent() {
   const fetchCountries = useCallback(async () => {
     setLoading(true);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || dbUser?.email || user?.email || '' : user?.email || '';
-      const res = await fetch('/api/v1/admin/countries', {
-        headers: { 'x-user-email': savedEmail },
-      });
+      const res = await authFetch('/api/v1/admin/countries');
       const data = await res.json();
       if (res.ok && data.countries) {
         setCountries(data.countries);
@@ -61,7 +58,7 @@ function AdminCountriesContent() {
     } finally {
       setLoading(false);
     }
-  }, [dbUser, user]);
+  }, [authFetch]);
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -106,11 +103,10 @@ function AdminCountriesContent() {
         ? { id: editingCountry.id, ...formData }
         : formData;
 
-      const res = await fetch(endpoint, {
+      const res = await authFetch(endpoint, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify(payload),
       });
@@ -136,12 +132,10 @@ function AdminCountriesContent() {
 
   const handleToggleActive = async (country: Country) => {
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || dbUser?.email || user?.email || '' : user?.email || '';
-      const res = await fetch('/api/v1/admin/countries', {
+      const res = await authFetch('/api/v1/admin/countries', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({
           id: country.id,
@@ -170,10 +164,8 @@ function AdminCountriesContent() {
     }
 
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || dbUser?.email || user?.email || '' : user?.email || '';
-      const res = await fetch(`/api/v1/admin/countries?id=${country.id}`, {
+      const res = await authFetch(`/api/v1/admin/countries?id=${country.id}`, {
         method: 'DELETE',
-        headers: { 'x-user-email': savedEmail },
       });
 
       const data = await res.json();
