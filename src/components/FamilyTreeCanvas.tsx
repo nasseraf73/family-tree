@@ -29,6 +29,7 @@ import { LayoutToolbar, VisualFilter } from './LayoutToolbar';
 import { Navbar } from './Navbar';
 
 import { getLayoutedElements, LayoutDirection } from '../lib/layout';
+import { getLayoutedElementsAsync } from '../lib/layout-client';
 import { getPentanyicFullName } from '../lib/lineage';
 import { Person, Relationship, RelationshipType, MergeRequest } from '../types';
 import { createClient } from '../lib/supabase/client';
@@ -341,37 +342,47 @@ function FamilyTreeCanvasContent() {
         };
       });
 
-      // 6. Compute layout positioning
-      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      // 6. Compute layout positioning (P4.3: off main thread via Web Worker)
+      getLayoutedElementsAsync(
         enrichedNodes,
         activeRawEdges,
         layoutDir,
         { nodesep: ns, ranksep: rs }
-      );
+      ).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
 
-      setNodes(layoutedNodes);
-      setEdges(layoutedEdges);
+        // Auto-focus camera on target parent node after branch collapse/expand
+        if (pendingFocusNodeIdRef.current !== null) {
+          const focusId = pendingFocusNodeIdRef.current;
+          pendingFocusNodeIdRef.current = null;
 
-      // Auto-focus camera on target parent node after branch collapse/expand
-      if (pendingFocusNodeIdRef.current !== null) {
-        const focusId = pendingFocusNodeIdRef.current;
-        pendingFocusNodeIdRef.current = null;
+          const targetNode = layoutedNodes.find((n) => n.id === focusId.toString());
+          if (targetNode) {
+            setTimeout(() => {
+              const currentViewport = reactFlowInstance.getViewport();
+              const currentZoom = currentViewport?.zoom || 1.1;
+              const targetZoom = currentZoom > 0.4 ? Math.min(currentZoom, 1.2) : 1.1;
 
-        const targetNode = layoutedNodes.find((n) => n.id === focusId.toString());
-        if (targetNode) {
-          setTimeout(() => {
-            const currentViewport = reactFlowInstance.getViewport();
-            const currentZoom = currentViewport?.zoom || 1.1;
-            const targetZoom = currentZoom > 0.4 ? Math.min(currentZoom, 1.2) : 1.1;
-
-            reactFlowInstance.setCenter(
-              targetNode.position.x + 140,
-              targetNode.position.y + 70,
-              { zoom: targetZoom, duration: 800 }
-            );
-          }, 50);
+              reactFlowInstance.setCenter(
+                targetNode.position.x + 140,
+                targetNode.position.y + 70,
+                { zoom: targetZoom, duration: 800 }
+              );
+            }, 50);
+          }
         }
-      }
+      }).catch((err) => {
+        console.error('[P4.3] Worker layout failed, falling back to sync:', err);
+        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+          enrichedNodes,
+          activeRawEdges,
+          layoutDir,
+          { nodesep: ns, ranksep: rs }
+        );
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
+      });
     },
     [user, handleFocusPerson, handleToggleCollapseNode, setNodes, setEdges, reactFlowInstance]
   );
