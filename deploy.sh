@@ -11,7 +11,7 @@ echo "🚀 [1/5] بدء عملية النشر لمشروع النمري (nammari
 # 1. سحب التحديثات إن وجد Git
 if [ -d ".git" ]; then
   echo "📥 سحب آخر التحديثات من المستودع..."
-  git pull origin main || echo "تخطي git pull..."
+  git pull origin al-nammari || git pull || echo "تخطي git pull..."
 fi
 
 # 2. تثبيت الحزم
