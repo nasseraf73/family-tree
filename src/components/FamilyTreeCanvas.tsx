@@ -371,17 +371,12 @@ function FamilyTreeCanvasContent() {
         layoutDir,
         { nodesep: ns, ranksep: rs }
       ).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-        // P4.4: Viewport culling - skip if graph is small (< 200)
-        const visibleNodes = layoutedNodes.length < 200
-          ? layoutedNodes
-          : cullToViewport(layoutedNodes, reactFlowInstance, 400);
-        const visibleNodeIds = new Set(visibleNodes.map((n) => n.id));
-        const visibleEdges = layoutedEdges.filter(
-          (e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target)
-        );
-
-        setNodes(visibleNodes);
-        setEdges(visibleEdges);
+        // P4.4: Viewport culling — DISABLED on initial load because:
+        // (a) The initial camera is at (0,0,zoom=1) and nodes may be far away
+        // (b) Auto-focus/fitView below must complete BEFORE we can cull
+        // (c) At 200 nodes per batch, culling has no measurable benefit
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
 
         // Auto-focus camera on target parent node after branch collapse/expand
         if (pendingFocusNodeIdRef.current !== null) {
@@ -411,16 +406,8 @@ function FamilyTreeCanvasContent() {
           layoutDir,
           { nodesep: ns, ranksep: rs }
         );
-        // P4.4: Viewport culling
-        const visibleNodes = layoutedNodes.length < 200
-          ? layoutedNodes
-          : cullToViewport(layoutedNodes, reactFlowInstance, 400);
-        const visibleNodeIds = new Set(visibleNodes.map((n) => n.id));
-        const visibleEdges = layoutedEdges.filter(
-          (e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target)
-        );
-        setNodes(visibleNodes);
-        setEdges(visibleEdges);
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
       });
     },
     [user, handleFocusPerson, handleToggleCollapseNode, setNodes, setEdges, reactFlowInstance]
