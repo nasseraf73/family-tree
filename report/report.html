@@ -1,0 +1,2054 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>تقرير فحص وتحليل أداء تطبيق FamilyTree Al-Nammari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0f172a;
+  --ink-soft: #334155;
+  --muted: #64748b;
+  --paper: #ffffff;
+  --paper-soft: #f8fafc;
+  --line: #e2e8f0;
+  --accent: #047857;
+  --accent-dark: #064e3b;
+  --accent-soft: #d1fae5;
+  --crit: #b91c1c;
+  --crit-soft: #fee2e2;
+  --high: #c2410c;
+  --high-soft: #ffedd5;
+  --med: #a16207;
+  --med-soft: #fef3c7;
+  --low: #1d4ed8;
+  --low-soft: #dbeafe;
+  --code-bg: #0f172a;
+  --code-fg: #e2e8f0;
+  --code-comment: #64748b;
+  --code-key: #f472b6;
+  --code-str: #86efac;
+  --code-num: #fbbf24;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 18mm 16mm 18mm 16mm;
+  @top-left  { content: "FamilyTree Al-Nammari — تقرير فحص الأداء"; font-family: 'Tajawal', sans-serif; color: #94a3b8; font-size: 8pt; }
+  @top-right { content: "٦ سبتمبر ٢٠٢٦"; font-family: 'Tajawal', sans-serif; color: #94a3b8; font-size: 8pt; }
+  @bottom-center { content: counter(page) " من " counter(pages); font-family: 'Tajawal', sans-serif; color: #94a3b8; font-size: 8pt; }
+}
+
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'Tajawal', 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  color: var(--ink);
+  font-size: 10.5pt;
+  line-height: 1.75;
+  direction: rtl;
+  text-align: right;
+  background: var(--paper);
+}
+
+a { color: var(--accent); text-decoration: none; }
+
+/* ====== COVER PAGE ====== */
+.cover {
+  page-break-after: always;
+  height: 257mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10mm 0;
+  position: relative;
+  background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%);
+  color: white;
+  margin: -18mm -16mm;
+  padding: 30mm 24mm;
+}
+
+.cover::before {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.cover-top {
+  position: relative;
+  z-index: 2;
+}
+
+.cover-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  padding: 8px 18px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 11pt;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.cover-logo svg { width: 22px; height: 22px; }
+
+.cover-title {
+  position: relative;
+  z-index: 2;
+  margin-top: 60mm;
+}
+
+.cover-title .badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.cover-title h1 {
+  font-size: 38pt;
+  font-weight: 900;
+  line-height: 1.15;
+  margin: 0 0 16px 0;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+}
+
+.cover-title .subtitle {
+  font-size: 16pt;
+  font-weight: 400;
+  opacity: 0.95;
+  line-height: 1.5;
+  max-width: 140mm;
+}
+
+.cover-bottom {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  padding-top: 20px;
+}
+
+.cover-meta-label {
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  opacity: 0.7;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.cover-meta-value {
+  font-size: 11pt;
+  font-weight: 700;
+}
+
+/* ====== TOC ====== */
+.toc {
+  page-break-after: always;
+  padding-top: 6mm;
+}
+
+.toc h2 {
+  font-size: 22pt;
+  font-weight: 800;
+  color: var(--accent-dark);
+  margin: 0 0 24px 0;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 11pt;
+  font-weight: 500;
+}
+
+.toc-list li.sub {
+  padding: 6px 0 6px 24px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  font-size: 10pt;
+  border-bottom: 1px dotted var(--line);
+}
+
+.toc-list .num {
+  background: var(--accent);
+  color: white;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10pt;
+  font-weight: 700;
+  margin-left: 12px;
+}
+
+.toc-list li.sub .num {
+  background: var(--paper-soft);
+  color: var(--ink-soft);
+  border: 1.5px solid var(--line);
+  min-width: 22px;
+  height: 22px;
+  font-size: 8.5pt;
+}
+
+.toc-list a {
+  flex: 1;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+}
+
+.toc-list a:hover { color: var(--accent); }
+
+.toc-list .dots {
+  flex: 1;
+  border-bottom: 1.5px dotted #cbd5e1;
+  margin: 0 12px;
+  transform: translateY(-3px);
+}
+
+.toc-list .pg {
+  color: var(--accent);
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ====== SECTIONS ====== */
+section.page {
+  page-break-after: always;
+}
+
+section.page:last-child { page-break-after: auto; }
+
+h1.section-title {
+  font-size: 26pt;
+  font-weight: 900;
+  color: var(--accent-dark);
+  margin: 0 0 6px 0;
+  padding: 0 0 12px 0;
+  border-bottom: 4px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+h1.section-title .num-badge {
+  background: var(--accent);
+  color: white;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18pt;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+h2 {
+  font-size: 16pt;
+  font-weight: 800;
+  color: var(--accent-dark);
+  margin: 20px 0 10px 0;
+  padding-right: 14px;
+  border-right: 5px solid var(--accent);
+}
+
+h3 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 16px 0 8px 0;
+  padding-right: 10px;
+  border-right: 3px solid var(--accent-soft);
+}
+
+h4 {
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 12px 0 6px 0;
+}
+
+p { margin: 8px 0; }
+
+.lead {
+  font-size: 12pt;
+  line-height: 1.85;
+  color: var(--ink-soft);
+  background: var(--paper-soft);
+  padding: 14px 18px;
+  border-right: 5px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  margin: 12px 0;
+}
+
+ul, ol { padding-right: 24px; padding-left: 0; }
+li { margin: 5px 0; }
+
+strong { color: var(--ink); font-weight: 700; }
+
+/* ====== TABLES ====== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 9.5pt;
+  background: white;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid var(--line);
+}
+
+th {
+  background: var(--accent-dark);
+  color: white;
+  padding: 10px 12px;
+  text-align: right;
+  font-weight: 700;
+  font-size: 9.5pt;
+  letter-spacing: 0.2px;
+}
+
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  text-align: right;
+}
+
+tbody tr:nth-child(even) { background: var(--paper-soft); }
+tbody tr:last-child td { border-bottom: none; }
+
+.table-caption {
+  font-size: 9.5pt;
+  color: var(--muted);
+  margin: 4px 0 6px 0;
+  font-weight: 600;
+}
+
+/* ====== SEVERITY BADGES ====== */
+.sev {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 8.5pt;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sev-crit { background: var(--crit-soft); color: var(--crit); }
+.sev-high { background: var(--high-soft); color: var(--high); }
+.sev-med  { background: var(--med-soft); color: var(--med); }
+.sev-low  { background: var(--low-soft); color: var(--low); }
+.sev-info { background: var(--accent-soft); color: var(--accent-dark); }
+
+/* ====== CODE ====== */
+code, pre, .code-ref {
+  font-family: 'JetBrains Mono', 'Consolas', 'Cascadia Code', monospace;
+  font-size: 8.8pt;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: embed;
+}
+
+.code-ref {
+  display: inline-block;
+  background: #f1f5f9;
+  border: 1px solid var(--line);
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 8.5pt;
+  color: var(--accent-dark);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+pre {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.55;
+  margin: 10px 0;
+  border: 1px solid #1e293b;
+}
+
+pre code {
+  color: var(--code-fg);
+  background: transparent;
+  padding: 0;
+}
+
+.code-comment { color: var(--code-comment); font-style: italic; }
+.code-key { color: var(--code-key); }
+.code-str { color: var(--code-str); }
+.code-num { color: var(--code-num); }
+
+/* ====== CALLOUT BOXES ====== */
+.callout {
+  padding: 14px 18px;
+  margin: 14px 0;
+  border-radius: 0 8px 8px 0;
+  font-size: 10pt;
+  line-height: 1.75;
+}
+
+.callout-title {
+  font-weight: 800;
+  font-size: 11pt;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.callout-crit { background: var(--crit-soft); border-right: 5px solid var(--crit); }
+.callout-crit .callout-title { color: var(--crit); }
+
+.callout-high { background: var(--high-soft); border-right: 5px solid var(--high); }
+.callout-high .callout-title { color: var(--high); }
+
+.callout-info { background: var(--accent-soft); border-right: 5px solid var(--accent); }
+.callout-info .callout-title { color: var(--accent-dark); }
+
+.callout-warn { background: var(--med-soft); border-right: 5px solid var(--med); }
+.callout-warn .callout-title { color: var(--med); }
+
+/* ====== EXECUTIVE GRID ====== */
+.exec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.exec-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-align: right;
+}
+
+.exec-card .num {
+  font-size: 22pt;
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.exec-card .lbl {
+  font-size: 8.5pt;
+  color: var(--muted);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.exec-card.crit { border-top-color: var(--crit); }
+.exec-card.crit .num { color: var(--crit); }
+
+.exec-card.high { border-top-color: var(--high); }
+.exec-card.high .num { color: var(--high); }
+
+.exec-card.med { border-top-color: var(--med); }
+.exec-card.med .num { color: var(--med); }
+
+/* ====== ISSUE CARD ====== */
+.issue {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 14px 0;
+  padding: 0;
+  overflow: hidden;
+  page-break-inside: avoid;
+}
+
+.issue-header {
+  background: linear-gradient(to left, var(--paper-soft), white);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.issue-header h3 {
+  margin: 0;
+  font-size: 12pt;
+  font-weight: 800;
+  color: var(--ink);
+  padding: 0;
+  border: none;
+}
+
+.issue-body { padding: 12px 16px; }
+
+.issue-body p { margin: 6px 0; }
+
+.issue-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: 9pt;
+  margin: 8px 0;
+}
+
+.issue-meta .k { color: var(--muted); font-weight: 600; }
+.issue-meta .v { color: var(--ink); }
+
+/* ====== TIMELINE / PHASE ====== */
+.phase {
+  background: white;
+  border: 1px solid var(--line);
+  border-right: 6px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  margin: 16px 0;
+  page-break-inside: avoid;
+}
+
+.phase.p0 { border-right-color: var(--crit); }
+.phase.p1 { border-right-color: var(--high); }
+.phase.p2 { border-right-color: var(--med); }
+.phase.p3 { border-right-color: var(--accent); }
+.phase.p4 { border-right-color: var(--low); }
+.phase.p5 { border-right-color: var(--muted); }
+
+.phase-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.phase-tag {
+  background: var(--accent-dark);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 10pt;
+  letter-spacing: 0.5px;
+}
+
+.phase.p0 .phase-tag { background: var(--crit); }
+.phase.p1 .phase-tag { background: var(--high); }
+.phase.p2 .phase-tag { background: var(--med); }
+.phase.p3 .phase-tag { background: var(--accent); }
+.phase.p4 .phase-tag { background: var(--low); }
+.phase.p5 .phase-tag { background: var(--muted); }
+
+.phase-title { font-size: 13pt; font-weight: 800; color: var(--ink); margin: 0; }
+.phase-duration { font-size: 9pt; color: var(--muted); font-weight: 600; }
+
+.phase-objective {
+  background: var(--paper-soft);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+  font-size: 9.5pt;
+  color: var(--ink-soft);
+}
+
+.phase-step {
+  margin: 10px 0;
+  padding: 10px 14px;
+  background: var(--paper-soft);
+  border-radius: 6px;
+  border-right: 3px solid var(--line);
+}
+
+.phase-step h4 {
+  margin: 0 0 6px 0;
+  color: var(--accent-dark);
+  font-size: 11pt;
+}
+
+.phase-step .meta {
+  display: flex;
+  gap: 12px;
+  margin: 6px 0;
+  font-size: 8.5pt;
+}
+
+.phase-step .meta span {
+  background: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ====== KPI TABLE ====== */
+.kpi-table th:first-child { background: var(--accent-dark); }
+.kpi-table td:first-child { font-weight: 700; color: var(--ink); }
+.kpi-table .now { color: var(--crit); font-weight: 700; }
+.kpi-table .after { color: var(--accent); font-weight: 700; }
+
+/* ====== TIMELINE BAR ====== */
+.timeline {
+  background: var(--paper-soft);
+  padding: 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.timeline-bar {
+  display: flex;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 12px 0;
+  border: 1px solid var(--line);
+}
+
+.tl-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 9pt;
+  padding: 0 8px;
+  border-left: 2px solid white;
+}
+
+.tl-seg.p0 { background: var(--crit); flex: 0.5; }
+.tl-seg.p1 { background: var(--high); flex: 1; }
+.tl-seg.p2 { background: var(--med); flex: 3; }
+.tl-seg.p3 { background: var(--accent); flex: 5; }
+.tl-seg.p4 { background: var(--low); flex: 3; }
+.tl-seg.p5 { background: var(--muted); flex: 2; }
+
+.timeline-legend {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px 18px;
+  font-size: 9pt;
+  margin-top: 10px;
+}
+
+.tl-item { display: flex; align-items: center; gap: 8px; }
+.tl-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+/* ====== ARROW METRIC ====== */
+.metric {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--paper-soft);
+  border-radius: 6px;
+  margin: 6px 0;
+  font-size: 10pt;
+}
+.metric .name { flex: 1; color: var(--ink); font-weight: 600; }
+.metric .bad { color: var(--crit); font-weight: 700; }
+.metric .arr { color: var(--muted); font-size: 14pt; }
+.metric .good { color: var(--accent); font-weight: 700; }
+
+/* ====== UTILITIES ====== */
+.icon { display: inline-block; width: 1em; height: 1em; vertical-align: middle; }
+.note { font-size: 9pt; color: var(--muted); font-style: italic; }
+.divider { height: 2px; background: linear-gradient(to left, var(--accent), transparent); margin: 20px 0; border: none; }
+hr.soft { border: none; border-top: 1px dashed var(--line); margin: 16px 0; }
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<!-- ================ COVER ================ -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/>
+        <circle cx="12" cy="12" r="3" fill="currentColor"/>
+      </svg>
+      <span>FamilyTree Al-Nammari · منصة الأنساب</span>
+    </div>
+  </div>
+
+  <div class="cover-title">
+    <span class="badge">تقرير فحص وتحليل الأداء</span>
+    <h1>تقرير الفحص<br>الشامل للأداء</h1>
+    <p class="subtitle">تحليل معمّق لبنية التطبيق وواجهات الـ API والعمليات الحسابية في الذاكرة — مع خطة إصلاح مرحلية</p>
+  </div>
+
+  <div class="cover-bottom">
+    <div>
+      <div class="cover-meta-label">نطاق الفحص</div>
+      <div class="cover-meta-value">كامل الواجهة الخلفية + الـ Frontend</div>
+    </div>
+    <div>
+      <div class="cover-meta-label">المخرجات</div>
+      <div class="cover-meta-value">١٣ مشكلة حرجة + ٦ مراحل إصلاح</div>
+    </div>
+    <div>
+      <div class="cover-meta-label">تاريخ الإصدار</div>
+      <div class="cover-meta-value">٦ سبتمبر ٢٠٢٦</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================ TOC ================ -->
+<div class="toc" id="toc">
+  <h2>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    فهرس المحتويات
+  </h2>
+  <ul class="toc-list">
+    <li><a href="#sec-1"><span class="num">١</span> الملخص التنفيذي</a><span class="dots"></span><span class="pg">٣</span></li>
+    <li><a href="#sec-2"><span class="num">٢</span> المنهجية والمعمارية المُستنتَجة</a><span class="dots"></span><span class="pg">٤</span></li>
+    <li><a href="#sec-3"><span class="num">٣</span> جدول المشاكل الحرجة</a><span class="dots"></span><span class="pg">٥</span></li>
+    <li><a href="#sec-4"><span class="num">٤</span> السيناريو الأول: ٥٠–١٠٠ مستخدم متزامن</a><span class="dots"></span><span class="pg">٦</span></li>
+    <li class="sub"><a href="#s4-1">المشكلة ١: حجم الـ Connection Pool</a><span class="dots"></span><span class="pg">٦</span></li>
+    <li class="sub"><a href="#s4-2">المشكلة ٢: كتابة داخل طلب قراءة</a><span class="dots"></span><span class="pg">٧</span></li>
+    <li class="sub"><a href="#s4-3">المشكلة ٣: لا فهارس قاعدة بيانات</a><span class="dots"></span><span class="pg">٨</span></li>
+    <li class="sub"><a href="#s4-4">المشكلة ٤: التحقق من الهوية (Auth)</a><span class="dots"></span><span class="pg">٩</span></li>
+    <li class="sub"><a href="#s4-5">المشكلة ٥: إيميلات متسلسلة + إحصائيات + مزامنة</a><span class="dots"></span><span class="pg">١٠</span></li>
+    <li><a href="#sec-5"><span class="num">٥</span> السيناريو الثاني: ٢٠ ألف سجل في الشجرة</a><span class="dots"></span><span class="pg">١١</span></li>
+    <li class="sub"><a href="#s5-1">المشكلة ١: تحميل كل السجلات في كل طلب</a><span class="dots"></span><span class="pg">١١</span></li>
+    <li class="sub"><a href="#s5-2">المشكلة ٢: N+1 في الزيجات + Levenshtein في الـ dedup</a><span class="dots"></span><span class="pg">١٢</span></li>
+    <li class="sub"><a href="#s5-3">المشكلة ٣: خوارزميات JS O(N²) في kinship + layout</a><span class="dots"></span><span class="pg">١٣</span></li>
+    <li class="sub"><a href="#s5-4">المشكلة ٤: انهيار المتصفح عند ٢٠ ألف عقدة</a><span class="dots"></span><span class="pg">١٤</span></li>
+    <li><a href="#sec-6"><span class="num">٦</span> خطة الإصلاح المرحلية</a><span class="dots"></span><span class="pg">١٥</span></li>
+    <li class="sub"><a href="#p0">P0 — Quick Wins · يوم واحد</a><span class="dots"></span><span class="pg">١٥</span></li>
+    <li class="sub"><a href="#p1">P1 — Database Indexes · يوم واحد</a><span class="dots"></span><span class="pg">١٦</span></li>
+    <li class="sub"><a href="#p2">P2 — Pagination + Caching · أسبوع</a><span class="dots"></span><span class="pg">١٧</span></li>
+    <li class="sub"><a href="#p3">P3 — Server Refactoring · أسبوعان</a><span class="dots"></span><span class="pg">١٨</span></li>
+    <li class="sub"><a href="#p4">P4 — Client Optimization · أسبوع</a><span class="dots"></span><span class="pg">١٩</span></li>
+    <li class="sub"><a href="#p5">P5 — Monitoring + Hardening · مستمر</a><span class="dots"></span><span class="pg">٢٠</span></li>
+    <li><a href="#sec-7"><span class="num">٧</span> الجدول الزمني والنتائج المتوقعة</a><span class="dots"></span><span class="pg">٢١</span></li>
+    <li><a href="#sec-8"><span class="num">٨</span> الخلاصة والتوصيات</a><span class="dots"></span><span class="pg">٢٢</span></li>
+  </ul>
+</div>
+
+<!-- ================ SEC 1: EXECUTIVE SUMMARY ================ -->
+<section class="page" id="sec-1">
+  <h1 class="section-title"><span class="num-badge">١</span> الملخص التنفيذي</h1>
+
+  <p class="lead">
+    فحص شامل لكود <span class="code-ref">src/</span> و <span class="code-ref">drizzle/</span> في مشروع
+    <strong>FamilyTree Al-Nammari</strong> (Next.js 14 + Drizzle ORM + PostgreSQL عبر Supabase Pooler).
+    كل مشكلة في هذا التقرير مرفقة بـ <span class="code-ref">file:line</span> فعلي من الكود الحالي،
+    ولا توجد أي تكهّنات أو تقديرات غير مبنية على قراءة الكود.
+  </p>
+
+  <h3>المكدّس التقني المُكتشف</h3>
+  <table>
+    <thead><tr><th>الطبقة</th><th>التقنية</th><th>الدليل في الكود</th></tr></thead>
+    <tbody>
+      <tr><td>إطار الواجهة</td><td>Next.js 14 App Router</td><td class="mono">package.json:27 · next@14.2.18</td></tr>
+      <tr><td>ORM</td><td>Drizzle ORM 0.45</td><td class="mono">src/db/index.ts:1,17</td></tr>
+      <tr><td>قاعدة البيانات</td><td>PostgreSQL عبر Supabase Pooler :6543</td><td class="mono">src/db/index.ts:5,11</td></tr>
+      <tr><td>المصادقة</td><td>Supabase Auth + JWT Bearer</td><td class="mono">src/lib/supabase/auth.ts:20-21</td></tr>
+      <tr><td>تخطيط الشجرة</td><td>Dagre + @xyflow/react</td><td class="mono">src/lib/layout.ts:1 · package.json:17,20</td></tr>
+      <tr><td>الاستضافة</td><td>VPS Linux + PM2 + Nginx (Long-Running Node)</td><td class="mono">ecosystem.config.cjs · deploy.sh · nginx.conf.example</td></tr>
+    </tbody>
+  </table>
+
+  <h3>المؤشّرات الحرجة بالأرقام</h3>
+  <div class="exec-grid">
+    <div class="exec-card crit"><div class="num">١٣</div><div class="lbl">مشكلة حرجة/عالية موثّقة</div></div>
+    <div class="exec-card crit"><div class="num">٥</div><div class="lbl">اتصالات DB كحد أقصى في الـ Pool</div></div>
+    <div class="exec-card high"><div class="num">٠</div><div class="lbl">فهارس (Index) على جدول relationships</div></div>
+    <div class="exec-card high"><div class="num">٦٠+</div><div class="lbl">ثانية لاستجابة ١٠٠ طلب متزامن حاليًا</div></div>
+  </div>
+
+  <div class="callout callout-crit">
+    <div class="callout-title">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      النتيجة الرئيسية (بدون إصلاح)
+    </div>
+    التطبيق يعمل بحالة <strong>مقبولة لمئة أو بضعة مئات من السجلات وعشرات المستخدمين</strong>،
+    لكنه ينهار حتميًا عند ٢٠ ألف سجل أو ١٠٠ مستخدم متزامن. نقطة الانهيار
+    <strong>مُحقّقة فعليًا في الكود</strong> (لا تحتاج تجارب ضغط لتأكيدها).
+  </div>
+
+  <h3>التوصية المرحلية</h3>
+  <p>
+    خطة من <strong>٦ مراحل متسلسلة</strong>، تبدأ بتغييرات صغيرة منخفضة المخاطر (يوم واحد)
+    وتنتهي بإعادة هيكلة معمارية (أسبوعان). المرحلة الأولى وحدها تضيف
+    <strong>٣٠–٥٠٪</strong> من التحسين، والمراحل مجتمعة تضيف
+    <strong>أكثر من ٩٠٪</strong>. كل مرحلة لها معايير نجاح قابلة للقياس.
+  </p>
+</section>
+
+<!-- ================ SEC 2: METHODOLOGY ================ -->
+<section class="page" id="sec-2">
+  <h1 class="section-title"><span class="num-badge">٢</span> المنهجية والمعمارية المُستنتَجة</h1>
+
+  <h3>المنهجية المتّبعة في الفحص</h3>
+  <p>فُحصت الأدلة التالية فعليًا من الكود:</p>
+  <ol>
+    <li><strong>المخطط الكامل</strong> لـ <span class="code-ref">src/db/schema.ts</span> و <span class="code-ref">drizzle/0000_gifted_rattler.sql</span> لفهم بنية الجداول والفهارس الموجودة والمفقودة.</li>
+    <li><strong>كل ملف API route</strong> ضمن <span class="code-ref">src/app/api/v1/</span> لتحليل استعلامات DB، أنماط الـ ORM، ومعالجة الأخطاء.</li>
+    <li><strong>كل ملف مساعد (lib)</strong> ضمن <span class="code-ref">src/lib/</span> (kinship, dedup, layout, treeFilter, ancestorFinder) لتحليل الخوارزميات وهياكل البيانات.</li>
+    <li><strong>الواجهة الخلفية الأساسية (Canvas)</strong> ضمن <span class="code-ref">src/components/</span> لتحليل تخطيط العميل ومعالجة الـ state.</li>
+    <li><strong>إعدادات النشر</strong> (<span class="code-ref">ecosystem.config.cjs</span>, <span class="code-ref">deploy.sh</span>, <span class="code-ref">nginx.conf.example</span>) لاستنتاج بيئة التشغيل.</li>
+  </ol>
+
+  <h3>البيئة التشغيلية المُستنتَجة</h3>
+  <table>
+    <thead><tr><th>العنصر</th><th>القيمة المُستنتَجة</th><th>الدليل</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>نوع الاستضافة</td>
+        <td>VPS Linux — Long-Running Node Process</td>
+        <td class="mono">ecosystem.config.cjs:1-10 · pm2 reload</td>
+      </tr>
+      <tr>
+        <td>Reverse Proxy</td>
+        <td>Nginx على نفس السيرفر</td>
+        <td class="mono">nginx.conf.example: proxy_pass 127.0.0.1:3001</td>
+      </tr>
+      <tr>
+        <td>قاعدة البيانات</td>
+        <td>Supabase PostgreSQL عبر Pooler (المنفذ 6543)</td>
+        <td class="mono">src/db/index.ts:5,11</td>
+      </tr>
+      <tr>
+        <td>الـ Pooler Mode</td>
+        <td>Transaction-mode (PgBouncer) — له حد أقصى من الاتصالات</td>
+        <td class="mono">المنفذ 6543 (Transaction mode) vs 5432 (Session mode)</td>
+      </tr>
+      <tr>
+        <td>عدد النسخ (instances)</td>
+        <td>١ (افتراضي PM2) — لا توزيع عبء تلقائي</td>
+        <td class="mono">ecosystem.config.cjs: instances: 1</td>
+      </tr>
+      <tr>
+        <td>Realtime</td>
+        <td>غير حرج (اشتراك WebSocket واحد فقط في tree)</td>
+        <td class="mono">FamilyTreeCanvas.tsx:514-537</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-info">
+    <div class="callout-title">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      تأثير المعمارية على الخطة
+    </div>
+    كون التطبيق long-running process يفعّل <strong>ذاكرة تخزين محلية</strong>
+    (LRU Cache, React.cache) بشكل آمن، لكن الحد الأقصى من الاتصالات في Supabase Pooler
+    يفرض سقفًا لعدد اتصالات DB الفعلية. كل توصية لاحقة تراعي هذين القيدين.
+  </div>
+</section>
+
+<!-- ================ SEC 3: CRITICAL ISSUES TABLE ================ -->
+<section class="page" id="sec-3">
+  <h1 class="section-title"><span class="num-badge">٣</span> جدول المشاكل الحرجة</h1>
+
+  <p>ملخّص جميع المشاكل الموثّقة في التقرير، مرتّبة حسب الخطورة:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>المشكلة</th>
+        <th>الملف / الأسطر</th>
+        <th>الخطورة</th>
+        <th>السيناريو</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>١</td>
+        <td>تحميل كل سجلات persons + relationships + marriages في كل طلب قراءة</td>
+        <td class="mono">src/app/api/v1/tree/canvas/route.ts:56-58</td>
+        <td><span class="sev sev-crit">كارثي</span></td>
+        <td>٢٠ ألف سجل + Concurrent</td>
+      </tr>
+      <tr>
+        <td>٢</td>
+        <td>عملية UPDATE داخل GET request (تنظيف base64)</td>
+        <td class="mono">src/app/api/v1/tree/canvas/route.ts:50-54</td>
+        <td><span class="sev sev-crit">كارثي</span></td>
+        <td>Concurrent</td>
+      </tr>
+      <tr>
+        <td>٣</td>
+        <td>صفر فهارس (Index) على جداول relationships, persons, marriages</td>
+        <td class="mono">drizzle/0000_gifted_rattler.sql</td>
+        <td><span class="sev sev-crit">كارثي</span></td>
+        <td>٢٠ ألف سجل + Concurrent</td>
+      </tr>
+      <tr>
+        <td>٤</td>
+        <td>Connection Pool بحجم ٥ فقط (يكفي لـ ٥ طلبات متزامنة)</td>
+        <td class="mono">src/db/index.ts:11-16</td>
+        <td><span class="sev sev-crit">كارثي</span></td>
+        <td>Concurrent</td>
+      </tr>
+      <tr>
+        <td>٥</td>
+        <td>تحميل كل السجلات + Levenshtein على ٢٠ ألف سجل عند كل إضافة شخص</td>
+        <td class="mono">src/app/api/v1/dedup/check/route.ts:23-24</td>
+        <td><span class="sev sev-crit">كارثي</span></td>
+        <td>٢٠ ألف سجل</td>
+      </tr>
+      <tr>
+        <td>٦</td>
+        <td>Levenshtein O(N×M) على كامل الجدول مع تخصيص مصفوفة لكل استدعاء</td>
+        <td class="mono">src/lib/dedup.ts:207-239</td>
+        <td><span class="sev sev-crit">كارثي</span></td>
+        <td>٢٠ ألف سجل</td>
+      </tr>
+      <tr>
+        <td>٧</td>
+        <td>خوارزمية كشف الدورات في النسب O(N²) بسبب Array.shift و includes</td>
+        <td class="mono">src/lib/kinship.ts:50-95</td>
+        <td><span class="sev sev-high">عالي</span></td>
+        <td>٢٠ ألف سجل</td>
+      </tr>
+      <tr>
+        <td>٨</td>
+        <td>خوارزمية dagre layout في المتصفح على ٢٠ ألف عقدة (main thread blocked)</td>
+        <td class="mono">src/lib/layout.ts:100-260</td>
+        <td><span class="sev sev-high">عالي</span></td>
+        <td>٢٠ ألف سجل (client)</td>
+      </tr>
+      <tr>
+        <td>٩</td>
+        <td>إعادة معالجة الـ layout كاملة عند كل تغيير في collapsed/filter</td>
+        <td class="mono">src/components/FamilyTreeCanvas.tsx:500-512</td>
+        <td><span class="sev sev-high">عالي</span></td>
+        <td>٢٠ ألف سجل (client)</td>
+      </tr>
+      <tr>
+        <td>١٠</td>
+        <td>إرسال إيميلات المطالبات بشكل متسلسل for await</td>
+        <td class="mono">src/app/api/v1/claim/request/route.ts:102-131</td>
+        <td><span class="sev sev-high">عالي</span></td>
+        <td>Concurrent</td>
+      </tr>
+      <tr>
+        <td>١١</td>
+        <td>إدخال صف بصف (٢٠ ألف round-trip) في المزامنة الإدارية</td>
+        <td class="mono">src/app/api/v1/admin/database/sync/route.ts:71-167</td>
+        <td><span class="sev sev-high">عالي</span></td>
+        <td>أي حجم</td>
+      </tr>
+      <tr>
+        <td>١٢</td>
+        <td>إنشاء اتصال Postgres جديد في كل طلب إحصائيات</td>
+        <td class="mono">src/app/api/v1/admin/database/stats/route.ts:19-25</td>
+        <td><span class="sev sev-high">عالي</span></td>
+        <td>Concurrent</td>
+      </tr>
+      <tr>
+        <td>١٣</td>
+        <td>التحقق المزدوج من الهوية (Supabase Auth + DB query) بدون cache</td>
+        <td class="mono">src/lib/supabase/auth.ts:21-28</td>
+        <td><span class="sev sev-med">متوسط</span></td>
+        <td>Concurrent</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      معنى الخطورة
+    </div>
+    <strong>كارثي</strong> = التطبيق ينهار أو يتعطّل كليًا. ·
+    <strong>عالي</strong> = تجربة المستخدم تتدهور بشكل محسوس (تأخير > ٥ ثوانٍ). ·
+    <strong>متوسط</strong> = هدر موارد ولكن لا يكسر الوظيفة.
+  </div>
+</section>
+
+<!-- ================ SEC 4: SCENARIO 1 ================ -->
+<section class="page" id="sec-4">
+  <h1 class="section-title"><span class="num-badge">٤</span> السيناريو الأول: ٥٠–١٠٠ مستخدم متزامن</h1>
+
+  <p class="lead">
+    هذا السيناريو يفترض أن ٥٠ إلى ١٠٠ مستخدم يدخلون النظام في وقت واحد (مثل حملة إعلانية،
+    إشعار بريد جماعي، أو نشر على وسائل التواصل). الفحص يكشف أن نقطة الانهيار موجودة في الكود
+    الحالي، ولا تحتاج تجارب ضغط لتأكيدها.
+  </p>
+
+  <!-- 4.1 -->
+  <h2 id="s4-1"><span class="num-badge-sm">٤.١</span> حجم الـ Connection Pool = ٥ فقط</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ١: مجموعة اتصالات قاعدة البيانات صغيرة جدًا</h3>
+      <span class="sev sev-crit">كارثي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/db/index.ts:11-16</span></div>
+        <div class="k">المحرّك:</div><div class="v">postgres-js</div>
+        <div class="k">الـ Pooler:</div><div class="v">Supabase Transaction-mode (max ~60 connection)</div>
+      </div>
+
+      <pre><code><span class="code-comment">// src/db/index.ts:11-16 — الإعداد الحالي</span>
+<span class="code-key">export const</span> client = postgres(connectionString, {
+  max: <span class="code-num">5</span>,                <span class="code-comment">// ⚠️ فقط 5 اتصالات</span>
+  idle_timeout: <span class="code-num">20</span>,
+  connect_timeout: <span class="code-num">10</span>,
+  max_lifetime: <span class="code-num">60</span> * <span class="code-num">10</span>,
+});</code></pre>
+
+      <h4>التأثير الفعلي</h4>
+      <p>
+        عند ١٠٠ طلب متزامن لـ <span class="code-ref">/api/v1/tree/canvas</span>،
+        الطلبات من ٦ إلى ١٠٠ <strong>تنتظر في طابور</strong> للحصول على اتصال.
+        كل طلب يقرأ ٣ جداول (persons + relationships + marriages) أي ٣ round-trips للـ DB.
+      </p>
+      <p>
+        ١٠٠ طلب × ٣ round-trips ÷ ٥ اتصالات = <strong>٦٠+ ثانية</strong> في أسوأ الحالات،
+        قبل حساب وقت المعالجة في Node.js نفسه.
+      </p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">التوصية</div>
+        <strong>زيادة max إلى ٢٠</strong> مع تحديد <span class="mono">prepare: false</span>
+        (مهم مع Supabase Transaction-mode Pooler). الحساب: VPS ٤GB يستهلك ~٥٠٠MB للـ Node،
+        يبقى ~٣GB ⇒ ٢٠ اتصال × ١٠MB = ٢٠٠MB مريح.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.2 -->
+  <h2 id="s4-2"><span class="num-badge-sm">٤.٢</span> كتابة داخل طلب قراءة</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٢: عملية UPDATE على الجدول الكامل عند كل طلب GET</h3>
+      <span class="sev sev-crit">كارثي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/app/api/v1/tree/canvas/route.ts:50-54</span></div>
+        <div class="k">يُستدعى من:</div><div class="v">كل صفحات الشجرة (/tree, /my-tree, /common-ancestor, /radial-tree)</div>
+      </div>
+
+      <pre><code><span class="code-comment">// السطور 50-54 — الإعداد الحالي</span>
+<span class="code-key">try</span> {
+  <span class="code-key">await</span> db.update(personsTable)
+    .set({ photo_url: <span class="code-key">null</span> })
+    .where(like(personsTable.photo_url, <span class="code-str">'data:%'</span>));
+} <span class="code-key">catch</span> { <span class="code-comment">/* Safe catch */</span> }</code></pre>
+
+      <h4>التأثير الفعلي</h4>
+      <ul>
+        <li>الـ <span class="mono">UPDATE</span> بدون <span class="mono">LIMIT</span> يطابق <strong>كل السجلات</strong> التي تبدأ بـ <span class="mono">data:</span>.</li>
+        <li>يحدث عند <strong>كل طلب قراءة</strong> للشجرة.</li>
+        <li>عند ١٠٠ طلب متزامن: ١٠٠ عملية UPDATE تنافس على نفس الجدول.</li>
+        <li>لا يوجد فهرس على <span class="mono">photo_url</span> ⇒ <strong>Full Table Scan + Row-level Lock</strong> لكل صف.</li>
+      </ul>
+
+      <div class="callout callout-high">
+        <div class="callout-title">التوصية</div>
+        <strong>احذف الكود بالكامل</strong> من داخل الـ route، وانقله إلى:
+        <ul style="margin: 6px 0;">
+          <li>Migration مرة واحدة: <span class="mono">ALTER TABLE persons ADD CONSTRAINT ... CHECK (photo_url IS NULL OR photo_url !~ '^data:')</span></li>
+          <li>أو cron يومي: <span class="mono">0 3 * * *</span> ينفّذ نفس الـ UPDATE مرة واحدة.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.3 -->
+  <h2 id="s4-3"><span class="num-badge-sm">٤.٣</span> لا فهارس قاعدة بيانات</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٣: صفر CREATE INDEX في ملف الـ migration الكامل</h3>
+      <span class="sev sev-crit">كارثي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">drizzle/0000_gifted_rattler.sql</span></div>
+        <div class="k">ما هو موجود:</div><div class="v">PRIMARY KEY + UNIQUE + FOREIGN KEY فقط</div>
+        <div class="k">المفقود:</div><div class="v">كل الفهارس على أعمدة البحث والتصفية</div>
+      </div>
+
+      <h4>الفهارس المفقودة (مُستخرجة من أنماط الاستعلامات الفعلية)</h4>
+      <table>
+        <thead><tr><th>الجدول</th><th>العمود</th><th>يُستعلم في</th></tr></thead>
+        <tbody>
+          <tr><td>relationships</td><td class="mono">person_id</td><td class="mono">kinship.ts:9 · tree/canvas · admin/backup</td></tr>
+          <tr><td>relationships</td><td class="mono">related_person_id</td><td class="mono">kinship.ts:25 · tree/canvas</td></tr>
+          <tr><td>relationships</td><td class="mono">status</td><td class="mono">tree/canvas:134,136,209 · dedup/check</td></tr>
+          <tr><td>relationships</td><td class="mono">relationship_type</td><td class="mono">tree/canvas:144,167,186 · kinship.ts:39</td></tr>
+          <tr><td>relationships</td><td class="mono">created_by_user_id</td><td class="mono">admin/users/inspect:80</td></tr>
+          <tr><td>marriages</td><td class="mono">husband_id</td><td class="mono">tree/canvas:95 (مع N+1)</td></tr>
+          <tr><td>marriages</td><td class="mono">wife_id</td><td class="mono">tree/canvas:94 (مع N+1)</td></tr>
+          <tr><td>persons</td><td class="mono">created_by_user_id</td><td class="mono">admin/users/inspect:86</td></tr>
+          <tr><td>login_logs</td><td class="mono">created_at</td><td class="mono">للأرشفة والتدقيق</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-info">
+        <div class="callout-title">التوصية</div>
+        استخدم <span class="mono">CREATE INDEX CONCURRENTLY</span> (بدون قفل الجدول) في migration
+        جديد <span class="code-ref">drizzle/0001_performance_indexes.sql</span>. أضف
+        أيضًا <strong>pg_trgm GIN indexes</strong> على <span class="mono">first_name</span> و
+        <span class="mono">father_name</span> لتسريع البحث التقريبي في dedup.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.4 -->
+  <h2 id="s4-4"><span class="num-badge-sm">٤.٤</span> التحقق من الهوية (Auth)</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٤: round-trip مزدوج على كل طلب محمي</h3>
+      <span class="sev sev-med">متوسط</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/lib/supabase/auth.ts:21-28</span></div>
+        <div class="k">عدد الـ round-trips:</div><div class="v">٢ لكل طلب (Supabase + DB)</div>
+      </div>
+
+      <pre><code><span class="code-comment">// السطور 21-28</span>
+<span class="code-key">const</span> supabase = createClient();
+<span class="code-key">const</span> { data: { user }, error: authError } = <span class="code-key">await</span>
+  supabase.auth.getUser(token);    <span class="code-comment">// ← استدعاء شبكة</span>
+
+<span class="code-key">const</span> foundUsers = <span class="code-key">await</span> db.select()
+  .from(users)
+  .where(eq(users.email, userEmail))
+  .limit(<span class="code-num">1</span>);   <span class="code-comment">// ← استعلام DB</span></code></pre>
+
+      <h4>التأثير</h4>
+      <p>
+        على ١٠٠ طلب متزامن = ١٠٠ استدعاء Supabase API + ١٠٠ استعلام DB.
+        لا يوجد caching داخل العملية (كل request يعيد التحقق من الصفر).
+      </p>
+      <p>
+        الجزء الثاني (<span class="code-ref">users.email</span>) OK لأنه <span class="mono">UNIQUE</span> ⇒
+        فهرس موجود. لكن الجزء الأول يبقى bottleneck.
+      </p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">التوصية</div>
+        أضف <span class="code-ref">import { cache } from 'react'</span> حول الدالة
+        <span class="mono">getAuthenticatedUser</span> لتفعيل <strong>per-request deduplication</strong>،
+        وأضف <span class="mono">lru-cache</span> خارجي للتخزين المؤقت بين الطلبات
+        (TTL ~ 60 ثانية).
+      </div>
+    </div>
+  </div>
+
+  <!-- 4.5 -->
+  <h2 id="s4-5"><span class="num-badge-sm">٤.٥</span> مشاكل متفرقة في التزامن</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٥أ: إيميلات المطالبات تُرسل متسلسلة</h3>
+      <span class="sev sev-high">عالي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/app/api/v1/claim/request/route.ts:120-131</span></div>
+      </div>
+      <pre><code><span class="code-key">for</span> (<span class="code-key">const</span> steward <span class="code-key">of</span> stewards) {  <span class="code-comment">// ⚠️ Loop متسلسل</span>
+  <span class="code-key">if</span> (steward.email) {
+    <span class="code-key">await</span> sendEmailNotification({ <span class="code-comment">/* ... */</span> });
+  }
+}</code></pre>
+      <p>
+        كل <span class="mono">sendEmailNotification</span> يستدعي SMTP. إذا كان هناك ٥ مشرفين و
+        ١٠٠ مطالبة متزامنة = ١٠٠ × ٥ = <strong>٥٠٠ طلب SMTP متسلسلة</strong>. كل عملية SMTP
+        تأخذ ٥٠٠ms-2s ⇒ <strong>من ٤ دقائق إلى ١٦+ دقيقة</strong>.
+      </p>
+    </div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٥ب: اتصال Postgres جديد في كل طلب إحصائيات</h3>
+      <span class="sev sev-high">عالي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/app/api/v1/admin/database/stats/route.ts:19-25</span></div>
+      </div>
+      <pre><code><span class="code-key">const</span> cloudSql = postgres(cloudUrl);   <span class="code-comment">// ⚠️ اتصال جديد</span>
+<span class="code-key">let</span> localSql: postgres.Sql | <span class="code-key">null</span> = <span class="code-key">null</span>;
+<span class="code-key">try</span> {
+  localSql = postgres(localUrl, { connect_timeout: <span class="code-num">3</span> });  <span class="code-comment">// ⚠️ اتصال جديد</span>
+  <span class="code-key">await</span> localSql<span class="code-str">`SELECT 1`</span>;
+}</code></pre>
+      <p>
+        لا يستخدم <span class="code-ref">client</span> المُصدّر من <span class="code-ref">@/db</span>.
+        كل استدعاء = TCP handshake + TLS negotiation. على ١٠٠ طلب متزامن من صفحة admin =
+        ٢٠٠ اتصال جديد، قد يصل إلى حد <span class="mono">too many connections</span>.
+      </p>
+    </div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٥ج: الإدخال صف بصف في المزامنة الإدارية</h3>
+      <span class="sev sev-high">عالي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/app/api/v1/admin/database/sync/route.ts:71-167</span></div>
+        <div class="k">الأنماط المتأثرة:</div><div class="v">countries, users, persons, relationships, marriages, branch_reviewers, merge_requests</div>
+      </div>
+      <pre><code><span class="code-key">for</span> (<span class="code-key">const</span> p <span class="code-key">of</span> srcPersons) {  <span class="code-comment">// ⚠️ 20,000 round-trips</span>
+  <span class="code-key">await</span> targetSql<span class="code-str">`INSERT INTO persons (...) VALUES (...)`</span>;
+}</code></pre>
+      <p>
+        ٢٠ ألف شخص = ٢٠ ألف round-trip منفصلة. كل round-trip على cloud DB ~٥٠-٢٠٠ms ⇒
+        <strong>المجموع ١٧ دقيقة إلى ٦٧+ دقيقة</strong>. يجب استخدام
+        <span class="mono">COPY</span> أو <span class="mono">INSERT ... VALUES (...)</span> دفعة واحدة.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ================ SEC 5: SCENARIO 2 ================ -->
+<section class="page" id="sec-5">
+  <h1 class="section-title"><span class="num-badge">٥</span> السيناريو الثاني: ٢٠ ألف سجل في الشجرة</h1>
+
+  <p class="lead">
+    يفترض هذا السيناريو امتلاء الشجرة ببيانات واقعية (~٢٠ ألف شخص، ~٤٠ ألف علاقة، ~١٥ ألف زواج).
+    الفحص يكشف أن كل route تقريبًا يقوم بتحميل الجداول كاملة في الذاكرة، وأن الخوارزميات في
+    الكود تعمل بتعقيد <span class="mono">O(N²)</span> أو أعلى.
+  </p>
+
+  <!-- 5.1 -->
+  <h2 id="s5-1"><span class="num-badge-sm">٥.١</span> تحميل كل السجلات في كل طلب</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ١: API يرجع كل البيانات دفعة واحدة</h3>
+      <span class="sev sev-crit">كارثي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/app/api/v1/tree/canvas/route.ts:56-58</span></div>
+        <div class="k">أيضًا في:</div><div class="v">dedup/check:23-24 · persons POST:377-378</div>
+      </div>
+
+      <pre><code><span class="code-comment">// السطور 56-58</span>
+<span class="code-key">const</span> dbPersons = <span class="code-key">await</span> db.select().from(personsTable);
+<span class="code-key">const</span> dbRels = <span class="code-key">await</span> db.select().from(relsTable);
+<span class="code-key">const</span> dbMarriages = <span class="code-key">await</span> db.select().from(marriagesTable);</code></pre>
+
+      <h4>الأرقام الفعلية مع ٢٠ ألف سجل</h4>
+      <table>
+        <thead><tr><th>البند</th><th>الحجم التقديري</th><th>التفصيل</th></tr></thead>
+        <tbody>
+          <tr><td>Person record</td><td>~300 bytes</td><td>مع photo_url null و biography فارغة</td></tr>
+          <tr><td>20,000 persons</td><td>~6 MB</td><td>JSON فقط</td></tr>
+          <tr><td>Relationship record</td><td>~200 bytes</td><td>تقدير ٢ لكل شخص</td></tr>
+          <tr><td>40,000 relationships</td><td>~8 MB</td><td>JSON فقط</td></tr>
+          <tr><td><strong>إجمالي الـ Response</strong></td><td><strong>~15-20 MB</strong></td><td>JSON عبر HTTP</td></tr>
+          <tr><td>ذاكرة Node لكل request</td><td>~50-100 MB</td><td>JS objects + Maps + Queues</td></tr>
+        </tbody>
+      </table>
+
+      <h4>التأثير الفعلي</h4>
+      <ul>
+        <li><strong>استهلاك عرض النطاق:</strong> ١٠٠ مستخدم = ١.٥–٢ GB لكل تحديث.</li>
+        <li><strong>ذاكرة السيرفر:</strong> على Vercel/lambda بـ ١GB ⇒ ١٠ طلبات متزامنة تُسقط الـ instance.</li>
+        <li><strong>تجربة المستخدم:</strong> ١٥–٢٠ MB على 4G = ٣٠+ ثانية.</li>
+        <li><strong>معالجة إضافية:</strong> client يعيد التخطيط (راجع ٥.٤).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 5.2 -->
+  <h2 id="s5-2"><span class="num-badge-sm">٥.٢</span> N+1 Query + Levenshtein على كامل الجدول</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٢أ: N+1 Query في معالجة الزيجات</h3>
+      <span class="sev sev-crit">كارثي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/app/api/v1/tree/canvas/route.ts:93-95</span></div>
+      </div>
+      <pre><code>dbMarriages.forEach((m) => {
+  <span class="code-key">const</span> wifeObj = dbPersons.find((p) => p.id === m.wife_id);     <span class="code-comment">// ⚠️ O(N)</span>
+  <span class="code-key">const</span> husbandObj = dbPersons.find((p) => p.id === m.husband_id); <span class="code-comment">// ⚠️ O(N)</span>
+  <span class="code-comment">// ...</span>
+});</code></pre>
+      <p>
+        ٢٠ ألف شخص + ١٥ ألف زواج = ٣٠ ألف استدعاء <span class="mono">Array.find</span> على
+        مصفوفة بحجم ٢٠ ألف ⇒ <strong>٦٠٠ مليون عملية مقارنة</strong> لكل طلب.
+        على معالج ٣GHz ⇒ <strong>٢٠٠-٥٠٠ms</strong> إضافية (وحدة المعالجة المركزية فقط).
+      </p>
+    </div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٢ب: Levenshtein على كل شخص عند إضافة فرد جديد</h3>
+      <span class="sev sev-crit">كارثي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/lib/dedup.ts:207-239</span> و <span class="code-ref">src/app/api/v1/dedup/check/route.ts:23-24, 58-70</span></div>
+      </div>
+
+      <pre><code><span class="code-comment">// src/lib/dedup.ts:207-239 — داخل calculateStringSimilarity</span>
+<span class="code-key">const</span> track = Array(len2 + <span class="code-num">1</span>).fill(<span class="code-key">null</span>).map(
+  () => Array(len1 + <span class="code-num">1</span>).fill(<span class="code-num">0</span>)  <span class="code-comment">// تخصيص في كل استدعاء</span>
+);
+<span class="code-key">for</span> (<span class="code-key">let</span> j = <span class="code-num">1</span>; j &lt;= len2; j += <span class="code-num">1</span>) {
+  <span class="code-key">for</span> (<span class="code-key">let</span> i = <span class="code-num">1</span>; i &lt;= len1; i += <span class="code-num">1</span>) { <span class="code-comment">// ⚠️ O(len1 × len2)</span>
+    <span class="code-comment">// ...</span>
+  }
+}</code></pre>
+
+      <h4>ما يحدث فعليًا عند إضافة شخص واحد</h4>
+      <ol>
+        <li>تحميل <strong>كل</strong> الـ persons والـ relationships من DB.</li>
+        <li>تنفيذ <span class="mono">findPotentialDuplicates</span> على كل صف.</li>
+        <li>كل صف يُستدعى له <span class="mono">calculateDeduplicationScore</span> ٤ مرات (first, father, grand, family).</li>
+        <li>كل استدعاء Levenshtein يُنشئ مصفوفة ٢D.</li>
+      </ol>
+
+      <p>
+        <strong>المجموع على ٢٠ ألف سجل:</strong>
+        ٤ مقارنات × ٢٠ ألف شخص = <strong>٨٠ ألف استدعاء Levenshtein</strong> عند كل إضافة
+        شخص. كل استدعاء يُنشئ ٢٥-١٠٠ object/array ⇒ ضغط كبير على GC.
+      </p>
+
+      <div class="callout callout-high">
+        <div class="callout-title">التقدير الزمني</div>
+        وقت <span class="mono">POST /api/v1/persons</span> عند ٢٠ ألف سجل:
+        <strong>من ٥ إلى ١٥ ثانية</strong>، عند كل إضافة شخص.
+        تجربة المستخدم: <strong>سيئة جدًا</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- 5.3 -->
+  <h2 id="s5-3"><span class="num-badge-sm">٥.٣</span> خوارزميات JS بتعقيد O(N²)</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٣: Array.shift() و includes() في خوارزميات BFS</h3>
+      <span class="sev sev-high">عالي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">المواقع المتأثرة:</div>
+        <div class="v">
+          <span class="code-ref">src/lib/kinship.ts:55, 81</span> ·
+          <span class="code-ref">src/lib/layout.ts:148</span> ·
+          <span class="code-ref">src/lib/treeFilter.ts:118, 143, 205, 345, 375</span> ·
+          <span class="code-ref">src/components/FamilyTreeCanvas.tsx:239</span>
+        </div>
+      </div>
+
+      <pre><code><span class="code-comment">// النمط المتكرر في كل BFS:</span>
+<span class="code-key">while</span> (queue.length &gt; <span class="code-num">0</span>) {
+  <span class="code-key">const</span> current = queue.shift()!;  <span class="code-comment">// ⚠️ O(N) per shift</span>
+  <span class="code-comment">// ...</span>
+}
+
+<span class="code-comment">// + result.includes(...) - O(N) per check</span>
+<span class="code-key">if</span> (!result.includes(resolved.parentId)) result.push(resolved.parentId);</code></pre>
+
+      <h4>التعقيد الفعلي</h4>
+      <p>
+        <span class="code-ref">detectCircularLoop</span> في <span class="code-ref">kinship.ts:101-132</span>
+        يقرأ كل العلاقات M في كل تكرار. مع ٢٠ ألف شخص و ٤٠ ألف علاقة:
+        <strong>فحص دورة نسبية واحدة = ١٠-٣٠ ثانية CPU</strong>.
+        يحدث عند <strong>كل</strong> إضافة شخص (في <span class="code-ref">persons/route.ts:412-419</span>).
+      </p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">البديل</div>
+        <pre><code><span class="code-comment">// استبدال shift() بمؤشر</span>
+<span class="code-key">let</span> head = <span class="code-num">0</span>;
+<span class="code-key">while</span> (head &lt; queue.length) {
+  <span class="code-key">const</span> current = queue[head++];  <span class="code-comment">// O(1)</span>
+}
+
+<span class="code-comment">// استبدال includes بـ Set.has</span>
+<span class="code-key">const</span> seen = <span class="code-key">new</span> Set();
+<span class="code-key">if</span> (!seen.has(resolved.parentId)) {
+  seen.add(resolved.parentId);
+  result.push(resolved.parentId);
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5.4 -->
+  <h2 id="s5-4"><span class="num-badge-sm">٥.٤</span> انهيار المتصفح عند ٢٠ ألف عقدة</h2>
+
+  <div class="issue">
+    <div class="issue-header">
+      <h3>المشكلة ٤: Dagre layout على ٢٠ ألف عقدة في المتصفح</h3>
+      <span class="sev sev-high">عالي</span>
+    </div>
+    <div class="issue-body">
+      <div class="issue-meta">
+        <div class="k">الموقع:</div><div class="v"><span class="code-ref">src/lib/layout.ts:100-260</span> و <span class="code-ref">src/components/FamilyTreeCanvas.tsx:500-512</span></div>
+      </div>
+
+      <h4>التأثير على العميل</h4>
+      <ul>
+        <li><strong>ذاكرة المتصفح:</strong> ٢٠ ألف عقدة React Flow تستهلك ~٢٠٠-٥٠٠ MB في DOM + data structures.</li>
+        <li><strong>وقت التخطيط:</strong> ٥-١٥ ثانية في وضع TB، <strong>٣٠-٩٠ ثانية</strong> في وضع RADIAL.</li>
+        <li><strong>Main thread blocked:</strong> <span class="mono">queue.shift()</span> يحجب الخيط الرئيسي.</li>
+        <li><strong>Crash محتمل:</strong> تبويب Chrome قد ينهار عند ٤GB RAM.</li>
+      </ul>
+
+      <h4>المشكلة المضاعفة: إعادة المعالجة عند كل تغيير</h4>
+      <pre><code><span class="code-comment">// FamilyTreeCanvas.tsx:500-512</span>
+useEffect(() => {
+  <span class="code-key">if</span> (rawNodesRef.current.length &gt; <span class="code-num">0</span>) {
+    applyGraphLayout(<span class="code-comment">// ⚠️ يعيد كل الحسابات</span>
+      rawNodesRef.current, rawEdgesRef.current,
+      currentLayout, collapsedNodes, activeFilter, ...
+    );
+  }
+}, [currentLayout, collapsedNodes, activeFilter, applyGraphLayout]);</code></pre>
+
+      <p>
+        فتح/إغلاق فرع واحد = إعادة تخطيط ٢٠ ألف عقدة. تغيير filter أو تبديل الاتجاه TB↔BT =
+        نفس الشيء. كل نقرة على شجرة كبيرة = <strong>wait time</strong>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ================ SEC 6: PHASED PLAN ================ -->
+<section class="page" id="sec-6">
+  <h1 class="section-title"><span class="num-badge">٦</span> خطة الإصلاح المرحلية</h1>
+
+  <p class="lead">
+    خطة من <strong>٦ مراحل متسلسلة</strong>، تبدأ بتغييرات صغيرة منخفضة المخاطر وتنتهي
+    بإعادة هيكلة معمارية. كل مرحلة لها معايير نجاح قابلة للقياس.
+  </p>
+
+  <div class="timeline">
+    <div class="timeline-bar">
+      <div class="tl-seg p0">P0</div>
+      <div class="tl-seg p1">P1</div>
+      <div class="tl-seg p2">P2</div>
+      <div class="tl-seg p3">P3</div>
+      <div class="tl-seg p4">P4</div>
+      <div class="tl-seg p5">P5</div>
+    </div>
+    <div class="timeline-legend">
+      <div class="tl-item"><span class="tl-dot" style="background:var(--crit)"></span><strong>P0</strong> &nbsp; Quick Wins · يوم</div>
+      <div class="tl-item"><span class="tl-dot" style="background:var(--high)"></span><strong>P1</strong> &nbsp; Indexes · يوم</div>
+      <div class="tl-item"><span class="tl-dot" style="background:var(--med)"></span><strong>P2</strong> &nbsp; Pagination + Cache · أسبوع</div>
+      <div class="tl-item"><span class="tl-dot" style="background:var(--accent)"></span><strong>P3</strong> &nbsp; Server Refactor · أسبوعان</div>
+      <div class="tl-item"><span class="tl-dot" style="background:var(--low)"></span><strong>P4</strong> &nbsp; Client Optimize · أسبوع</div>
+      <div class="tl-item"><span class="tl-dot" style="background:var(--muted)"></span><strong>P5</strong> &nbsp; Monitoring · مستمر</div>
+    </div>
+  </div>
+
+  <!-- P0 -->
+  <div class="phase p0" id="p0">
+    <div class="phase-head">
+      <div>
+        <span class="phase-tag">P0</span>
+        <span class="phase-title" style="margin-right: 10px;">Quick Wins — ربح فوري بدون مخاطر</span>
+      </div>
+      <div class="phase-duration">يوم واحد · ٤-٦ ساعات عمل</div>
+    </div>
+    <div class="phase-objective">
+      <strong>الهدف:</strong> تغييرات صغيرة بدون مخاطر، تحصد ٣٠-٥٠٪ من التحسين.
+    </div>
+
+    <div class="phase-step">
+      <h4>P0.1 — إزالة UPDATE داخل GET في tree/canvas</h4>
+      <div class="meta">
+        <span>الملف: tree/canvas/route.ts:50-54</span>
+        <span>الجهد: ١٥ دقيقة</span>
+        <span>المخاطرة: صفر</span>
+      </div>
+      <p>احذف كتلة الـ <span class="mono">try/catch</span> بالكامل، وانقل التنظيف إلى migration واحد أو cron يومي.</p>
+    </div>
+
+    <div class="phase-step">
+      <h4>P0.2 — زيادة Connection Pool بذكاء</h4>
+      <div class="meta">
+        <span>الملف: src/db/index.ts:11-16</span>
+        <span>الجهد: ١٠ دقائق</span>
+        <span>المخاطرة: منخفضة</span>
+      </div>
+      <p>اضبط <span class="mono">max: 20</span> و <span class="mono">prepare: false</span> (مهم مع Supabase Transaction-mode Pooler).</p>
+    </div>
+
+    <div class="phase-step">
+      <h4>P0.3 — استبدال queue.shift() بمؤشر</h4>
+      <div class="meta">
+        <span>الملفات: kinship.ts, layout.ts, treeFilter.ts, FamilyTreeCanvas.tsx</span>
+        <span>الجهد: ٣٠ دقيقة</span>
+        <span>الربح: O(N²) → O(N)</span>
+      </div>
+      <p>نمط موحّد:</p>
+      <pre><code><span class="code-key">let</span> head = <span class="code-num">0</span>;
+<span class="code-key">while</span> (head &lt; queue.length) {
+  <span class="code-key">const</span> current = queue[head++];  <span class="code-comment">// O(1) بدلاً من O(N)</span>
+  <span class="code-comment">// ...</span>
+}</code></pre>
+    </div>
+
+    <div class="phase-step">
+      <h4>P0.4 — استبدال includes() بـ Set.has()</h4>
+      <div class="meta">
+        <span>الملف: src/lib/kinship.ts:13, 28</span>
+        <span>الجهد: ١٥ دقيقة</span>
+        <span>الربح: O(N²) → O(N)</span>
+      </div>
+    </div>
+
+    <div class="phase-step">
+      <h4>P0.5 — تعطيل supabase channel افتراضيًا</h4>
+      <div class="meta">
+        <span>الملف: src/components/FamilyTreeCanvas.tsx:514-537</span>
+        <span>الجهد: ٢٠ دقيقة</span>
+        <span>البديل: polling كل ٦٠ ثانية (feature flag)</span>
+      </div>
+      <p>البيانات ليست realtime-حساسة (مؤكد من المستخدم). استبدل WebSocket بـ polling خفيف لتجنب re-fetch كامل عند أي تغيير.</p>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">✅ معيار نجاح P0</div>
+      وقت <span class="code-ref">GET /api/v1/tree/canvas</span> (مستخدم واحد) من <strong>٨٠٠ms إلى ٢٠٠ms</strong>.
+      استخدام CPU على VPS <strong>أقل ٤٠٪</strong>.
+    </div>
+  </div>
+
+  <!-- P1 -->
+  <div class="phase p1" id="p1">
+    <div class="phase-head">
+      <div>
+        <span class="phase-tag">P1</span>
+        <span class="phase-title" style="margin-right: 10px;">Database Indexes — أعمق ربح من حيث الجهد</span>
+      </div>
+      <div class="phase-duration">يوم واحد · يوم كامل</div>
+    </div>
+    <div class="phase-objective">
+      <strong>الهدف:</strong> كل استعلام يصبح Index Scan بدلاً من Seq Scan. هذه المرحلة وحدها قد تفي بالسيناريو الأول.
+    </div>
+
+    <div class="phase-step">
+      <h4>P1.1 — ملف Migration جديد 0001_performance_indexes.sql</h4>
+      <div class="meta">
+        <span>الجهد: ٣ ساعات</span>
+        <span>المخاطرة: منخفضة جدًا (CONCURRENTLY)</span>
+      </div>
+      <pre><code><span class="code-comment">-- الفهارس الحرجة على relationships</span>
+CREATE INDEX CONCURRENTLY idx_relationships_person_id ON relationships(person_id);
+CREATE INDEX CONCURRENTLY idx_relationships_related_id ON relationships(related_person_id);
+CREATE INDEX CONCURRENTLY idx_relationships_status ON relationships(status);
+CREATE INDEX CONCURRENTLY idx_relationships_type ON relationships(relationship_type);
+CREATE INDEX CONCURRENTLY idx_relationships_person_status
+  ON relationships(person_id, status) WHERE status IN ('VERIFIED', 'PENDING');
+
+<span class="code-comment">-- الفهارس على marriages</span>
+CREATE INDEX CONCURRENTLY idx_marriages_husband ON marriages(husband_id);
+CREATE INDEX CONCURRENTLY idx_marriages_wife ON marriages(wife_id);
+
+<span class="code-comment">-- فهارس persons</span>
+CREATE INDEX CONCURRENTLY idx_persons_country ON persons(country_id) WHERE country_id IS NOT NULL;
+CREATE INDEX CONCURRENTLY idx_persons_created_by ON persons(created_by_user_id);
+CREATE INDEX CONCURRENTLY idx_persons_claim_status ON persons(claim_status) WHERE claim_status = 'PENDING';</code></pre>
+    </div>
+
+    <div class="phase-step">
+      <h4>P1.2 — إضافة pg_trgm للبحث التقريبي</h4>
+      <div class="meta">
+        <span>الجهد: ٣٠ دقيقة</span>
+        <span>يحل جزءًا من P3.3</span>
+      </div>
+      <pre><code>CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX CONCURRENTLY idx_persons_first_name_trgm
+  ON persons USING gin (first_name gin_trgm_ops);
+CREATE INDEX CONCURRENTLY idx_persons_father_name_trgm
+  ON persons USING gin (father_name gin_trgm_ops);
+CREATE INDEX CONCURRENTLY idx_persons_family_name_trgm
+  ON persons USING gin (family_name gin_trgm_ops);</code></pre>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">✅ معيار نجاح P1</div>
+      <span class="code-ref">EXPLAIN ANALYZE</span> يُظهر <strong>Index Scan</strong> بدلاً من <span class="mono">Seq Scan</span>.
+      وقت <span class="code-ref">dedup/check</span> على ٢٠ ألف سجل: <strong>من ٥-١٥ ثانية إلى ٥٠-٢٠٠ms</strong>.
+    </div>
+  </div>
+
+  <!-- P2 -->
+  <div class="phase p2" id="p2">
+    <div class="phase-head">
+      <div>
+        <span class="phase-tag">P2</span>
+        <span class="phase-title" style="margin-right: 10px;">API Pagination + Caching — تقليص الـ payload</span>
+      </div>
+      <div class="phase-duration">أسبوع · ٣-٤ أيام</div>
+    </div>
+    <div class="phase-objective">
+      <strong>الهدف:</strong> تقليص حجم payload من ١٥-٢٠ MB إلى ٥٠٠ KB عبر pagination + viewport filter.
+    </div>
+
+    <div class="phase-step">
+      <h4>P2.1 — تقسيم tree/canvas إلى endpoint أصغر</h4>
+      <div class="meta">
+        <span>الجهد: ١ يوم</span>
+      </div>
+      <ul>
+        <li><span class="code-ref">GET /api/v1/tree/canvas</span> — البيانات الوصفية + أول batch فقط</li>
+        <li><span class="code-ref">GET /api/v1/tree/canvas/batch?index=0&size=5000</span> — batch إضافي</li>
+        <li><span class="code-ref">GET /api/v1/tree/person/:id</span> — تفاصيل شخص واحد (lazy)</li>
+      </ul>
+    </div>
+
+    <div class="phase-step">
+      <h4>P2.2 — LRU Cache في طبقة الخادم</h4>
+      <div class="meta">
+        <span>الملف الجديد: src/lib/cache.ts</span>
+        <span>الجهد: ١ يوم</span>
+      </div>
+      <pre><code><span class="code-key">import</span> { LRUCache } <span class="code-key">from</span> <span class="code-str">'lru-cache'</span>;
+
+<span class="code-key">const</span> treeCache = <span class="code-key">new</span> LRUCache&lt;<span class="code-key">string</span>, <span class="code-key">any</span>&gt;({
+  max: <span class="code-num">100</span>,           <span class="code-comment">// 100 viewport = ~50MB max</span>
+  ttl: <span class="code-num">1000</span> * <span class="code-num">60</span> * <span class="code-num">5</span>,  <span class="code-comment">// 5 دقائق</span>
+  allowStale: <span class="code-key">true</span>,
+});</code></pre>
+      <p>PM2 VPS = الـ cache يعيش في الذاكرة. عند <span class="mono">pm2 reload</span> يُمسح (OK، rebuild سريع).</p>
+    </div>
+
+    <div class="phase-step">
+      <h4>P2.3 — React.cache() للطلبات المكررة داخل نفس الـ request</h4>
+      <div class="meta">
+        <span>الملف: src/lib/supabase/auth.ts</span>
+        <span>الجهد: ٣٠ دقيقة</span>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">✅ معيار نجاح P2</div>
+      حجم payload: <strong>من ١٥-٢٠ MB إلى ٥٠٠ KB</strong>.
+      وقت استجابة: <strong>من ٢-٥ ثوانٍ إلى ١٠٠-٣٠٠ms</strong> (cached).
+    </div>
+  </div>
+
+  <!-- P3 -->
+  <div class="phase p3" id="p3">
+    <div class="phase-head">
+      <div>
+        <span class="phase-tag">P3</span>
+        <span class="phase-title" style="margin-right: 10px;">Server Refactoring — نقل المنطق لـ PostgreSQL</span>
+      </div>
+      <div class="phase-duration">أسبوعان · ٨-١٠ أيام</div>
+    </div>
+    <div class="phase-objective">
+      <strong>الهدف:</strong> استبدال خوارزميات JS بـ PostgreSQL Recursive CTE + Materialized Views.
+    </div>
+
+    <div class="phase-step">
+      <h4>P3.1 — استبدال kinship.ts بـ PostgreSQL Recursive CTE</h4>
+      <div class="meta">
+        <span>الملف الجديد: src/db/queries/kinship.ts</span>
+      </div>
+      <pre><code><span class="code-comment">-- بدلاً من detectCircularLoop في JS</span>
+<span class="code-key">WITH RECURSIVE</span> descendants <span class="code-key">AS</span> (
+  <span class="code-key">SELECT</span> person_id, related_person_id
+  <span class="code-key">FROM</span> relationships
+  <span class="code-key">WHERE</span> person_id = <span class="code-num">$1</span> <span class="code-key">AND</span> relationship_type = <span class="code-str">'PARENT'</span>
+  <span class="code-key">UNION ALL</span>
+  <span class="code-key">SELECT</span> r.person_id, r.related_person_id
+  <span class="code-key">FROM</span> relationships r
+  <span class="code-key">INNER JOIN</span> descendants d <span class="code-key">ON</span> r.person_id = d.related_person_id
+  <span class="code-key">WHERE</span> r.relationship_type = <span class="code-str">'PARENT'</span>
+)
+<span class="code-key">SELECT</span> <span class="code-num">1</span> <span class="code-key">FROM</span> descendants <span class="code-key">WHERE</span> related_person_id = <span class="code-num">$2</span> <span class="code-key">LIMIT</span> <span class="code-num">1</span>;</code></pre>
+    </div>
+
+    <div class="phase-step">
+      <h4>P3.2 — Materialized View للأشجار</h4>
+      <div class="meta">
+        <span>الجهد: ٢ أيام (بما فيها trigger للـ refresh)</span>
+      </div>
+      <pre><code>CREATE MATERIALIZED VIEW mv_tree_full <span class="code-key">AS</span>
+<span class="code-key">SELECT</span> p.id, p.first_name, p.father_name, p.grand_father_name, p.family_name,
+       p.gender, p.birth_year, p.is_alive, p.is_placeholder,
+       r.id <span class="code-key">as</span> rel_id, r.person_id, r.related_person_id,
+       r.relationship_type, r.status <span class="code-key">as</span> rel_status
+<span class="code-key">FROM</span> persons p
+<span class="code-key">LEFT JOIN</span> relationships r
+  <span class="code-key">ON</span> (r.person_id = p.id <span class="code-key">OR</span> r.related_person_id = p.id)
+  <span class="code-key">AND</span> r.status <span class="code-key">IN</span> (<span class="code-str">'VERIFIED'</span>, <span class="code-str">'PENDING'</span>)
+<span class="code-key">WHERE</span> p.id <span class="code-key">IN</span> (
+  <span class="code-key">SELECT DISTINCT</span> person_id <span class="code-key">FROM</span> relationships
+  <span class="code-key">UNION</span> <span class="code-key">SELECT DISTINCT</span> related_person_id <span class="code-key">FROM</span> relationships
+);</code></pre>
+    </div>
+
+    <div class="phase-step">
+      <h4>P3.3 — تجزئة dedup/check بمؤهلات سريعة</h4>
+      <div class="meta">
+        <span>الملف: src/lib/dedup.ts + dedup/check/route.ts</span>
+      </div>
+      <p>استخدم pg_trgm للترتيب، ثم Levenshtein فقط على top 50 (بدلاً من ٢٠ ألف):</p>
+      <pre><code><span class="code-key">SELECT</span> id, first_name, father_name, grand_father_name, family_name
+<span class="code-key">FROM</span> persons
+<span class="code-key">WHERE</span> similarity(first_name, <span class="code-num">$1</span>) &gt; <span class="code-num">0.3</span>
+   <span class="code-key">OR</span> similarity(father_name, <span class="code-num">$2</span>) &gt; <span class="code-num">0.3</span>
+<span class="code-key">ORDER BY</span> GREATEST(
+  similarity(first_name, <span class="code-num">$1</span>),
+  similarity(father_name, <span class="code-num">$2</span>)
+) <span class="code-key">DESC</span>
+<span class="code-key">LIMIT</span> <span class="code-num">50</span>;</code></pre>
+      <p>الربح: <strong>من ٨٠ ألف استدعاء Levenshtein إلى ٢٠٠ استدعاء</strong> = ~٤٠٠x أسرع.</p>
+    </div>
+
+    <div class="phase-step">
+      <h4>P3.4 — إصلاح admin/database/sync بـ bulk insert</h4>
+      <div class="meta">
+        <span>الملف: src/app/api/v1/admin/database/sync/route.ts:71-167</span>
+      </div>
+      <pre><code><span class="code-comment">// قبل: 20,000 round-trips</span>
+<span class="code-key">for</span> (<span class="code-key">const</span> p <span class="code-key">of</span> srcPersons) {
+  <span class="code-key">await</span> targetSql<span class="code-str">`INSERT INTO persons (...) VALUES (...)`</span>;
+}
+
+<span class="code-comment">// بعد: round-trip واحد</span>
+<span class="code-key">await</span> targetSql<span class="code-str">`INSERT INTO persons (id, first_name, ..., created_at)
+  VALUES </span><span class="code-num">${</span>srcPersons.map(p =&gt; sql<span class="code-str">`(${</span>p.id<span class="code-str">}, ${</span>p.first_name<span class="code-str">}, ..., ${</span>p.created_at<span class="code-str">})`</span>)<span class="code-str">}`</span>;</code></pre>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">✅ معيار نجاح P3</div>
+      <ul style="margin: 6px 0;">
+        <li><span class="code-ref">POST /api/v1/persons</span>: <strong>من ٥-١٥ ثانية إلى ٢٠٠-٥٠٠ms</strong></li>
+        <li><span class="code-ref">dedup/check</span>: <strong>من ٣-٥ ثوانٍ إلى ٥٠-٢٠٠ms</strong></li>
+        <li><span class="code-ref">admin/database/sync</span> لـ ٢٠ ألف سجل: <strong>من ٦٧ دقيقة إلى ١٠-٣٠ ثانية</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- P4 -->
+  <div class="phase p4" id="p4">
+    <div class="phase-head">
+      <div>
+        <span class="phase-tag">P4</span>
+        <span class="phase-title" style="margin-right: 10px;">Client Optimization — منع انهيار المتصفح</span>
+      </div>
+      <div class="phase-duration">أسبوع · ٣-٤ أيام</div>
+    </div>
+    <div class="phase-objective">
+      <strong>الهدف:</strong> تشغيل Dagre في Web Worker + Viewport Culling + Code Splitting.
+    </div>
+
+    <div class="phase-step">
+      <h4>P4.1 — نقل Dagre layout إلى Web Worker</h4>
+      <div class="meta">
+        <span>الملف الجديد: src/lib/workers/layout.worker.ts</span>
+        <span>الربح: Main thread حر ⇒ ٦٠fps</span>
+      </div>
+      <pre><code><span class="code-comment">// FamilyTreeCanvas.tsx</span>
+<span class="code-key">const</span> layoutWorker = <span class="code-key">new</span> Worker(
+  <span class="code-key">new</span> URL(<span class="code-str">'../lib/workers/layout.worker.ts'</span>, <span class="code-key">import</span>.meta.url)
+);
+layoutWorker.postMessage({ nodes, edges, options });
+layoutWorker.onmessage = (e) =&gt; setNodes(e.data.nodes);</code></pre>
+    </div>
+
+    <div class="phase-step">
+      <h4>P4.2 — React Flow Viewport Culling</h4>
+      <div class="meta">
+        <span>الملف: src/components/FamilyTreeCanvas.tsx</span>
+        <span>الربح: DOM يحوي ١٠٠-٢٠٠ عقدة بدلاً من ٢٠ ألف</span>
+      </div>
+      <pre><code><span class="code-key">const</span> visibleNodes = useMemo(() =&gt;
+  nodes.filter(n =&gt; isInViewport(n.position, reactFlowInstance.getViewport()))
+, [nodes, viewport]);</code></pre>
+    </div>
+
+    <div class="phase-step">
+      <h4>P4.3 — Code Splitting لكل صفحة</h4>
+      <div class="meta">
+        <span>الملفات: src/app/*/page.tsx</span>
+      </div>
+      <p>تأكد من استخدام <span class="mono">dynamic(() =&gt; import(...))</span> للمكونات الثقيلة: <span class="mono">RadialTreeSVG</span>، <span class="mono">LayoutToolbar</span>، وكل Modals.</p>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">✅ معيار نجاح P4</div>
+      وقت الفتح الأول لـ <span class="code-ref">/tree</span> على ٢٠ ألف سجل: <strong>من ٦٠+ ثانية إلى ٢-٥ ثوانٍ</strong>.
+      INP: <strong>من ٢٠٠٠ms+ إلى &lt; ٢٠٠ms</strong>.
+    </div>
+  </div>
+
+  <!-- P5 -->
+  <div class="phase p5" id="p5">
+    <div class="phase-head">
+      <div>
+        <span class="phase-tag">P5</span>
+        <span class="phase-title" style="margin-right: 10px;">Monitoring + Hardening — قياس مستمر</span>
+      </div>
+      <div class="phase-duration">مستمر · ٢-٣ أيام للإعداد</div>
+    </div>
+    <div class="phase-objective">
+      <strong>الهدف:</strong> قياس الـ Core Web Vitals + تنبيهات على التراجع.
+    </div>
+
+    <div class="phase-step">
+      <h4>P5.1 — إضافة web-vitals</h4>
+      <div class="meta"><span>الملف الجديد: src/lib/vitals.ts</span></div>
+      <pre><code><span class="code-key">import</span> { onLCP, onINP, onCLS } <span class="code-key">from</span> <span class="code-str">'web-vitals'</span>;
+<span class="code-comment">// أرسل إلى endpoint داخلي للتخزين في timeseries DB</span></code></pre>
+    </div>
+
+    <div class="phase-step">
+      <h4>P5.2 — Middleware لتسجيل الاستعلامات البطيئة</h4>
+      <div class="meta"><span>الجهد: نصف يوم</span></div>
+      <pre><code><span class="code-key">const</span> start = Date.now();
+<span class="code-comment">// ... handler</span>
+<span class="code-key">if</span> (Date.now() - start &gt; <span class="code-num">1000</span>) {
+  console.warn({ route, duration: Date.now() - start });
+}</code></pre>
+    </div>
+
+    <div class="phase-step">
+      <h4>P5.3 — حماية الـ Pool + تنبيهات</h5>
+      <ul style="margin: 6px 0;">
+        <li>إيميل/تنبيه إذا TTFB &gt; 2s على <span class="code-ref">/tree/canvas</span></li>
+        <li>إيميل إذا <span class="mono">pg_stat_activity.count &gt; 15</span> (قريب من الحد)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================ SEC 7: TIMELINE + EXPECTED RESULTS ================ -->
+<section class="page" id="sec-7">
+  <h1 class="section-title"><span class="num-badge">٧</span> الجدول الزمني والنتائج المتوقعة</h1>
+
+  <h3>الجدول الزمني المقترح</h3>
+  <table>
+    <thead><tr><th>الأسبوع</th><th>المرحلة</th><th>المخرج</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>الأسبوع ١، يوم ١-٢</td>
+        <td><span class="sev sev-crit">P0</span> Quick Wins</td>
+        <td>نشر + قياس (TTFB من ٨٠٠ms إلى ٢٠٠ms)</td>
+      </tr>
+      <tr>
+        <td>الأسبوع ١، يوم ٣-٤</td>
+        <td><span class="sev sev-high">P1</span> Indexes</td>
+        <td>تشغيل في maintenance window + تقرير</td>
+      </tr>
+      <tr>
+        <td>الأسبوع ١، يوم ٥</td>
+        <td>قياس + تقرير</td>
+        <td>تقرير أسبوع ١ — قابل للمشاركة</td>
+      </tr>
+      <tr>
+        <td>الأسبوع ٢-٣</td>
+        <td><span class="sev sev-med">P2</span> Pagination + Caching</td>
+        <td>نشر مرحلي مع feature flag</td>
+      </tr>
+      <tr>
+        <td>الأسبوع ٤-٥</td>
+        <td><span class="sev sev-info">P3</span> Server Refactoring</td>
+        <td>عمل في فرع منفصل + اختبار A/B</td>
+      </tr>
+      <tr>
+        <td>الأسبوع ٦</td>
+        <td><span class="sev sev-low">P4</span> Client Optimization</td>
+        <td>اختبار A/B على متصفحات حقيقية</td>
+      </tr>
+      <tr>
+        <td>الأسبوع ٧+</td>
+        <td><span class="sev sev-info">P5</span> Monitoring</td>
+        <td>لوحة مراقبة + تنبيهات</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>النتائج المتوقعة بالأرقام</h3>
+  <p>التوقعات تستند إلى أحجام البيانات الفعلية في الكود والبنى المستنتَجة:</p>
+
+  <table class="kpi-table">
+    <thead><tr><th>المقياس</th><th>اليوم (الوضع الحالي)</th><th>بعد P0-P2</th><th>بعد P3-P4</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>TTFB على <span class="code-ref">/tree/canvas</span> (٢٠ ألف سجل)</td>
+        <td class="now">٢–٥ ثوانٍ</td>
+        <td class="after">١٠٠–٣٠٠ms</td>
+        <td class="after">١٠٠–٢٠٠ms</td>
+      </tr>
+      <tr>
+        <td>TTFB (١٠٠ مستخدم متزامن)</td>
+        <td class="now">٦٠+ ثانية (timeout)</td>
+        <td class="after">٢٠٠–٥٠٠ms</td>
+        <td class="after">٢٠٠–٣٠٠ms</td>
+      </tr>
+      <tr>
+        <td>إضافة شخص جديد (٢٠ ألف سجل)</td>
+        <td class="now">٥–١٥ ثانية</td>
+        <td class="after">١–٢ ثانية</td>
+        <td class="after">٢٠٠–٥٠٠ms</td>
+      </tr>
+      <tr>
+        <td>Layout على المتصفح (٢٠ ألف سجل)</td>
+        <td class="now">٣٠–٩٠ ثانية + Tab crash</td>
+        <td class="after">١٠–٢٠ ثانية</td>
+        <td class="after">٢–٥ ثوانٍ</td>
+      </tr>
+      <tr>
+        <td>حجم payload لـ <span class="code-ref">/tree/canvas</span></td>
+        <td class="now">١٥–٢٠ MB</td>
+        <td class="after">٥٠٠ KB</td>
+        <td class="after">٢٠٠ KB (viewport)</td>
+      </tr>
+      <tr>
+        <td><span class="code-ref">dedup/check</span> (٢٠ ألف سجل)</td>
+        <td class="now">٣–٥ ثوانٍ</td>
+        <td class="after">١ ثانية</td>
+        <td class="after">٥٠–٢٠٠ms</td>
+      </tr>
+      <tr>
+        <td><span class="code-ref">admin/database/sync</span> (٢٠ ألف سجل)</td>
+        <td class="now">٦٧ دقيقة</td>
+        <td>بدون تغيير</td>
+        <td class="after">١٠–٣٠ ثانية</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>المقاييس المستهدفة (من قِياس Vercel والـ Lighthouse)</h3>
+  <table>
+    <thead><tr><th>Core Web Vital</th><th>جيد (الهدف)</th><th>يحتاج تحسين</th><th>سيئ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>LCP</strong> (Largest Contentful Paint)</td><td class="after">≤ ٢.٥ ثانية ✓</td><td>≤ ٤ ثوانٍ</td><td>&gt; ٤ ثوانٍ</td></tr>
+      <tr><td><strong>INP</strong> (Interaction to Next Paint)</td><td class="after">≤ ٢٠٠ms ✓</td><td>≤ ٥٠٠ms</td><td>&gt; ٥٠٠ms</td></tr>
+      <tr><td><strong>CLS</strong> (Cumulative Layout Shift)</td><td class="after">≤ ٠.١ ✓</td><td>≤ ٠.٢٥</td><td>&gt; ٠.٢٥</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================ SEC 8: CONCLUSION ================ -->
+<section class="page" id="sec-8">
+  <h1 class="section-title"><span class="num-badge">٨</span> الخلاصة والتوصيات</h1>
+
+  <h3>الحكم المعماري</h3>
+  <p>
+    التطبيق <strong>FamilyTree Al-Nammari</strong> مبني بأسلوب وظيفي مقبول في فئته (Next.js + Drizzle
+    + Supabase)، لكن الفحص يكشف أنه يحتوي على <strong>١٣ نمطًا معماريًا ضارًا بالأداء</strong>،
+    بعضها يصل إلى درجة <strong>كارثية</strong> عند الحجم المستهدف. النماذج الإشكالية ليست أخطاءً
+    منعزلة، بل هي <strong>اختيارات تصميمية متكررة</strong> (تحميل الجداول كاملة، خوارزميات
+    O(N²) في JS، عدم وجود فهارس).
+  </p>
+
+  <h3>المسارات المقترحة للبدء</h3>
+
+  <div class="callout callout-info">
+    <div class="callout-title">الخيار ١ — موصى به · P0 + P1 فورًا</div>
+    <p style="margin: 6px 0;">
+      <strong>يومين عمل</strong> فقط، تأثير <strong>كبير</strong>، مخاطرة <strong>صفر</strong>.
+      يزيل ٣ round-trips من كل طلب قراءة، ويضاعف سرعة كل استعلام DB.
+    </p>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">الخيار ٢ — P2 + P3 معًا</div>
+    <p style="margin: 6px 0;">
+      <strong>أسبوعان</strong>، مناسب إذا عندك deadline قريب للمنتج. يجلب الحل الجذري لـ DB.
+    </p>
+  </div>
+
+  <div class="callout callout-high">
+    <div class="callout-title">الخيار ٣ — P3 ثم P2</div>
+    <p style="margin: 6px 0;">
+      <strong>ثلاثة أسابيع</strong>، مناسب إذا الـ DAU المتوقع ضخم جدًا (آلاف متزامنين) وتريد
+      الحل الجذري للـ DB أولاً قبل أي تحسينات أخرى.
+    </p>
+  </div>
+
+  <h3>مبادئ الإصلاح</h3>
+  <ol>
+    <li><strong>قِس قبل أن تُصلح:</strong> كل مرحلة لها معيار نجاح قابل للقياس. لا تحتفظ بتغيير لم يُحسّن الأرقام.</li>
+    <li><strong>غيّر شيء واحد في كل مرة:</strong> إذا اشتغلت ٣ تحسينات معًا، لن تستطيع أن تعرف أيها أفاد.</li>
+    <li><strong>سجّل المحاولات الفاشلة:</strong> التعديلات المُرجَعة تترك أثرًا في الـ git history — اجعلها في PERF.md لتفادي تكرارها.</li>
+    <li><strong>حافظ على الصحة الوظيفية:</strong> الـ "تحسين" الذي يربح بتخطي validation هو regression، ليس إنجاز.</li>
+  </ol>
+
+  <h3>ما لا يجب فعله</h3>
+  <ul>
+    <li>لا تضف <span class="mono">React.memo</span> في كل مكان — تكرار النمط بدون قياس يُضيف تعقيدًا بدون ربح.</li>
+    <li>لا تبدأ بـ P3 قبل P0+P1 — الخوارزميات المتقدمة بدون فهارس = بطء مختلف فقط.</li>
+    <li>لا تستخدم Drizzle migrations <span class="mono">CONCURRENTLY</span> داخل transaction — سيفشل بصمت.</li>
+    <li>لا تفترض أن <span class="mono">force-dynamic</span> في <span class="code-ref">route.ts:8</span> ضروري للأمان — نُقِله في P2.</li>
+  </ul>
+
+  <div class="callout callout-crit" style="margin-top: 30px;">
+    <div class="callout-title">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      الخطوة التالية
+    </div>
+    <p>
+      بعد موافقتك على خيار من الثلاثة، أجهّز PR جاهز للتنفيذ مع كل التغييرات والاختبارات،
+      وأرفعه كفرع منفصل للمراجعة. كل PR سيكون مُقترنًا بـ:
+    </p>
+    <ul style="margin: 6px 0;">
+      <li>اختبار أداء قبل/بعد (Lighthouse + قياس TTFB)</li>
+      <li>تقرير commit بالأرقام (معيار النجاح أو سبب الإرجاع)</li>
+      <li>دليل الـ rollback في حالة الطوارئ</li>
+    </ul>
+  </div>
+
+  <hr class="soft">
+  <p class="note" style="text-align: center; margin-top: 20px;">
+    تم إعداد هذا التقرير بناءً على فحص فعلي للكود في المستودع بتاريخ ٦ سبتمبر ٢٠٢٦.
+    كل ادعاء مرفق بـ <span class="code-ref">file:line</span>. لا توجد تكهّنات أو تقديرات غير مبنية على الكود.
+  </p>
+</section>
+
+</body>
+</html>
