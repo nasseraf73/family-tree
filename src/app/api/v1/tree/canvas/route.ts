@@ -87,9 +87,15 @@ export async function GET(request: Request) {
         created_at: r.created_at ? r.created_at.toISOString() : new Date().toISOString(),
       }));
 
+      // P-fix: Build person lookup map to avoid O(N*M) find() calls
+      const personById = new Map<number, typeof dbPersons[0]>();
+      for (const p of dbPersons) {
+        personById.set(p.id, p);
+      }
+
       dbMarriages.forEach((m) => {
-        const wifeObj = dbPersons.find((p) => p.id === m.wife_id);
-        const husbandObj = dbPersons.find((p) => p.id === m.husband_id);
+        const wifeObj = m.wife_id != null ? personById.get(m.wife_id) : undefined;
+        const husbandObj = m.husband_id != null ? personById.get(m.husband_id) : undefined;
 
         const wifeName = wifeObj
           ? `${wifeObj.first_name} ${wifeObj.family_name || ''}`.trim()
@@ -136,14 +142,33 @@ export async function GET(request: Request) {
     return false;
   });
 
-  // Identify root ancestors (nodes without parent relationships)
-  const rootAncestors = persons.filter(p => {
-    const parentRels = validRelationships.filter(r => 
-      (r.person_id === p.id && r.relationship_type === 'PARENT') ||
-      (r.related_person_id === p.id && r.relationship_type === 'CHILD')
-    );
-    return parentRels.length === 0;
-  });
+  // P-fix: Build parent/child adjacency maps ONCE instead of .filter() per node
+  // Was: O(N*M) for cluster detection
+  // Now: O(N+M) using Map lookups
+  const hasParent = new Set<number>();
+  const childByParent = new Map<number, number[]>();
+
+  for (const r of validRelationships) {
+    if (r.relationship_type === 'PARENT') {
+      // r.person_id is child, r.related_person_id is parent
+      if (!childByParent.has(r.related_person_id)) childByParent.set(r.related_person_id, []);
+      childByParent.get(r.related_person_id)!.push(r.person_id);
+      hasParent.add(r.person_id);
+    } else if (r.relationship_type === 'CHILD') {
+      // r.person_id is child, r.related_person_id is parent
+      if (!childByParent.has(r.person_id)) childByParent.set(r.person_id, []);
+      childByParent.get(r.person_id)!.push(r.related_person_id);
+      hasParent.add(r.related_person_id);
+    }
+  }
+
+  // Root ancestors are nodes that have no parent
+  const rootAncestors: Person[] = [];
+  for (const p of persons) {
+    if (!hasParent.has(p.id)) {
+      rootAncestors.push(p);
+    }
+  }
 
   const nodePositions = new Map<number, { x: number; y: number }>();
   const processedNodes = new Set<number>();
@@ -156,38 +181,33 @@ export async function GET(request: Request) {
     const clusterNodes: number[] = [rootPerson.id];
     const queue = [rootPerson.id];
     const visited = new Set<number>([rootPerson.id]);
+    let qHead = 0;
 
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-      visibleRelationships.forEach(rel => {
-        let childId: number | null = null;
-        if (rel.relationship_type === 'PARENT' && rel.related_person_id === currentId) {
-          childId = rel.person_id;
-        } else if (rel.relationship_type === 'CHILD' && rel.person_id === currentId) {
-          childId = rel.related_person_id;
+    // BFS using adjacency map (O(N+M) total instead of O(N*M))
+    while (qHead < queue.length) {
+      const currentId = queue[qHead++];
+      const kids = childByParent.get(currentId);
+      if (kids) {
+        for (const k of kids) {
+          if (!visited.has(k)) {
+            visited.add(k);
+            clusterNodes.push(k);
+            queue.push(k);
+          }
         }
-
-        if (childId && !visited.has(childId)) {
-          visited.add(childId);
-          clusterNodes.push(childId);
-          queue.push(childId);
-        }
-      });
+      }
     }
 
     clusterNodes.forEach(id => processedNodes.add(id));
 
+    // Width is just the max kids count
     let maxClusterWidth = 1;
-
-    clusterNodes.forEach(id => {
-      const nodeChildren = visibleRelationships.filter(r => 
-        (r.relationship_type === 'PARENT' && r.related_person_id === id) ||
-        (r.relationship_type === 'CHILD' && r.person_id === id)
-      );
-      if (nodeChildren.length > maxClusterWidth) {
-        maxClusterWidth = nodeChildren.length;
+    for (const id of clusterNodes) {
+      const k = childByParent.get(id);
+      if (k && k.length > maxClusterWidth) {
+        maxClusterWidth = k.length;
       }
-    });
+    }
 
     const clusterWidthPx = maxClusterWidth * 340;
     currentClusterXOffset += clusterWidthPx + 500;
@@ -200,12 +220,18 @@ export async function GET(request: Request) {
     }
   });
 
+  // P-fix: Pre-compute set of person IDs that have any PENDING relationship
+  // Avoids O(N*M) .some() check per person
+  const pendingPersonIds = new Set<number>();
+  for (const r of validRelationships) {
+    if (r.status === 'PENDING') {
+      pendingPersonIds.add(r.person_id);
+      pendingPersonIds.add(r.related_person_id);
+    }
+  }
+
   let nodes: CanvasNode[] = persons.map(person => {
     const pos = nodePositions.get(person.id) || { x: 0, y: 0 };
-    
-    const isPending = validRelationships.some(r => 
-      (r.person_id === person.id || r.related_person_id === person.id) && r.status === 'PENDING'
-    );
 
     return {
       id: person.id.toString(),
@@ -213,7 +239,7 @@ export async function GET(request: Request) {
       position: pos,
       data: {
         ...person,
-        isPendingStatus: isPending,
+        isPendingStatus: pendingPersonIds.has(person.id),
         spouses: personSpousesMap.get(person.id) || [],
       },
     };
@@ -221,7 +247,7 @@ export async function GET(request: Request) {
 
   if (xMin !== null && yMin !== null && xMax !== null && yMax !== null) {
     const buffer = 400;
-    nodes = nodes.filter(node => 
+    nodes = nodes.filter(node =>
       node.position.x >= xMin - buffer &&
       node.position.x <= xMax + buffer &&
       node.position.y >= yMin - buffer &&
@@ -234,6 +260,7 @@ export async function GET(request: Request) {
   persons.forEach(p => personMap.set(p.id, p));
 
   const edges: CanvasEdge[] = visibleRelationships
+    .filter(rel => visibleNodeIds.has(rel.person_id.toString()) || visibleNodeIds.has(rel.related_person_id.toString()))
     .map(rel => {
       let sourceId: string;
       let targetId: string;
