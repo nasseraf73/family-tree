@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Link as LinkIcon, RefreshCw, AlertTriangle, CheckCircle, Users } from 'lucide-react';
 import { Person } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface LinkNodesModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const LinkNodesModal: React.FC<LinkNodesModalProps> = ({
   userRole,
   onSuccess,
 }) => {
+  const { authFetch } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -31,8 +33,6 @@ export const LinkNodesModal: React.FC<LinkNodesModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-
       // Standardize so child is always existing_person_id (person_id) and parent is related_person_id
       let pId = sourcePerson.id;
       let rId = targetPerson.id;
@@ -69,14 +69,14 @@ export const LinkNodesModal: React.FC<LinkNodesModalProps> = ({
         payload.link_mode = 'AUTO_PARENT_BRIDGE';
       }
 
-      const res = await fetch('/api/v1/persons', {
+      const res = await authFetch('/api/v1/persons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify(payload),
       });
+
 
       const data = await res.json();
       if (!res.ok) {

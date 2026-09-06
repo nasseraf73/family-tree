@@ -3,7 +3,6 @@ import { dbStore } from '@/lib/store';
 import { db } from '@/db';
 import { persons as personsTable, relationships as relsTable, marriages as marriagesTable } from '@/db/schema';
 import { Person, Relationship, RelationshipType, RelationshipStatus, Gender } from '@/types';
-import { sql, like } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,13 +45,6 @@ export async function GET(request: Request) {
 
   // Fetch directly from persistent PostgreSQL database
   try {
-    // 0. Database Cleanup: Permanently remove any heavy Base64 image strings from persons table
-    try {
-      await db.update(personsTable).set({ photo_url: null }).where(like(personsTable.photo_url, 'data:%'));
-    } catch {
-      // Safe catch if table isn't populated yet
-    }
-
     const dbPersons = await db.select().from(personsTable);
     const dbRels = await db.select().from(relsTable);
     const dbMarriages = await db.select().from(marriagesTable);

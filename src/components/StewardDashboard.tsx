@@ -5,6 +5,7 @@ import { ShieldCheck, Check, X, GitMerge, Clock, UserCheck, AlertCircle, Users, 
 import { Person, Relationship, MergeRequest } from '../types';
 import { normalizeForSearch } from '../lib/dedup';
 import { resolveParentAndChildIds } from '../lib/lineage';
+import { useAuth } from '../context/AuthContext';
 
 interface StewardDashboardProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
   onRefresh,
   userRole = 'USER',
 }) => {
+  const { authFetch } = useAuth();
   const isAdmin = userRole === 'ADMIN' || userRole === 'ADM';
   const [activeTab, setActiveTab] = useState<'pending' | 'merge' | 'claims' | 'stewards'>('pending');
   const [loading, setLoading] = useState(false);
@@ -61,10 +63,7 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
   const fetchClaimsList = async () => {
     setLoadingClaims(true);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch('/api/v1/claim/requests', {
-        headers: { 'x-user-email': savedEmail },
-      });
+      const res = await authFetch('/api/v1/claim/requests');
       const data = await res.json();
       if (data.claims) {
         setClaimsList(data.claims);
@@ -76,6 +75,7 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
     }
   };
 
+
   useEffect(() => {
     if (isOpen) {
       fetchClaimsList();
@@ -86,12 +86,10 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
     setLoading(true);
     setActionMessage(null);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch('/api/v1/claim/requests', {
+      const res = await authFetch('/api/v1/claim/requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({ person_id: personId, action }),
       });
@@ -120,10 +118,7 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
     if (!isAdmin) return;
     setLoadingUsers(true);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch('/api/v1/admin/users', {
-        headers: { 'x-user-email': savedEmail },
-      });
+      const res = await authFetch('/api/v1/admin/users');
       const data = await res.json();
       if (data.users) {
         setUsersList(data.users);
@@ -149,12 +144,10 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
     setActionMessage(null);
 
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch('/api/v1/admin/users', {
+      const res = await authFetch('/api/v1/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({
           full_name: stewardName,
@@ -185,12 +178,10 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
   const handleRoleChange = async (userId: number, newRole: 'USER' | 'REVIEWER' | 'ADMIN') => {
     setActionMessage(null);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch('/api/v1/admin/users', {
+      const res = await authFetch('/api/v1/admin/users', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({
           user_id: userId,
@@ -215,10 +206,8 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
 
     setActionMessage(null);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch(`/api/v1/admin/users?id=${userId}`, {
+      const res = await authFetch(`/api/v1/admin/users?id=${userId}`, {
         method: 'DELETE',
-        headers: { 'x-user-email': savedEmail },
       });
 
       const data = await res.json();
@@ -244,12 +233,10 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
     setLoading(true);
     setActionMessage(null);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch('/api/v1/review/approve', {
+      const res = await authFetch('/api/v1/review/approve', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail
         },
         body: JSON.stringify({
           relationship_id: relId,
@@ -275,12 +262,10 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
     setLoading(true);
     setActionMessage(null);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch('/api/v1/review/merge', {
+      const res = await authFetch('/api/v1/review/merge', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail
         },
         body: JSON.stringify({
           merge_request_id: mergeId,
@@ -300,6 +285,7 @@ export const StewardDashboard: React.FC<StewardDashboardProps> = ({
       setLoading(false);
     }
   };
+
 
   const isStewardOrAdmin = userRole === 'ADMIN' || userRole === 'ADM' || userRole === 'REVIEWER' || userRole === 'STEWARD';
 

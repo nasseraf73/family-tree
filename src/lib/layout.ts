@@ -140,13 +140,14 @@ export function getRadialLayoutedElements(
   // Sort root nodes so patriarch with largest subtree is first
   rootNodeIds.sort((a, b) => (weightMap.get(b) || 0) - (weightMap.get(a) || 0));
 
-  // 4. Compute Generations / Depths from Roots
+  // 4. Compute Generations / Depths from Roots — P0.3: head pointer instead of shift()
   const depthMap = new Map<string, number>();
   const queue: { id: string; depth: number }[] = rootNodeIds.map((id) => ({ id, depth: 0 }));
   const visitedDepth = new Set<string>();
+  let headL = 0;
 
-  while (queue.length > 0) {
-    const { id, depth } = queue.shift()!;
+  while (headL < queue.length) {
+    const { id, depth } = queue[headL++];
     if (visitedDepth.has(id)) continue;
     visitedDepth.add(id);
 

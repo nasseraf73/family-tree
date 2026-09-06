@@ -7,37 +7,34 @@ import { User as DbUser } from '../../types';
 export async function getAuthenticatedUser(request: Request): Promise<{ dbUser: DbUser | null; error: string | null }> {
   try {
     const authHeader = request.headers.get('Authorization');
-    const xUserEmail = request.headers.get('x-user-email');
 
-    let userEmail: string | undefined;
-
-    // 1. Check custom header for local auth
-    if (xUserEmail && xUserEmail.trim() !== '') {
-      userEmail = xUserEmail.trim();
-    } else if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      const supabase = createClient();
-      try {
-        const { data: { user } } = await supabase.auth.getUser(token);
-        if (user?.email) {
-          userEmail = user.email;
-        }
-      } catch {
-        // Ignore JWT verification errors in local mode
-      }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return { dbUser: null, error: 'Unauthorized: Missing or invalid Authorization Bearer header' };
     }
 
-    if (!userEmail) {
-      return { dbUser: null, error: 'No user session or header found' };
+    const token = authHeader.substring(7).trim();
+    if (!token) {
+      return { dbUser: null, error: 'Unauthorized: Empty Bearer token' };
     }
 
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user || !user.email) {
+      return { dbUser: null, error: authError?.message || 'Unauthorized: Invalid token signature' };
+    }
+
+    const userEmail = user.email.trim().toLowerCase();
     const foundUsers = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
 
     if (foundUsers.length === 0) {
-      // Auto-register user into PostgreSQL DB if user email exists but not in users table yet
+      const defaultFullName = (user.user_metadata?.full_name as string) || userEmail.split('@')[0];
+      const defaultPhone = (user.user_metadata?.phone as string) || null;
+
       const insertedUsers = await db.insert(users).values({
-        full_name: userEmail.split('@')[0],
+        full_name: defaultFullName,
         email: userEmail,
+        phone: defaultPhone,
         role: 'USER',
       }).returning();
 
@@ -56,7 +53,7 @@ export async function getAuthenticatedUser(request: Request): Promise<{ dbUser: 
         };
       }
 
-      return { dbUser: null, error: 'User record not found in public database' };
+      return { dbUser: null, error: 'User record not found in database' };
     }
 
     const row = foundUsers[0];
@@ -74,3 +71,4 @@ export async function getAuthenticatedUser(request: Request): Promise<{ dbUser: 
     return { dbUser: null, error: (err as Error).message };
   }
 }
+

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, AlertTriangle, CheckCircle, UserPlus, RefreshCw, Upload, Sparkles, Heart } from 'lucide-react';
 import { Person, RelationshipType, Gender, Country } from '../types';
 import { uploadPersonPhoto } from '../lib/supabase/storage';
+import { useAuth } from '../context/AuthContext';
 
 interface AddRelationModalProps {
   isOpen: boolean;
@@ -22,6 +23,8 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
   userRole,
   onSuccess,
 }) => {
+  const { authFetch } = useAuth();
+
   const [relationType, setRelationType] = useState<RelationshipType | 'SIBLING'>(initialRelationType);
   const [subType, setSubType] = useState<'FATHER' | 'MOTHER' | 'SON' | 'DAUGHTER' | 'HUSBAND' | 'WIFE' | 'SIBLING'>('FATHER');
   
@@ -181,19 +184,16 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-
       // Dual-Path Spouse Handling
       if (relationType === 'SPOUSE' && targetPerson) {
         const isTargetHusband = targetPerson.gender === 'MALE';
 
         if (spousePath === 'EXTERNAL') {
           // Path B: External Partner entry saved in marriagesTable without creating a standalone card
-          const resM = await fetch('/api/v1/marriages', {
+          const resM = await authFetch('/api/v1/marriages', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-user-email': savedEmail,
             },
             body: JSON.stringify({
               husband_id: isTargetHusband ? targetPerson.id : null,
@@ -231,11 +231,10 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
         }
       }
 
-      const res = await fetch('/api/v1/persons', {
+      const res = await authFetch('/api/v1/persons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({
           first_name: firstName,
@@ -248,6 +247,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
           death_date: !isAlive ? deathYear : null,
           burial_place: !isAlive ? burialPlace : null,
           country_id: countryId ? parseInt(countryId, 10) : null,
+
           photo_url: uploadedPhotoUrl,
           related_person_id: targetPerson ? targetPerson.id : null,
           relationship_type: targetPerson ? relationType : null,

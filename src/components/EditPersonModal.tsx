@@ -5,6 +5,7 @@ import { X, CheckCircle, AlertTriangle, Edit3, Upload, RefreshCw, User, Trash2, 
 import { Person, Gender, Country } from '../types';
 import { uploadPersonPhoto } from '../lib/supabase/storage';
 import { ConfirmModal } from './ConfirmModal';
+import { useAuth } from '../context/AuthContext';
 
 interface EditPersonModalProps {
   isOpen: boolean;
@@ -21,7 +22,9 @@ export const EditPersonModal: React.FC<EditPersonModalProps> = ({
   allPersonsMap,
   onSuccess,
 }) => {
+  const { authFetch } = useAuth();
   const [firstName, setFirstName] = useState('');
+
   const [fatherName, setFatherName] = useState('');
   const [grandFatherName, setGrandFatherName] = useState('');
   const [familyName, setFamilyName] = useState('');
@@ -127,12 +130,10 @@ export const EditPersonModal: React.FC<EditPersonModalProps> = ({
     setLoading(true);
     setErrorMessage(null);
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch('/api/v1/relationships', {
+      const res = await authFetch('/api/v1/relationships', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({ relationship_id: unlinkTarget.relId }),
       });
@@ -158,12 +159,8 @@ export const EditPersonModal: React.FC<EditPersonModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-      const res = await fetch(`/api/v1/persons?id=${person.id}`, {
+      const res = await authFetch(`/api/v1/persons?id=${person.id}`, {
         method: 'DELETE',
-        headers: {
-          'x-user-email': savedEmail,
-        },
       });
       const data = await res.json();
       if (!res.ok) {
@@ -202,17 +199,14 @@ export const EditPersonModal: React.FC<EditPersonModalProps> = ({
         }
       }
 
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-
       const formattedDeathDate = !isAlive && deathDate && deathDate.trim()
         ? (deathDate.trim().length === 4 ? `${deathDate.trim()}-01-01` : deathDate.trim())
         : null;
 
-      const res = await fetch('/api/v1/persons', {
+      const res = await authFetch('/api/v1/persons', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({
           id: person.id,
@@ -232,6 +226,7 @@ export const EditPersonModal: React.FC<EditPersonModalProps> = ({
       });
 
       const data = await res.json();
+
 
       if (!res.ok) {
         setErrorMessage(data.error || 'حدث خطأ أثناء تعديل بيانات الشخص');

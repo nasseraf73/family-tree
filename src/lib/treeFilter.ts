@@ -112,11 +112,12 @@ export function filterTreeByFocus(
     // - All descendants of target and siblings
     // - Spouses of included nodes
 
-    // A. Linear ancestors
+    // A. Linear ancestors — P0.3: head pointer instead of shift()
     const ancestors = new Set<number>();
     const queueAncestors = [targetPersonId];
-    while (queueAncestors.length > 0) {
-      const curr = queueAncestors.shift()!;
+    let headA = 0;
+    while (headA < queueAncestors.length) {
+      const curr = queueAncestors[headA++];
       ancestors.add(curr);
       const parents = parentsMap.get(curr);
       if (parents) {
@@ -137,11 +138,12 @@ export function filterTreeByFocus(
       sibs.forEach(sId => keyRoots.add(sId));
     });
 
-    // C. Descendants of all key roots
+    // C. Descendants of all key roots — P0.3: head pointer instead of shift()
     const descendants = new Set<number>();
     const queueDesc = Array.from(keyRoots);
-    while (queueDesc.length > 0) {
-      const curr = queueDesc.shift()!;
+    let headD = 0;
+    while (headD < queueDesc.length) {
+      const curr = queueDesc[headD++];
       descendants.add(curr);
       const children = childrenMap.get(curr);
       if (children) {
@@ -199,11 +201,12 @@ export function filterTreeByFocus(
       }
     }
 
-    // B. Direct Children chain downward
+    // B. Direct Children chain downward — P0.3: head pointer instead of shift()
     const descendantsDown = new Set<number>([targetPersonId]);
     const queueChildren = [targetPersonId];
-    while (queueChildren.length > 0) {
-      const curr = queueChildren.shift()!;
+    let headC = 0;
+    while (headC < queueChildren.length) {
+      const curr = queueChildren[headC++];
       descendantsDown.add(curr);
       const children = childrenMap.get(curr);
       if (children) {

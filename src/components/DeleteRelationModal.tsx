@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Person } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface DeleteRelationModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const DeleteRelationModal: React.FC<DeleteRelationModalProps> = ({
   relationshipType,
   onSuccess,
 }) => {
+  const { authFetch } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -40,18 +42,16 @@ export const DeleteRelationModal: React.FC<DeleteRelationModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
-
-      const res = await fetch('/api/v1/relationships', {
+      const res = await authFetch('/api/v1/relationships', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify({
           relationship_id: relationshipId,
         }),
       });
+
 
       const data = await res.json();
       if (!res.ok) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { createClient } from '../lib/supabase/client';
 import { User as DbUser } from '../types';
@@ -14,6 +14,7 @@ interface AuthContextType {
   signIn: (email: string, pass: string) => Promise<{ error: string | null }>;
   signUp: (email: string, pass: string, fullName: string, phone: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  authFetch: (url: string, init?: RequestInit) => Promise<Response>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,11 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<'USER' | 'REVIEWER' | 'ADMIN'>('USER');
   const [loading, setLoading] = useState(true);
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const isPlaceholderSupabase = !supabaseUrl || supabaseUrl.includes('familytree.supabase.co');
-
-  // Only create supabase client when we have a REAL Supabase URL (not placeholder)
-  const supabase = isPlaceholderSupabase ? null : createClient();
+  const supabase = createClient();
 
   const mapUserRole = (rVal?: string): 'USER' | 'REVIEWER' | 'ADMIN' => {
     if (!rVal) return 'USER';
@@ -38,9 +35,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return 'USER';
   };
 
-  const fetchDbUserRole = async (userEmail: string) => {
+  const fetchDbUserProfile = useCallback(async (token: string) => {
     try {
-      const res = await fetch(`/api/v1/auth/user?email=${encodeURIComponent(userEmail)}`);
+      const res = await fetch('/api/v1/auth/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
@@ -49,243 +50,174 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return data.user;
         }
       }
-    } catch {
-      // Ignore network errors
+    } catch (err) {
+      console.error('Failed to fetch authenticated user profile:', err);
     }
     return null;
-  };
+  }, []);
 
-  const handleLocalSignIn = async (rawEmail: string, pass?: string, isRestore = false) => {
-    if (!rawEmail || !rawEmail.trim()) {
-      return { error: 'يرجى إدخال البريد الإلكتروني أو اسم المستخدم' };
+  const authFetch = useCallback(async (url: string, init?: RequestInit): Promise<Response> => {
+    const headers = new Headers(init?.headers || {});
+    if (session?.access_token) {
+      headers.set('Authorization', `Bearer ${session.access_token}`);
     }
-
-    if (!isRestore && (!pass || pass.trim().length < 6)) {
-      return { error: 'يرجى إدخال كلمة المرور المكونة من 6 أحرف على الأقل' };
-    }
-
-    const cleanEmail = rawEmail.trim().toLowerCase();
-    let foundUser = await fetchDbUserRole(cleanEmail);
-
-    // Auto-create user account if logging in with a new email in local environment
-    if (!foundUser) {
-      try {
-        const defaultName = cleanEmail.includes('@')
-          ? cleanEmail.split('@')[0]
-          : cleanEmail;
-
-        const regRes = await fetch('/api/v1/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: cleanEmail,
-            full_name: defaultName,
-            role: 'USER',
-          }),
-        });
-        const regData = await regRes.json();
-        if (regData.user) {
-          foundUser = regData.user;
-          setDbUser(foundUser);
-          setRole(mapUserRole(foundUser.role));
-        }
-      } catch {
-        // Fallback
-      }
-    }
-
-    if (foundUser) {
-      if (!isRestore) {
-        // Log login audit event (IP, Name, Email, Timestamp)
-        fetch('/api/v1/auth/log-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: cleanEmail,
-            full_name: foundUser.full_name,
-            user_id: foundUser.id,
-            status: 'SUCCESS',
-          }),
-        }).catch(() => {});
-      }
-
-      const mockSupabaseUser = {
-        id: foundUser.id.toString(),
-        email: foundUser.email,
-        app_metadata: {},
-        user_metadata: { full_name: foundUser.full_name },
-        aud: 'authenticated',
-        created_at: foundUser.created_at || new Date().toISOString(),
-      } as unknown as User;
-
-      setUser(mockSupabaseUser);
-      localStorage.setItem('family_tree_user_email', cleanEmail);
-      return { error: null };
-    }
-    return { error: 'تعذر تسجيل الدخول، يرجى التأكد من البريد الإلكتروني وكلمة المرور' };
-  };
-
-  const handleLocalSignUp = async (email: string, fullName: string, phone: string) => {
-    try {
-      const res = await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, full_name: fullName, phone }),
-      });
-      const data = await res.json();
-
-      if (res.ok && data.user) {
-        setDbUser(data.user);
-        setRole(mapUserRole(data.user.role));
-
-        // Log registration/login event
-        fetch('/api/v1/auth/log-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            full_name: fullName,
-            user_id: data.user.id,
-            status: 'REGISTER_SUCCESS',
-          }),
-        }).catch(() => {});
-
-        const mockSupabaseUser = {
-          id: data.user.id.toString(),
-          email: data.user.email,
-          app_metadata: {},
-          user_metadata: { full_name: data.user.full_name },
-          aud: 'authenticated',
-          created_at: data.user.created_at || new Date().toISOString(),
-        } as unknown as User;
-
-        setUser(mockSupabaseUser);
-        localStorage.setItem('family_tree_user_email', email);
-        return { error: null };
-      }
-      return { error: data.error || 'حدث خطأ أثناء إنشاء الحساب' };
-    } catch (err) {
-      return { error: (err as Error).message };
-    }
-  };
+    return fetch(url, {
+      ...init,
+      headers,
+    });
+  }, [session?.access_token]);
 
   useEffect(() => {
-    const getInitialSession = async () => {
+    let isMounted = true;
+
+    const initAuth = async () => {
       try {
-        if (!isPlaceholderSupabase) {
-          const { data: { session: initSession } } = await supabase!.auth.getSession();
-          if (initSession?.user) {
-            setSession(initSession);
-            setUser(initSession.user);
-            if (initSession.user.email) {
-              await fetchDbUserRole(initSession.user.email);
-            }
-            setLoading(false);
-            return;
-          }
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting initial Supabase session:', error);
         }
 
-        // Saved local session fallback
-        const savedEmail = localStorage.getItem('family_tree_user_email');
-        if (savedEmail) {
-          await handleLocalSignIn(savedEmail, undefined, true);
+        if (initialSession?.user && isMounted) {
+          setSession(initialSession);
+          setUser(initialSession.user);
+          if (initialSession.access_token) {
+            await fetchDbUserProfile(initialSession.access_token);
+          }
         }
-      } catch {
-        const savedEmail = localStorage.getItem('family_tree_user_email');
-        if (savedEmail) {
-          await handleLocalSignIn(savedEmail, undefined, true);
-        }
+      } catch (err) {
+        console.error('Auth initialization error:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    getInitialSession();
+    initAuth();
 
-    if (!isPlaceholderSupabase) {
-      try {
-        const { data: { subscription } } = supabase!.auth.onAuthStateChange(async (_event, currentSession) => {
-          if (currentSession?.user) {
-            setSession(currentSession);
-            setUser(currentSession.user);
-            if (currentSession.user.email) {
-              await fetchDbUserRole(currentSession.user.email);
-            }
-          }
-          setLoading(false);
-        });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!isMounted) return;
 
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch {
-        // Suppress subscription errors
+      if (currentSession?.user) {
+        setSession(currentSession);
+        setUser(currentSession.user);
+        if (currentSession.access_token) {
+          await fetchDbUserProfile(currentSession.access_token);
+        }
+      } else {
+        setSession(null);
+        setUser(null);
+        setDbUser(null);
+        setRole('USER');
       }
-    }
-  }, []);
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase, fetchDbUserProfile]);
 
   const signIn = async (email: string, pass: string) => {
-    if (isPlaceholderSupabase) {
-      return await handleLocalSignIn(email, pass);
+    if (!email || !email.trim()) {
+      return { error: 'يرجى إدخال البريد الإلكتروني' };
     }
+    if (!pass || pass.trim().length < 6) {
+      return { error: 'يرجى إدخال كلمة المرور (6 أحرف على الأقل)' };
+    }
+
     try {
-      const { error } = await supabase!.auth.signInWithPassword({
-        email,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
         password: pass,
       });
+
       if (error) {
-        return await handleLocalSignIn(email, pass);
+        return { error: error.message || 'فشل تسجيل الدخول، يرجى التأكد من البريد وكلمة المرور' };
       }
-      localStorage.setItem('family_tree_user_email', email);
+
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+        if (data.session.access_token) {
+          const profile = await fetchDbUserProfile(data.session.access_token);
+          if (profile) {
+            fetch('/api/v1/auth/log-login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${data.session.access_token}`,
+              },
+              body: JSON.stringify({
+                email: profile.email,
+                full_name: profile.full_name,
+                user_id: profile.id,
+                status: 'SUCCESS',
+              }),
+            }).catch(() => {});
+          }
+        }
+      }
+
       return { error: null };
-    } catch {
-      return await handleLocalSignIn(email, pass);
+    } catch (err) {
+      return { error: (err as Error).message || 'حدث خطأ غير متوقع أثناء تسجيل الدخول' };
     }
   };
 
   const signUp = async (email: string, pass: string, fullName: string, phone: string) => {
-    if (isPlaceholderSupabase) {
-      return await handleLocalSignUp(email, fullName, phone);
+    if (!email || !email.trim()) {
+      return { error: 'يرجى إدخال البريد الإلكتروني' };
     }
+    if (!pass || pass.trim().length < 6) {
+      return { error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' };
+    }
+    if (!fullName || !fullName.trim()) {
+      return { error: 'يرجى إدخال الاسم الكامل' };
+    }
+
     try {
-      const { error } = await supabase!.auth.signUp({
-        email,
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanName = fullName.trim();
+      const cleanPhone = phone?.trim() || '';
+
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
         password: pass,
         options: {
           data: {
-            full_name: fullName,
-            phone,
+            full_name: cleanName,
+            phone: cleanPhone,
             role: 'USER',
           },
         },
       });
 
       if (error) {
-        return await handleLocalSignUp(email, fullName, phone);
+        return { error: error.message || 'فشل إنشاء الحساب الجديد' };
       }
 
-      await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, full_name: fullName, phone }),
-      });
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+        if (data.session.access_token) {
+          await fetchDbUserProfile(data.session.access_token);
+        }
+      }
 
-      localStorage.setItem('family_tree_user_email', email);
       return { error: null };
-    } catch {
-      return await handleLocalSignUp(email, fullName, phone);
+    } catch (err) {
+      return { error: (err as Error).message || 'حدث خطأ غير متوقع أثناء التسجيل' };
     }
   };
 
   const signOut = async () => {
-    if (!isPlaceholderSupabase) {
-      try {
-        await supabase!.auth.signOut();
-      } catch {
-        // Ignore
-      }
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Error signing out:', err);
     }
-    localStorage.removeItem('family_tree_user_email');
     setUser(null);
     setSession(null);
     setDbUser(null);
@@ -297,7 +229,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, dbUser, role, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, dbUser, role, loading, signIn, signUp, signOut, authFetch }}>
       {children}
     </AuthContext.Provider>
   );

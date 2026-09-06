@@ -226,7 +226,7 @@ function FamilyTreeCanvasContent() {
         childrenMap.get(parentId)!.push(childId);
       });
 
-      // 2. Compute Generation Levels (BFS from roots)
+      // 2. Compute Generation Levels (BFS from roots) — P0.3: head pointer instead of shift()
       const genMap = new Map<string, number>();
       const rootIds = rawNodes
         .map((n: any) => n.id)
@@ -234,9 +234,10 @@ function FamilyTreeCanvasContent() {
 
       const queue: { id: string; gen: number }[] = rootIds.map((id: string) => ({ id, gen: 1 }));
       const visitedGen = new Set<string>();
+      let headG = 0;
 
-      while (queue.length > 0) {
-        const { id, gen } = queue.shift()!;
+      while (headG < queue.length) {
+        const { id, gen } = queue[headG++];
         if (visitedGen.has(id)) continue;
         visitedGen.add(id);
 
@@ -514,10 +515,17 @@ function FamilyTreeCanvasContent() {
   useEffect(() => {
     fetchTreeData();
 
+    // P0.5: Feature flag for realtime tree sync.
+    // Default OFF because:
+    //   1) FamilyTree data is not realtime-critical (PENDING → VERIFIED workflow)
+    //   2) Realtime WebSocket re-fetches entire tree on any change (heavy)
+    //   3) We replace with lightweight polling (60s) which is enough for family data
+    // To re-enable: set NEXT_PUBLIC_REALTIME_TREE_SYNC=true in .env.local
+    const REALTIME_TREE_SYNC = process.env.NEXT_PUBLIC_REALTIME_TREE_SYNC === 'true';
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const isPlaceholder = !supabaseUrl || supabaseUrl.includes('familytree.supabase.co');
 
-    if (!isPlaceholder) {
+    if (REALTIME_TREE_SYNC && !isPlaceholder) {
       try {
         const supabase = createClient();
         const channel = supabase
@@ -533,6 +541,13 @@ function FamilyTreeCanvasContent() {
       } catch {
         // Safe catch
       }
+    } else {
+      // Lightweight polling fallback (60 seconds)
+      const POLL_INTERVAL_MS = 60_000;
+      const interval = setInterval(() => {
+        fetchTreeData();
+      }, POLL_INTERVAL_MS);
+      return () => clearInterval(interval);
     }
   }, [fetchTreeData]);
 

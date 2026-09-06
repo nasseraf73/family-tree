@@ -3,14 +3,19 @@ import { resolveParentAndChildIds } from './lineage';
 
 /**
  * Get all verified direct parent IDs for a person
+ * P0.4: Replaced result.includes() (O(N)) with Set.has() (O(1)) — same output, ~Nx faster
  */
 export function getParentIds(personId: number, relationships: Relationship[], personsMap?: Map<number, Person>): number[] {
   const result: number[] = [];
+  const seen = new Set<number>();
   relationships.forEach(r => {
     if (r.status !== 'VERIFIED') return;
     const resolved = resolveParentAndChildIds(r, personsMap);
     if (resolved && resolved.childId === personId) {
-      if (!result.includes(resolved.parentId)) result.push(resolved.parentId);
+      if (!seen.has(resolved.parentId)) {
+        seen.add(resolved.parentId);
+        result.push(resolved.parentId);
+      }
     }
   });
   return result;
@@ -18,14 +23,19 @@ export function getParentIds(personId: number, relationships: Relationship[], pe
 
 /**
  * Get all verified direct child IDs for a person
+ * P0.4: Replaced result.includes() (O(N)) with Set.has() (O(1)) — same output, ~Nx faster
  */
 export function getChildIds(personId: number, relationships: Relationship[], personsMap?: Map<number, Person>): number[] {
   const result: number[] = [];
+  const seen = new Set<number>();
   relationships.forEach(r => {
     if (r.status !== 'VERIFIED') return;
     const resolved = resolveParentAndChildIds(r, personsMap);
     if (resolved && resolved.parentId === personId) {
-      if (!result.includes(resolved.childId)) result.push(resolved.childId);
+      if (!seen.has(resolved.childId)) {
+        seen.add(resolved.childId);
+        result.push(resolved.childId);
+      }
     }
   });
   return result;
@@ -46,14 +56,16 @@ export function getSpouseIds(personId: number, relationships: Relationship[]): n
 
 /**
  * Recursive Ancestors Query (equivalent to PostgreSQL WITH RECURSIVE Ancestors CTE)
+ * P0.3: Replaced queue.shift() (O(N)) with head pointer (O(1)) — same output, ~Nx faster
  */
 export function getAncestors(personId: number, relationships: Relationship[]): Set<number> {
   const ancestors = new Set<number>();
   const queue = [personId];
   const visited = new Set<number>();
+  let head = 0;
 
-  while (queue.length > 0) {
-    const current = queue.shift()!;
+  while (head < queue.length) {
+    const current = queue[head++];
     if (visited.has(current)) continue;
     visited.add(current);
 
@@ -71,14 +83,16 @@ export function getAncestors(personId: number, relationships: Relationship[]): S
 
 /**
  * Recursive Descendants Query
+ * P0.3: Replaced queue.shift() (O(N)) with head pointer (O(1)) — same output, ~Nx faster
  */
 export function getDescendants(personId: number, relationships: Relationship[]): Set<number> {
   const descendants = new Set<number>();
   const queue = [personId];
   const visited = new Set<number>();
+  let head = 0;
 
-  while (queue.length > 0) {
-    const current = queue.shift()!;
+  while (head < queue.length) {
+    const current = queue[head++];
     if (visited.has(current)) continue;
     visited.add(current);
 

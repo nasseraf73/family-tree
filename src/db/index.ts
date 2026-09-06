@@ -8,11 +8,17 @@ if (!connectionString && process.env.NODE_ENV === 'production') {
 }
 
 // Create Postgres client connection instance with robust timeouts
+// P0.2: max raised from 5 to 20 to handle concurrent users (was bottleneck)
+// prepare:false is REQUIRED when using Supabase Transaction-mode Pooler
 export const client = postgres(connectionString, {
-  max: 5,
-  idle_timeout: 20,
+  max: 20,
+  idle_timeout: 30,
   connect_timeout: 10,
-  max_lifetime: 60 * 10,
+  max_lifetime: 60 * 30,
+  prepare: false,
+  connection: {
+    application_name: 'family-tree-vps',
+  },
 });
 export const db = drizzle(client, { schema });
 

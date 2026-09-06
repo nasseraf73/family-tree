@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { relationships as relsTable, users as usersTable, persons as personsTable } from '@/db/schema';
+import { relationships as relsTable, persons as personsTable } from '@/db/schema';
 import { eq, or } from 'drizzle-orm';
+import { getAuthenticatedUser } from '@/lib/supabase/auth';
 
 export async function DELETE(request: Request) {
   try {
-    const userEmail = request.headers.get('x-user-email');
-    if (!userEmail) {
+    const { dbUser: currentUser, error: authError } = await getAuthenticatedUser(request);
+    if (authError || !currentUser) {
       return NextResponse.json(
         { error: 'غير مصرح: يرجى تسجيل الدخول أولاً لحذف العلاقة' },
         { status: 401 }
@@ -23,16 +24,6 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // 1. Fetch requesting user
-    const dbUsers = await db.select().from(usersTable).where(eq(usersTable.email, userEmail));
-    if (dbUsers.length === 0) {
-      return NextResponse.json(
-        { error: 'حساب المستخدم غير موجود' },
-        { status: 404 }
-      );
-    }
-    const currentUser = dbUsers[0];
-
     // 2. Fetch target relationship record
     const targetRels = await db.select().from(relsTable).where(eq(relsTable.id, relationship_id));
     if (targetRels.length === 0) {
@@ -42,6 +33,7 @@ export async function DELETE(request: Request) {
       );
     }
     const targetRel = targetRels[0];
+
 
     // 3. Permission Control (RBAC):
     // Authorized if: User is ADMIN OR REVIEWER OR User is the Creator of the relationship

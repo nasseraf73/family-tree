@@ -1,31 +1,19 @@
 import { NextResponse } from 'next/server';
 import { db, client } from '@/db';
-import { loginLogs, users } from '@/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { loginLogs } from '@/db/schema';
+import { desc } from 'drizzle-orm';
+import { getAuthenticatedUser } from '@/lib/supabase/auth';
 
 async function checkAdminPermission(req: Request) {
-  const url = new URL(req.url);
-  const emailParam = url.searchParams.get('admin_email') || req.headers.get('x-user-email');
-
-  if (emailParam) {
-    const [dbUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, emailParam.trim().toLowerCase()))
-      .limit(1);
-
-    if (dbUser && (dbUser.role === 'ADMIN' || (dbUser.role as string) === 'ADM')) {
-      return { isAdmin: true, user: dbUser };
-    }
+  const { dbUser, error } = await getAuthenticatedUser(req);
+  if (error || !dbUser) {
+    return { isAdmin: false };
   }
 
-  const roleParam = url.searchParams.get('role');
-  if (roleParam === 'ADMIN' || roleParam === 'SUPER_ADMIN') {
-    return { isAdmin: true };
-  }
-
-  return { isAdmin: false };
+  const isAdmin = dbUser.role === 'ADMIN' || (dbUser.role as string) === 'ADM';
+  return { isAdmin, user: dbUser };
 }
+
 
 export async function GET(req: Request) {
   try {

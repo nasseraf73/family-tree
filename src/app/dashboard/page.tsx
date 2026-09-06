@@ -30,7 +30,7 @@ import {
 // ─── Dashboard Content ───────────────────────────────────────────────
 
 function DashboardContent() {
-  const { user, dbUser, role, loading: authLoading } = useAuth();
+  const { user, dbUser, role, loading: authLoading, authFetch } = useAuth();
   const isAdmin = role === 'ADMIN' || (role as string) === 'ADM';
   const isStewardOrAdmin = isAdmin || role === 'REVIEWER' || (role as string) === 'STEWARD' || (role as string) === 'REV';
 
@@ -151,17 +151,10 @@ function DashboardContent() {
     }
   }, [role]);
 
-  const getUserAuthEmail = useCallback(() => {
-    return user?.email || dbUser?.email || (typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '');
-  }, [user, dbUser]);
-
   const fetchClaimsList = useCallback(async () => {
     setLoadingClaims(true);
     try {
-      const email = getUserAuthEmail();
-      const res = await fetch('/api/v1/claim/requests', {
-        headers: { 'x-user-email': email },
-      });
+      const res = await authFetch('/api/v1/claim/requests');
       const data = await res.json();
       if (data.claims) {
         setClaimsList(data.claims);
@@ -171,16 +164,13 @@ function DashboardContent() {
     } finally {
       setLoadingClaims(false);
     }
-  }, [getUserAuthEmail]);
+  }, [authFetch]);
 
   const fetchUsersList = useCallback(async () => {
     if (!isAdmin) return;
     setLoadingUsers(true);
     try {
-      const email = getUserAuthEmail();
-      const res = await fetch('/api/v1/admin/users', {
-        headers: { 'x-user-email': email },
-      });
+      const res = await authFetch('/api/v1/admin/users');
       const data = await res.json();
       if (data.users) {
         setUsersList(data.users);
@@ -190,7 +180,7 @@ function DashboardContent() {
     } finally {
       setLoadingUsers(false);
     }
-  }, [isAdmin, getUserAuthEmail]);
+  }, [isAdmin, authFetch]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -220,12 +210,10 @@ function DashboardContent() {
     setLoading(true);
     setActionMessage(null);
     try {
-      const email = getUserAuthEmail();
-      const res = await fetch('/api/v1/review/approve', {
+      const res = await authFetch('/api/v1/review/approve', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': email,
         },
         body: JSON.stringify({ relationship_id: relId, action }),
       });
@@ -247,12 +235,10 @@ function DashboardContent() {
     setLoading(true);
     setActionMessage(null);
     try {
-      const email = getUserAuthEmail();
-      const res = await fetch('/api/v1/review/merge', {
+      const res = await authFetch('/api/v1/review/merge', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': email,
         },
         body: JSON.stringify({ merge_request_id: mergeId }),
       });
@@ -274,12 +260,10 @@ function DashboardContent() {
     setLoading(true);
     setActionMessage(null);
     try {
-      const email = getUserAuthEmail();
-      const res = await fetch('/api/v1/claim/requests', {
+      const res = await authFetch('/api/v1/claim/requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': email,
         },
         body: JSON.stringify({ person_id: personId, action }),
       });
@@ -303,12 +287,10 @@ function DashboardContent() {
     setSubmittingSteward(true);
     setActionMessage(null);
     try {
-      const email = getUserAuthEmail();
-      const res = await fetch('/api/v1/admin/users', {
+      const res = await authFetch('/api/v1/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': email,
         },
         body: JSON.stringify({
           full_name: stewardName,
@@ -338,12 +320,10 @@ function DashboardContent() {
   const handleRoleChange = async (userId: number, newRole: 'USER' | 'REVIEWER' | 'ADMIN') => {
     setActionMessage(null);
     try {
-      const email = getUserAuthEmail();
-      const res = await fetch('/api/v1/admin/users', {
+      const res = await authFetch('/api/v1/admin/users', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': email,
         },
         body: JSON.stringify({ user_id: userId, role: newRole }),
       });
@@ -363,12 +343,8 @@ function DashboardContent() {
     if (!confirm('هل أنت متأكد من رغبتك في حذف هذا المشرف/المستخدم من النظام؟')) return;
     setActionMessage(null);
     try {
-      const email = getUserAuthEmail();
-      const res = await fetch(`/api/v1/admin/users?id=${userId}`, {
+      const res = await authFetch(`/api/v1/admin/users?id=${userId}`, {
         method: 'DELETE',
-        headers: {
-          'x-user-email': email,
-        },
       });
       const data = await res.json();
       if (res.ok) {
@@ -381,6 +357,7 @@ function DashboardContent() {
       setActionMessage('حدث خطأ أثناء حذف المشرف');
     }
   };
+
 
   // ─── Refresh All Data ──────────────────────────────────────────
   const refreshAll = () => {

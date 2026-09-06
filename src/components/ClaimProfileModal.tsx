@@ -22,7 +22,7 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
   targetPerson: initialTargetPerson,
   onSuccess,
 }) => {
-  const { user, dbUser } = useAuth();
+  const { user, dbUser, authFetch } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(initialTargetPerson || null);
   const [proofNote, setProofNote] = useState('');
@@ -38,14 +38,10 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
 
   // Synchronize selectedPerson when modal opens or initialTargetPerson prop changes
   useEffect(() => {
-    if (isOpen) {
-      setSelectedPerson(initialTargetPerson || null);
-      setMessage(null);
-      setError(null);
-      setProofNote('');
-      setSearchQuery('');
+    if (initialTargetPerson) {
+      setSelectedPerson(initialTargetPerson);
     }
-  }, [isOpen, initialTargetPerson]);
+  }, [initialTargetPerson]);
 
   const filteredPersons = useMemo(() => {
     if (!searchQuery || !searchQuery.trim()) return allPersons.slice(0, 30);
@@ -60,20 +56,17 @@ export const ClaimProfileModal: React.FC<ClaimProfileModalProps> = ({
     setError(null);
     setMessage(null);
 
-    const userEmail = user?.email || dbUser?.email || (typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '');
-
-    if (!userEmail) {
+    if (!user) {
       setError('غير مصرح: يرجى تسجيل الدخول أولاً من شريط التنقل العلوي للمطالبة ببطاقة نسبك.');
       setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch('/api/v1/claim/request', {
+      const res = await authFetch('/api/v1/claim/request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': userEmail,
         },
         body: JSON.stringify({
           person_id: selectedPerson.id,

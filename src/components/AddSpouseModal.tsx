@@ -5,6 +5,7 @@ import { X, Heart, Search, CheckCircle, RefreshCw, AlertTriangle, UserCheck, Use
 import { Person } from '../types';
 import { getPentanyicFullName } from '../lib/lineage';
 import { normalizeForSearch, sortSearchResults } from '../lib/dedup';
+import { useAuth } from '../context/AuthContext';
 
 interface AddSpouseModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const AddSpouseModal: React.FC<AddSpouseModalProps> = ({
   allPersons,
   onSuccess,
 }) => {
+  const { authFetch } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInternalPerson, setSelectedInternalPerson] = useState<Person | null>(null);
 
@@ -41,6 +43,7 @@ export const AddSpouseModal: React.FC<AddSpouseModalProps> = ({
       setMarriageStatus('ACTIVE');
       setMarriageOrder(1);
       setErrorMessage(null);
+      setLoading(false);
     }
   }, [isOpen]);
 
@@ -66,7 +69,7 @@ export const AddSpouseModal: React.FC<AddSpouseModalProps> = ({
     setSearchQuery('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSaveSpouse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetPerson) return;
 
@@ -74,7 +77,6 @@ export const AddSpouseModal: React.FC<AddSpouseModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('family_tree_user_email') || '' : '';
       const isTargetHusband = targetPerson.gender === 'MALE';
 
       const payload = selectedInternalPerson
@@ -93,11 +95,10 @@ export const AddSpouseModal: React.FC<AddSpouseModalProps> = ({
             marriage_order: marriageOrder,
           };
 
-      const res = await fetch('/api/v1/marriages', {
+      const res = await authFetch('/api/v1/marriages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': savedEmail,
         },
         body: JSON.stringify(payload),
       });
@@ -139,7 +140,7 @@ export const AddSpouseModal: React.FC<AddSpouseModalProps> = ({
         </div>
 
         {/* Modal Content Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm dir-rtl">
+        <form onSubmit={handleSaveSpouse} className="p-6 space-y-4 text-sm dir-rtl">
           {/* Live Auto-Suggest Search Bar */}
           <div className="space-y-1.5 relative">
             <label className="block text-xs font-bold text-slate-300">
