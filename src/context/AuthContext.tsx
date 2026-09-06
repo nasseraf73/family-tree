@@ -134,7 +134,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
-        return { error: error.message || 'فشل تسجيل الدخول، يرجى التأكد من البريد وكلمة المرور' };
+        const errorText = (!error.message || error.message.trim() === '{}' || error.message.trim() === '')
+          ? 'فشل تسجيل الدخول، يرجى التأكد من صحة البريد الإلكتروني وكلمة المرور'
+          : error.message;
+        return { error: errorText };
       }
 
       if (data.session) {
@@ -195,7 +198,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
-        return { error: error.message || 'فشل إنشاء الحساب الجديد' };
+        const errorText = (!error.message || error.message.trim() === '{}' || error.message.trim() === '')
+          ? 'فشل إنشاء الحساب الجديد، يرجى المحاولة لاحقاً'
+          : error.message;
+        return { error: errorText };
       }
 
       if (data.session) {
