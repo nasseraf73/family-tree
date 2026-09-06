@@ -117,18 +117,22 @@ export async function POST(request: Request) {
 
       console.log(`[CLAIM REQUEST] Found ${stewards.length} stewards to notify. Person: ${personFullName}`);
 
-      for (const steward of stewards) {
-        if (steward.email) {
-          await sendEmailNotification({
-            to: steward.email,
-            subject: 'طلب مطابقة وتوثيق ملف شخصي جديد 📋',
-            title: 'طلب مطابقة وتوثيق جديد بانتظار المراجعة',
-            bodyHtml: `قام العضو <b>${dbUser.full_name}</b> (بريد: ${dbUser.email}) بتقديم طلب توثيق ومطابقة للملف الشخصي: <b>${personFullName}</b>.<br/>يرجى الدخول إلى لوحة التحكم الخاصة بالمشرفين لمراجعة الطلب والمستندات المرفقة واتخاذ الإجراء المناسب.`,
-            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://family-tree-ten-blush.vercel.app'}/tree`,
-            actionText: 'لوحة تحكم المشرفين',
-          });
-        }
-      }
+      // P3.bulk: Send emails in parallel instead of serially.
+      // 5 stewards × 1s SMTP = 5s serially, but only 1s in parallel.
+      await Promise.allSettled(
+        stewards
+          .filter(s => s.email)
+          .map(steward =>
+            sendEmailNotification({
+              to: steward.email,
+              subject: 'طلب مطابقة وتوثيق ملف شخصي جديد 📋',
+              title: 'طلب مطابقة وتوثيق جديد بانتظار المراجعة',
+              bodyHtml: `قام العضو <b>${dbUser.full_name}</b> (بريد: ${dbUser.email}) بتقديم طلب توثيق ومطابقة للملف الشخصي: <b>${personFullName}</b>.<br/>يرجى الدخول إلى لوحة التحكم الخاصة بالمشرفين لمراجعة الطلب والمستندات المرفقة واتخاذ الإجراء المناسب.`,
+              actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://family-tree-ten-blush.vercel.app'}/tree`,
+              actionText: 'لوحة تحكم المشرفين',
+            }).catch(err => console.error(`[CLAIM EMAIL] Failed for ${steward.email}:`, err))
+          )
+      );
     } catch (mailErr) {
       console.error('[CLAIM REQUEST EMAIL EXCEPTION]', mailErr);
     }

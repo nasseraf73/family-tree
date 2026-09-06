@@ -3,6 +3,7 @@ import { dbStore } from '@/lib/store';
 import { db } from '@/db';
 import { persons as personsTable, relationships as relsTable, marriages as marriagesTable } from '@/db/schema';
 import { Person, Relationship, RelationshipType, RelationshipStatus, Gender } from '@/types';
+import { getTreeSnapshot, treeCacheKey, getTreeCacheStats } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,11 +44,15 @@ export async function GET(request: Request) {
     marriage_order: number;
   }>>();
 
-  // Fetch directly from persistent PostgreSQL database
+  // P2.1: Use LRU cache to avoid hitting DB on every request.
+  // Cache key includes role + viewport. TTL 5 min, max 50 entries.
+  const cacheKey = treeCacheKey({ role: userRole, xMin, yMin, xMax, yMax });
+
   try {
-    const dbPersons = await db.select().from(personsTable);
-    const dbRels = await db.select().from(relsTable);
-    const dbMarriages = await db.select().from(marriagesTable);
+    const snapshot = await getTreeSnapshot(cacheKey);
+    const dbPersons = snapshot.persons;
+    const dbRels = snapshot.relationships;
+    const dbMarriages = snapshot.marriages;
 
     if (dbPersons.length > 0) {
       persons = dbPersons.map(p => ({
@@ -290,5 +295,6 @@ export async function GET(request: Request) {
     totalEdges: edges.length,
     persons,
     relationships,
+    cache: getTreeCacheStats(),
   });
 }

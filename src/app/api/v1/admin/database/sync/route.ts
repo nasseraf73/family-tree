@@ -67,102 +67,71 @@ export async function POST(request: Request) {
       sourceSql`SELECT * FROM merge_requests ORDER BY id`,
     ]);
 
-    // 3. Insert Countries
-    for (const c of srcCountries) {
-      await targetSql`
-        INSERT INTO countries (id, name, code, flag_emoji, is_active, created_at)
-        VALUES (${c.id}, ${c.name}, ${c.code}, ${c.flag_emoji}, ${c.is_active}, ${c.created_at})
-      `;
-    }
+    // 3. Insert Countries (P3.4: bulk insert instead of N round-trips)
+    // postgres-js pattern: pass array of arrays as VALUES
     if (srcCountries.length > 0) {
+      const countryTuples = srcCountries.map(c =>
+        [c.id, c.name, c.code, c.flag_emoji, c.is_active, c.created_at]
+      );
+      await targetSql`INSERT INTO countries (id, name, code, flag_emoji, is_active, created_at) VALUES ${targetSql(countryTuples)}`;
       await targetSql`SELECT setval('countries_id_seq', COALESCE((SELECT MAX(id) FROM countries), 1))`;
     }
 
     // 4. Insert Users
-    for (const u of srcUsers) {
-      await targetSql`
-        INSERT INTO users (id, email, password_hash, full_name, phone, role, created_at)
-        VALUES (${u.id}, ${u.email}, ${u.password_hash}, ${u.full_name}, ${u.phone}, ${u.role}, ${u.created_at})
-      `;
-    }
     if (srcUsers.length > 0) {
+      const userTuples = srcUsers.map(u =>
+        [u.id, u.email, u.password_hash, u.full_name, u.phone, u.role, u.created_at]
+      );
+      await targetSql`INSERT INTO users (id, email, password_hash, full_name, phone, role, created_at) VALUES ${targetSql(userTuples)}`;
       await targetSql`SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 1))`;
     }
 
     // 5. Insert Persons
-    for (const p of srcPersons) {
-      await targetSql`
-        INSERT INTO persons (
-          id, first_name, father_name, grand_father_name, family_name, gender, is_alive,
-          birth_date, birth_year, death_date, burial_place, country_id, photo_url, biography,
-          is_placeholder, created_by_user_id, claimed_by_user_id, created_at
-        ) VALUES (
-          ${p.id}, ${p.first_name}, ${p.father_name}, ${p.grand_father_name}, ${p.family_name}, ${p.gender}, ${p.is_alive},
-          ${p.birth_date}, ${p.birth_year}, ${p.death_date}, ${p.burial_place}, ${p.country_id}, ${p.photo_url}, ${p.biography},
-          ${p.is_placeholder}, ${p.created_by_user_id}, ${p.claimed_by_user_id}, ${p.created_at}
-        )
-      `;
-    }
     if (srcPersons.length > 0) {
+      const personTuples = srcPersons.map(p => [
+        p.id, p.first_name, p.father_name, p.grand_father_name, p.family_name,
+        p.gender, p.is_alive, p.birth_date, p.birth_year, p.death_date,
+        p.burial_place, p.country_id, p.photo_url, p.biography,
+        p.is_placeholder, p.created_by_user_id, p.claimed_by_user_id, p.created_at,
+      ]);
+      await targetSql`INSERT INTO persons (id, first_name, father_name, grand_father_name, family_name, gender, is_alive, birth_date, birth_year, death_date, burial_place, country_id, photo_url, biography, is_placeholder, created_by_user_id, claimed_by_user_id, created_at) VALUES ${targetSql(personTuples)}`;
       await targetSql`SELECT setval('persons_id_seq', COALESCE((SELECT MAX(id) FROM persons), 1))`;
     }
 
     // 6. Insert Relationships
-    for (const r of srcRels) {
-      await targetSql`
-        INSERT INTO relationships (
-          id, person_id, related_person_id, relationship_type, status,
-          created_by_user_id, verified_by_user_id, verified_at, created_at
-        ) VALUES (
-          ${r.id}, ${r.person_id}, ${r.related_person_id}, ${r.relationship_type}, ${r.status},
-          ${r.created_by_user_id}, ${r.verified_by_user_id}, ${r.verified_at}, ${r.created_at}
-        )
-      `;
-    }
     if (srcRels.length > 0) {
+      const relTuples = srcRels.map(r => [
+        r.id, r.person_id, r.related_person_id, r.relationship_type, r.status,
+        r.created_by_user_id, r.verified_by_user_id, r.verified_at, r.created_at,
+      ]);
+      await targetSql`INSERT INTO relationships (id, person_id, related_person_id, relationship_type, status, created_by_user_id, verified_by_user_id, verified_at, created_at) VALUES ${targetSql(relTuples)}`;
       await targetSql`SELECT setval('relationships_id_seq', COALESCE((SELECT MAX(id) FROM relationships), 1))`;
     }
 
     // 7. Insert Marriages
-    for (const m of srcMarr) {
-      await targetSql`
-        INSERT INTO marriages (
-          id, husband_id, wife_id, external_spouse_name, external_family_name,
-          status, marriage_order, created_by_user_id, created_at
-        ) VALUES (
-          ${m.id}, ${m.husband_id}, ${m.wife_id}, ${m.external_spouse_name}, ${m.external_family_name},
-          ${m.status}, ${m.marriage_order}, ${m.created_by_user_id}, ${m.created_at}
-        )
-      `;
-    }
     if (srcMarr.length > 0) {
+      const marrTuples = srcMarr.map(m => [
+        m.id, m.husband_id, m.wife_id, m.external_spouse_name, m.external_family_name,
+        m.status, m.marriage_order, m.created_by_user_id, m.created_at,
+      ]);
+      await targetSql`INSERT INTO marriages (id, husband_id, wife_id, external_spouse_name, external_family_name, status, marriage_order, created_by_user_id, created_at) VALUES ${targetSql(marrTuples)}`;
       await targetSql`SELECT setval('marriages_id_seq', COALESCE((SELECT MAX(id) FROM marriages), 1))`;
     }
 
     // 8. Insert Branch Reviewers
-    for (const br of srcRev) {
-      await targetSql`
-        INSERT INTO branch_reviewers (id, user_id, root_person_id, assigned_at)
-        VALUES (${br.id}, ${br.user_id}, ${br.root_person_id}, ${br.assigned_at})
-      `;
-    }
     if (srcRev.length > 0) {
+      const revTuples = srcRev.map(br => [br.id, br.user_id, br.root_person_id, br.assigned_at]);
+      await targetSql`INSERT INTO branch_reviewers (id, user_id, root_person_id, assigned_at) VALUES ${targetSql(revTuples)}`;
       await targetSql`SELECT setval('branch_reviewers_id_seq', COALESCE((SELECT MAX(id) FROM branch_reviewers), 1))`;
     }
 
     // 9. Insert Merge Requests
-    for (const mr of srcMerge) {
-      await targetSql`
-        INSERT INTO merge_requests (
-          id, primary_person_id, duplicate_person_id, status,
-          requested_by_user_id, reviewed_by_user_id, created_at
-        ) VALUES (
-          ${mr.id}, ${mr.primary_person_id}, ${mr.duplicate_person_id}, ${mr.status},
-          ${mr.requested_by_user_id}, ${mr.reviewed_by_user_id}, ${mr.created_at}
-        )
-      `;
-    }
     if (srcMerge.length > 0) {
+      const mergeTuples = srcMerge.map(mr => [
+        mr.id, mr.primary_person_id, mr.duplicate_person_id, mr.status,
+        mr.requested_by_user_id, mr.reviewed_by_user_id, mr.created_at,
+      ]);
+      await targetSql`INSERT INTO merge_requests (id, primary_person_id, duplicate_person_id, status, requested_by_user_id, reviewed_by_user_id, created_at) VALUES ${targetSql(mergeTuples)}`;
       await targetSql`SELECT setval('merge_requests_id_seq', COALESCE((SELECT MAX(id) FROM merge_requests), 1))`;
     }
 

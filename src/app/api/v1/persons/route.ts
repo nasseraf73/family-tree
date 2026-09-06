@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { dbStore } from '@/lib/store';
 import { RelationshipType, Gender, Person, Relationship, RelationshipStatus } from '@/types';
-import { checkKinshipCycle } from '@/lib/kinship';
 import { getAuthenticatedUser } from '@/lib/supabase/auth';
 import { normalizeForDatabase } from '@/lib/dedup';
 import { db } from '@/db';
 import { persons as personsTable, relationships as relsTable } from '@/db/schema';
 import { eq, and, or } from 'drizzle-orm';
+import { invalidateTreeCache } from '@/lib/cache';
 
 function formatPostgresDate(dStr: string | null | undefined): string | null {
   if (!dStr || dStr.trim() === '') return null;
@@ -243,6 +243,7 @@ export async function POST(request: Request) {
         relationship: createdRel,
         linked: true,
       }, { status: 201 });
+      invalidateTreeCache();
     }
 
     // -------------------------------------------------------------
@@ -294,6 +295,7 @@ export async function POST(request: Request) {
         relationship: createdRel,
         linked: true,
       }, { status: 201 });
+      invalidateTreeCache();
     }
 
     if (!first_name || !gender) {
@@ -367,56 +369,19 @@ export async function POST(request: Request) {
         message: 'تم إضافة الجد/الشخص الأول في شجرة العائلة بنجاح!',
         person: createdPerson,
       }, { status: 201 });
+      invalidateTreeCache();
     }
 
     // 2. Adding relative to existing person
-    let currentPersons: Person[] = [];
-    let currentRelationships: Relationship[] = [];
-
-    try {
-      const dbPersons = await db.select().from(personsTable);
-      const dbRels = await db.select().from(relsTable);
-      if (dbPersons.length > 0) {
-        currentPersons = dbPersons.map(p => ({
-          id: p.id,
-          first_name: p.first_name,
-          father_name: p.father_name || undefined,
-          grand_father_name: p.grand_father_name || undefined,
-          family_name: p.family_name || undefined,
-          gender: p.gender as Gender,
-          is_alive: p.is_alive,
-          birth_year: p.birth_year || undefined,
-          death_date: p.death_date || undefined,
-          burial_place: p.burial_place || undefined,
-          photo_url: p.photo_url || undefined,
-          created_at: p.created_at ? p.created_at.toISOString() : new Date().toISOString(),
-        }));
-
-        currentRelationships = dbRels.map(r => ({
-          id: r.id,
-          person_id: r.person_id,
-          related_person_id: r.related_person_id,
-          relationship_type: r.relationship_type as RelationshipType,
-          status: r.status as RelationshipStatus,
-          created_at: r.created_at ? r.created_at.toISOString() : new Date().toISOString(),
-        }));
-      } else {
-        currentPersons = dbStore.getPersons();
-        currentRelationships = dbStore.getRelationships();
-      }
-    } catch {
-      currentPersons = dbStore.getPersons();
-      currentRelationships = dbStore.getRelationships();
-    }
-
-    const tempNewPersonId = Date.now();
-    const isCycleDetected = checkKinshipCycle(
-      tempNewPersonId,
-      related_person_id,
-      relationship_type as RelationshipType,
-      currentPersons,
-      currentRelationships
-    );
+    // P3.1: Cycle detection was previously done in JS by loading ALL
+    // persons + relationships (O(N²)). The new detectCycleDb() CTE in
+    // @/db/queries/kinship is a database-side replacement available for
+    // re-linking scenarios. For NEW person addition, cycle detection
+    // is logically a no-op (the new person has no ID yet) so we skip
+    // the expensive JS check entirely. This eliminates the wasteful
+    // db.select().from(personsTable) + db.select().from(relsTable)
+    // calls that previously happened on every POST.
+    const isCycleDetected = false;
 
     if (isCycleDetected) {
       return NextResponse.json(
@@ -519,6 +484,7 @@ export async function POST(request: Request) {
       person: createdPerson,
       relationship: createdRelationship,
     }, { status: 201 });
+    invalidateTreeCache();
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }

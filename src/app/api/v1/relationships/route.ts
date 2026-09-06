@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { relationships as relsTable, persons as personsTable } from '@/db/schema';
 import { eq, or } from 'drizzle-orm';
 import { getAuthenticatedUser } from '@/lib/supabase/auth';
+import { invalidateTreeCache } from '@/lib/cache';
 
 export async function DELETE(request: Request) {
   try {
@@ -76,6 +77,7 @@ export async function DELETE(request: Request) {
       success: true,
       message: 'تم حذف العلاقة بنجاح وتنظيف العقد اليتيمة',
     });
+    invalidateTreeCache();
   } catch (error) {
     return NextResponse.json(
       { error: 'حدث خطأ أثناء حذف العلاقة: ' + (error as Error).message },

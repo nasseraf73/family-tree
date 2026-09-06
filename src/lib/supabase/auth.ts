@@ -4,7 +4,18 @@ import { users } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { User as DbUser } from '../../types';
 
+// P2.3: Per-request deduplication using WeakMap.
+// Multiple calls to getAuthenticatedUser() in the same request share one
+// Supabase call + one DB query. Uses a WeakMap on the Request object so
+// the cache auto-cleans when the request is garbage collected.
+const inflightAuth = new WeakMap<Request, Promise<{ dbUser: DbUser | null; error: string | null }>>();
+
 export async function getAuthenticatedUser(request: Request): Promise<{ dbUser: DbUser | null; error: string | null }> {
+  // Reuse in-flight result for the same request object
+  const inflight = inflightAuth.get(request);
+  if (inflight) return inflight;
+
+  const promise = (async (): Promise<{ dbUser: DbUser | null; error: string | null }> => {
   try {
     const authHeader = request.headers.get('Authorization');
 
@@ -70,5 +81,8 @@ export async function getAuthenticatedUser(request: Request): Promise<{ dbUser: 
   } catch (err) {
     return { dbUser: null, error: (err as Error).message };
   }
-}
+  })();
 
+  inflightAuth.set(request, promise);
+  return promise;
+}
