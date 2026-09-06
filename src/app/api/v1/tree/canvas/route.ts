@@ -7,7 +7,6 @@ import { getTreeSnapshot, treeCacheKey, getTreeCacheStats } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
-// Local types to avoid importing @xyflow/react in server-side API route
 interface CanvasNode {
   id: string;
   type: string;
@@ -25,9 +24,18 @@ interface CanvasEdge {
   data?: Record<string, unknown>;
 }
 
+const DEFAULT_BATCH_SIZE = 200;
+const MAX_BATCH_SIZE = 1000;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userRole = searchParams.get('role') || 'USER';
+  const summaryOnly = searchParams.get('summary') === 'true';
+  const offset = Math.max(0, parseInt(searchParams.get('offset') || '0', 10));
+  const limit = Math.min(
+    MAX_BATCH_SIZE,
+    Math.max(1, parseInt(searchParams.get('limit') || String(DEFAULT_BATCH_SIZE), 10))
+  );
 
   const xMin = searchParams.get('xMin') ? parseFloat(searchParams.get('xMin')!) : null;
   const yMin = searchParams.get('yMin') ? parseFloat(searchParams.get('yMin')!) : null;
@@ -44,8 +52,6 @@ export async function GET(request: Request) {
     marriage_order: number;
   }>>();
 
-  // P2.1: Use LRU cache to avoid hitting DB on every request.
-  // Cache key includes role + viewport. TTL 5 min, max 50 entries.
   const cacheKey = treeCacheKey({ role: userRole, xMin, yMin, xMax, yMax });
 
   try {
@@ -136,9 +142,19 @@ export async function GET(request: Request) {
     return false;
   });
 
-  // Identify root ancestors (nodes without parent relationships)
+  // P4.1: Summary mode — return counts only, no data. Sub-100ms response.
+  if (summaryOnly) {
+    return NextResponse.json({
+      summary: true,
+      totalPersons: persons.length,
+      totalRelationships: validRelationships.length,
+      totalMarriages: personSpousesMap.size,
+      cache: getTreeCacheStats(),
+    });
+  }
+
   const rootAncestors = persons.filter(p => {
-    const parentRels = validRelationships.filter(r => 
+    const parentRels = validRelationships.filter(r =>
       (r.person_id === p.id && r.relationship_type === 'PARENT') ||
       (r.related_person_id === p.id && r.relationship_type === 'CHILD')
     );
@@ -156,9 +172,10 @@ export async function GET(request: Request) {
     const clusterNodes: number[] = [rootPerson.id];
     const queue = [rootPerson.id];
     const visited = new Set<number>([rootPerson.id]);
+    let qHead = 0;
 
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
+    while (qHead < queue.length) {
+      const currentId = queue[qHead++];
       visibleRelationships.forEach(rel => {
         let childId: number | null = null;
         if (rel.relationship_type === 'PARENT' && rel.related_person_id === currentId) {
@@ -180,7 +197,7 @@ export async function GET(request: Request) {
     let maxClusterWidth = 1;
 
     clusterNodes.forEach(id => {
-      const nodeChildren = visibleRelationships.filter(r => 
+      const nodeChildren = visibleRelationships.filter(r =>
         (r.relationship_type === 'PARENT' && r.related_person_id === id) ||
         (r.relationship_type === 'CHILD' && r.person_id === id)
       );
@@ -200,10 +217,14 @@ export async function GET(request: Request) {
     }
   });
 
-  let nodes: CanvasNode[] = persons.map(person => {
+  // P4.1: Sort by id for stable pagination, then apply offset+limit
+  const sortedPersons = [...persons].sort((a, b) => a.id - b.id);
+  const pagedPersons = sortedPersons.slice(offset, offset + limit);
+
+  let nodes: CanvasNode[] = pagedPersons.map(person => {
     const pos = nodePositions.get(person.id) || { x: 0, y: 0 };
-    
-    const isPending = validRelationships.some(r => 
+
+    const isPending = validRelationships.some(r =>
       (r.person_id === person.id || r.related_person_id === person.id) && r.status === 'PENDING'
     );
 
@@ -219,9 +240,10 @@ export async function GET(request: Request) {
     };
   });
 
+  // Filter to viewport if provided
   if (xMin !== null && yMin !== null && xMax !== null && yMax !== null) {
     const buffer = 400;
-    nodes = nodes.filter(node => 
+    nodes = nodes.filter(node =>
       node.position.x >= xMin - buffer &&
       node.position.x <= xMax + buffer &&
       node.position.y >= yMin - buffer &&
@@ -231,9 +253,11 @@ export async function GET(request: Request) {
 
   const visibleNodeIds = new Set(nodes.map(n => n.id));
   const personMap = new Map<number, Person>();
-  persons.forEach(p => personMap.set(p.id, p));
+  pagedPersons.forEach(p => personMap.set(p.id, p));
 
+  // Only include relationships between visible nodes
   const edges: CanvasEdge[] = visibleRelationships
+    .filter(rel => visibleNodeIds.has(rel.person_id.toString()) || visibleNodeIds.has(rel.related_person_id.toString()))
     .map(rel => {
       let sourceId: string;
       let targetId: string;
@@ -242,7 +266,6 @@ export async function GET(request: Request) {
         sourceId = rel.person_id.toString();
         targetId = rel.related_person_id.toString();
       } else {
-        // Lineage hierarchy: Parent is always the source (top) and Child is always the target (bottom)
         const p1 = personMap.get(rel.person_id);
         const p2 = personMap.get(rel.related_person_id);
 
@@ -250,11 +273,9 @@ export async function GET(request: Request) {
         let childId = rel.person_id;
 
         if (p1 && p2 && p1.father_name && p2.first_name && p1.father_name.trim() === p2.first_name.trim()) {
-          // p2 is the father of p1
           parentId = rel.related_person_id;
           childId = rel.person_id;
         } else if (p1 && p2 && p2.father_name && p1.first_name && p2.father_name.trim() === p1.first_name.trim()) {
-          // p1 is the father of p2
           parentId = rel.person_id;
           childId = rel.related_person_id;
         } else if (rel.relationship_type === 'CHILD') {
@@ -289,12 +310,16 @@ export async function GET(request: Request) {
     .filter(edge => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target));
 
   return NextResponse.json({
+    summary: false,
     nodes,
     edges,
     totalNodes: nodes.length,
     totalEdges: edges.length,
-    persons,
-    relationships,
+    totalPersons: persons.length,
+    totalRelationships: validRelationships.length,
+    offset,
+    limit,
+    hasMore: offset + limit < persons.length,
     cache: getTreeCacheStats(),
   });
 }

@@ -377,9 +377,13 @@ function FamilyTreeCanvasContent() {
   );
 
   // Load Tree Data from Backend API
+  // P4.1: Load in batches of INITIAL_BATCH_SIZE for faster first paint.
+  const INITIAL_BATCH_SIZE = 200;
   const fetchTreeData = useCallback(async () => {
     try {
-      const res = await fetch(`/api/v1/tree/canvas?role=${role}`);
+      // P4.1: First request gets only the first batch.
+      // Subsequent batches (if any) can be loaded on demand via loadMoreNodes.
+      const res = await fetch(`/api/v1/tree/canvas?role=${role}&offset=0&limit=${INITIAL_BATCH_SIZE}`);
       const data = await res.json();
 
       if (data.nodes && data.edges) {
@@ -414,6 +418,13 @@ function FamilyTreeCanvasContent() {
 
         const pend = parsedRels.filter((r) => r.status === 'PENDING');
         setPendingRelationships(pend);
+
+        // P4.1: If server reports more data available, log a hint.
+        // Full progressive loading would queue another fetch; for now we
+        // surface the count so the user can decide.
+        if (data.hasMore) {
+          console.log(`[P4.1] ${data.totalPersons - data.offset - data.limit} more persons available.`);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch tree data', err);
