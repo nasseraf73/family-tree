@@ -12,35 +12,33 @@ const AuthModal = dynamic(
 );
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import {
-  Scroll,
-  Landmark,
-  Compass,
-  Map,
-  Sparkles,
-  Search,
-  Maximize2,
-  X,
-  ChevronLeft,
-  Calendar,
-  ShieldCheck,
-  Award,
-  Layers,
-  Share2,
-  CheckCircle,
-  FileText,
-  Key,
-  Flame,
-  ArrowRight,
-  Info,
-  UploadCloud,
-  PlusCircle,
-  User,
-  Clock,
-  Check,
-  Trash2,
-  AlertCircle
-} from 'lucide-react';
+import Scroll from 'lucide-react/dist/esm/icons/scroll';
+import Landmark from 'lucide-react/dist/esm/icons/landmark';
+import Compass from 'lucide-react/dist/esm/icons/compass';
+import Map from 'lucide-react/dist/esm/icons/map';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Maximize2 from 'lucide-react/dist/esm/icons/maximize-2';
+import X from 'lucide-react/dist/esm/icons/x';
+import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import Award from 'lucide-react/dist/esm/icons/award';
+import Layers from 'lucide-react/dist/esm/icons/layers';
+import Share2 from 'lucide-react/dist/esm/icons/share-2';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Key from 'lucide-react/dist/esm/icons/key';
+import Flame from 'lucide-react/dist/esm/icons/flame';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import Info from 'lucide-react/dist/esm/icons/info';
+import UploadCloud from 'lucide-react/dist/esm/icons/upload-cloud';
+import PlusCircle from 'lucide-react/dist/esm/icons/plus-circle';
+import User from 'lucide-react/dist/esm/icons/user';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 
 interface ArchiveItem {
   id: string;

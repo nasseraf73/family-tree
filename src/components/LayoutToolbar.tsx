@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import { ArrowDown, ArrowUp, Users, Sparkles } from 'lucide-react';
+import ArrowDown from 'lucide-react/dist/esm/icons/arrow-down';
+import ArrowUp from 'lucide-react/dist/esm/icons/arrow-up';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import { LayoutDirection } from '../lib/layout';
 
 export type VisualFilter = 'ALL' | 'LIVING' | 'MARRIED';

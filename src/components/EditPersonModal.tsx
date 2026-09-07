@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { X, CheckCircle, AlertTriangle, Edit3, Upload, RefreshCw, User, Trash2, Link as LinkIcon } from 'lucide-react';
+import X from 'lucide-react/dist/esm/icons/x';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import Edit3 from 'lucide-react/dist/esm/icons/edit-3';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import User from 'lucide-react/dist/esm/icons/user';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import LinkIcon from 'lucide-react/dist/esm/icons/link';
 import { Person, Gender, Country } from '../types';
 import { uploadPersonPhoto } from '../lib/supabase/storage';
 // P4.3: تحميل كسول للنافذة المؤكدة

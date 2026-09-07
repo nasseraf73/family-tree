@@ -15,25 +15,23 @@ const AuthModal = dynamicNext(
 );
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ThemeProvider } from '../context/ThemeContext';
-import {
-  GitBranch,
-  Users,
-  ShieldCheck,
-  Network,
-  Sparkles,
-  ArrowLeft,
-  UserCheck,
-  BookOpen,
-  Layers,
-  BarChart3,
-  GitMerge,
-  Eye,
-  Sun,
-  Share2,
-  CircleDot,
-  Crown,
-  Scroll,
-} from 'lucide-react';
+import GitBranch from 'lucide-react/dist/esm/icons/git-branch';
+import Users from 'lucide-react/dist/esm/icons/users';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import Network from 'lucide-react/dist/esm/icons/network';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import UserCheck from 'lucide-react/dist/esm/icons/user-check';
+import BookOpen from 'lucide-react/dist/esm/icons/book-open';
+import Layers from 'lucide-react/dist/esm/icons/layers';
+import BarChart3 from 'lucide-react/dist/esm/icons/bar-chart-3';
+import GitMerge from 'lucide-react/dist/esm/icons/git-merge';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import Sun from 'lucide-react/dist/esm/icons/sun';
+import Share2 from 'lucide-react/dist/esm/icons/share-2';
+import CircleDot from 'lucide-react/dist/esm/icons/circle-dot';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import Scroll from 'lucide-react/dist/esm/icons/scroll';
 
 function LandingPageContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);

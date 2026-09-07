@@ -7,25 +7,23 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { Person, Relationship, MergeRequest } from '@/types';
 import { normalizeForSearch } from '@/lib/dedup';
-import {
-  ShieldCheck,
-  Check,
-  X,
-  GitMerge,
-  Clock,
-  UserCheck,
-  Users,
-  UserPlus,
-  Trash2,
-  RefreshCw,
-  Shield,
-  Globe,
-  Database,
-  ArrowRight,
-  Settings,
-  LayoutDashboard,
-  Search,
-} from 'lucide-react';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import Check from 'lucide-react/dist/esm/icons/check';
+import X from 'lucide-react/dist/esm/icons/x';
+import GitMerge from 'lucide-react/dist/esm/icons/git-merge';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import UserCheck from 'lucide-react/dist/esm/icons/user-check';
+import Users from 'lucide-react/dist/esm/icons/users';
+import UserPlus from 'lucide-react/dist/esm/icons/user-plus';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Shield from 'lucide-react/dist/esm/icons/shield';
+import Globe from 'lucide-react/dist/esm/icons/globe';
+import Database from 'lucide-react/dist/esm/icons/database';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import Settings from 'lucide-react/dist/esm/icons/settings';
+import LayoutDashboard from 'lucide-react/dist/esm/icons/layout-dashboard';
+import Search from 'lucide-react/dist/esm/icons/search';
 
 // ─── Dashboard Content ───────────────────────────────────────────────
 

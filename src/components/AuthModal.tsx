@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, LogIn, UserPlus, AlertCircle, RefreshCw, Lock, Mail, User, Phone, Shield } from 'lucide-react';
+import X from 'lucide-react/dist/esm/icons/x';
+import LogIn from 'lucide-react/dist/esm/icons/log-in';
+import UserPlus from 'lucide-react/dist/esm/icons/user-plus';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Lock from 'lucide-react/dist/esm/icons/lock';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import User from 'lucide-react/dist/esm/icons/user';
+import Phone from 'lucide-react/dist/esm/icons/phone';
+import Shield from 'lucide-react/dist/esm/icons/shield';
 import { useAuth } from '../context/AuthContext';
 
 interface AuthModalProps {

@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, AlertTriangle, CheckCircle, UserPlus, RefreshCw, Upload, Sparkles, Heart } from 'lucide-react';
+import X from 'lucide-react/dist/esm/icons/x';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import UserPlus from 'lucide-react/dist/esm/icons/user-plus';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import Heart from 'lucide-react/dist/esm/icons/heart';
 import { Person, RelationshipType, Gender, Country } from '../types';
 import { uploadPersonPhoto } from '../lib/supabase/storage';
 import { useAuth } from '../context/AuthContext';

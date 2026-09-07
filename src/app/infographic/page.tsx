@@ -15,24 +15,22 @@ import { Person, Relationship } from '../../types';
 import { calculateTreeAnalytics, TreeAnalyticsResult } from '../../lib/treeAnalytics';
 import { getPentanyicFullName } from '../../lib/lineage';
 
-import {
-  Users,
-  Crown,
-  GitBranch,
-  Baby,
-  Heart,
-  Sparkles,
-  TrendingUp,
-  Award,
-  Calendar,
-  Printer,
-  Share2,
-  CheckCircle,
-  PieChart,
-  ShieldCheck,
-  BarChart3,
-  ChevronLeft,
-} from 'lucide-react';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import GitBranch from 'lucide-react/dist/esm/icons/git-branch';
+import Baby from 'lucide-react/dist/esm/icons/baby';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import Award from 'lucide-react/dist/esm/icons/award';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import Printer from 'lucide-react/dist/esm/icons/printer';
+import Share2 from 'lucide-react/dist/esm/icons/share-2';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import PieChart from 'lucide-react/dist/esm/icons/pie-chart';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import BarChart3 from 'lucide-react/dist/esm/icons/bar-chart-3';
+import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left';
 
 function InfographicContent() {
   const { role } = useAuth();

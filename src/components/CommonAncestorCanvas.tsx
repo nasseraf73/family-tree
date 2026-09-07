@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  MiniMap,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -15,6 +14,7 @@ import {
 const ReactFlow = dynamic(() => import('@xyflow/react').then(m => ({ default: m.ReactFlow })), { ssr: false, loading: () => null });
 const Background = dynamic(() => import('@xyflow/react').then(m => ({ default: m.Background })), { ssr: false, loading: () => null });
 const Controls = dynamic(() => import('@xyflow/react').then(m => ({ default: m.Controls })), { ssr: false, loading: () => null });
+const MiniMap = dynamic(() => import('@xyflow/react').then((m) => ({ default: m.MiniMap })), { ssr: false, loading: () => null });
 
 
 import { PersonNode, PersonNodeData } from './PersonNode';
@@ -39,18 +39,16 @@ import { Person, Relationship } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { normalizeForSearch, sortSearchResults, filterAndSortSearchResults } from '../lib/dedup';
 
-import {
-  Search,
-  Share2,
-  Download,
-  CheckCircle,
-  GitMerge,
-  RefreshCw,
-  Users,
-  AlertCircle,
-  Wand2,
-  Sparkles,
-} from 'lucide-react';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Share2 from 'lucide-react/dist/esm/icons/share-2';
+import Download from 'lucide-react/dist/esm/icons/download';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import GitMerge from 'lucide-react/dist/esm/icons/git-merge';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Users from 'lucide-react/dist/esm/icons/users';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Wand2 from 'lucide-react/dist/esm/icons/wand-2';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 
 const nodeTypes = {
   personNode: PersonNode,

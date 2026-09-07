@@ -5,28 +5,26 @@ import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import {
-  Database,
-  Cloud,
-  HardDrive,
-  RefreshCw,
-  Download,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  CheckCircle,
-  AlertTriangle,
-  FileJson,
-  ShieldAlert,
-  ArrowRight,
-  Sparkles,
-  Users,
-  Globe,
-  Heart,
-  Trees,
-  Layers,
-  Check,
-  Server,
-} from 'lucide-react';
+import Database from 'lucide-react/dist/esm/icons/database';
+import Cloud from 'lucide-react/dist/esm/icons/cloud';
+import HardDrive from 'lucide-react/dist/esm/icons/hard-drive';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Download from 'lucide-react/dist/esm/icons/download';
+import ArrowDownCircle from 'lucide-react/dist/esm/icons/arrow-down-circle';
+import ArrowUpCircle from 'lucide-react/dist/esm/icons/arrow-up-circle';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import FileJson from 'lucide-react/dist/esm/icons/file-json';
+import ShieldAlert from 'lucide-react/dist/esm/icons/shield-alert';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Globe from 'lucide-react/dist/esm/icons/globe';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import Trees from 'lucide-react/dist/esm/icons/trees';
+import Layers from 'lucide-react/dist/esm/icons/layers';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Server from 'lucide-react/dist/esm/icons/server';
 
 interface DbStats {
   users: number;

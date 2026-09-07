@@ -2,7 +2,21 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Copy, Check, Edit3, User, Calendar, MapPin, Heart, FileText, Sparkles, Users, Baby, Download, Loader2, ShieldCheck } from 'lucide-react';
+import X from 'lucide-react/dist/esm/icons/x';
+import Copy from 'lucide-react/dist/esm/icons/copy';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Edit3 from 'lucide-react/dist/esm/icons/edit-3';
+import User from 'lucide-react/dist/esm/icons/user';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Baby from 'lucide-react/dist/esm/icons/baby';
+import Download from 'lucide-react/dist/esm/icons/download';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
 import { Person, Relationship } from '../types';
 import { generateFullLineage, resolveParentAndChildIds } from '../lib/lineage';
 import { exportCustomProfilePdf } from '../lib/lineagePdfExport';

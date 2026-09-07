@@ -1,7 +1,11 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, Trash2, Info, X, RefreshCw } from 'lucide-react';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import Info from 'lucide-react/dist/esm/icons/info';
+import X from 'lucide-react/dist/esm/icons/x';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
 
 export interface ConfirmModalProps {
   isOpen: boolean;

@@ -6,32 +6,30 @@ import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import {
-  MapPin,
-  Mountain,
-  Map,
-  Users,
-  Building2,
-  Trees,
-  Briefcase,
-  GraduationCap,
-  Activity,
-  History,
-  Sparkles,
-  ShieldCheck,
-  Droplets,
-  ArrowRight,
-  Maximize2,
-  X,
-  ChevronLeft,
-  TrendingUp,
-  Landmark,
-  Compass,
-  Calendar,
-  Layers,
-  PieChart,
-  Sun
-} from 'lucide-react';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import Mountain from 'lucide-react/dist/esm/icons/mountain';
+import Map from 'lucide-react/dist/esm/icons/map';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Building2 from 'lucide-react/dist/esm/icons/building-2';
+import Trees from 'lucide-react/dist/esm/icons/trees';
+import Briefcase from 'lucide-react/dist/esm/icons/briefcase';
+import GraduationCap from 'lucide-react/dist/esm/icons/graduation-cap';
+import Activity from 'lucide-react/dist/esm/icons/activity';
+import History from 'lucide-react/dist/esm/icons/history';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import Droplets from 'lucide-react/dist/esm/icons/droplets';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import Maximize2 from 'lucide-react/dist/esm/icons/maximize-2';
+import X from 'lucide-react/dist/esm/icons/x';
+import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import Landmark from 'lucide-react/dist/esm/icons/landmark';
+import Compass from 'lucide-react/dist/esm/icons/compass';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import Layers from 'lucide-react/dist/esm/icons/layers';
+import PieChart from 'lucide-react/dist/esm/icons/pie-chart';
+import Sun from 'lucide-react/dist/esm/icons/sun';
 
 function NammariyahContent() {
   const [activeTab, setActiveTab] = useState<'overview' | 'charts' | 'history' | 'landmarks' | 'gallery' | 'development'>('overview');

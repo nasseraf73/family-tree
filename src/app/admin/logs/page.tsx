@@ -10,21 +10,19 @@ const AuthModal = dynamic(
 );
 import { AuthProvider, useAuth } from '../../../context/AuthContext';
 import { ThemeProvider } from '../../../context/ThemeContext';
-import {
-  ShieldAlert,
-  Search,
-  RefreshCw,
-  Trash2,
-  Globe,
-  Clock,
-  UserCheck,
-  CheckCircle,
-  AlertCircle,
-  Laptop,
-  ArrowRight,
-  ShieldCheck,
-  Activity,
-} from 'lucide-react';
+import ShieldAlert from 'lucide-react/dist/esm/icons/shield-alert';
+import Search from 'lucide-react/dist/esm/icons/search';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import Globe from 'lucide-react/dist/esm/icons/globe';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import UserCheck from 'lucide-react/dist/esm/icons/user-check';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Laptop from 'lucide-react/dist/esm/icons/laptop';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import Activity from 'lucide-react/dist/esm/icons/activity';
 import Link from 'next/link';
 
 interface LogItem {

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  MiniMap,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -15,6 +14,7 @@ import {
 const ReactFlow = dynamic(() => import('@xyflow/react').then(m => ({ default: m.ReactFlow })), { ssr: false, loading: () => null });
 const Background = dynamic(() => import('@xyflow/react').then(m => ({ default: m.Background })), { ssr: false, loading: () => null });
 const Controls = dynamic(() => import('@xyflow/react').then(m => ({ default: m.Controls })), { ssr: false, loading: () => null });
+const MiniMap = dynamic(() => import('@xyflow/react').then((m) => ({ default: m.MiniMap })), { ssr: false, loading: () => null });
 
 
 import { PersonNode, PersonNodeData } from './PersonNode';
@@ -40,21 +40,19 @@ import { useAuth } from '../context/AuthContext';
 import { normalizeForSearch, sortSearchResults, filterAndSortSearchResults } from '../lib/dedup';
 
 import { createPortal } from 'react-dom';
-import {
-  Search,
-  Share2,
-  Download,
-  GitBranch,
-  Eye,
-  CheckCircle,
-  Layers,
-  Sparkles,
-  RefreshCw,
-  UserCheck,
-  X,
-  AlertCircle,
-  Wand2,
-} from 'lucide-react';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Share2 from 'lucide-react/dist/esm/icons/share-2';
+import Download from 'lucide-react/dist/esm/icons/download';
+import GitBranch from 'lucide-react/dist/esm/icons/git-branch';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Layers from 'lucide-react/dist/esm/icons/layers';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import UserCheck from 'lucide-react/dist/esm/icons/user-check';
+import X from 'lucide-react/dist/esm/icons/x';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Wand2 from 'lucide-react/dist/esm/icons/wand-2';
 
 const nodeTypes = {
   personNode: PersonNode,

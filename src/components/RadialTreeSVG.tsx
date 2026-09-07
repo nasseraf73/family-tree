@@ -4,7 +4,13 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic';
 import { Person, Relationship } from '../types';
 import { createClient } from '../lib/supabase/client';
-import { Download, Maximize, Minimize, RotateCw, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
+import Download from 'lucide-react/dist/esm/icons/download';
+import Maximize from 'lucide-react/dist/esm/icons/maximize';
+import Minimize from 'lucide-react/dist/esm/icons/minimize';
+import RotateCw from 'lucide-react/dist/esm/icons/rotate-cw';
+import ZoomIn from 'lucide-react/dist/esm/icons/zoom-in';
+import ZoomOut from 'lucide-react/dist/esm/icons/zoom-out';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
 // P4.3: تحميل كسول للنافذة الثقيلة
 const PersonProfileModal = dynamic(
   () => import('./PersonProfileModal').then((m) => ({ default: m.PersonProfileModal })),

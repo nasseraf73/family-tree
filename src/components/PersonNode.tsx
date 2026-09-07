@@ -2,8 +2,21 @@
 
 import React, { memo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Handle, Position } from '@xyflow/react';
-import { Clock, Heart, Plus, ShieldCheck, UserCheck, MapPin, Edit3, Sparkles, Users, Mars, Venus, X } from 'lucide-react';
+import dynamic from 'next/dynamic';
+const Handle = dynamic(() => import('@xyflow/react').then((m) => ({ default: m.Handle })), { ssr: false, loading: () => null });
+import { Position } from '@xyflow/react';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import UserCheck from 'lucide-react/dist/esm/icons/user-check';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import Edit3 from 'lucide-react/dist/esm/icons/edit-3';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Mars from 'lucide-react/dist/esm/icons/mars';
+import Venus from 'lucide-react/dist/esm/icons/venus';
+import X from 'lucide-react/dist/esm/icons/x';
 import { Person } from '../types';
 
 export interface SpouseInfo {

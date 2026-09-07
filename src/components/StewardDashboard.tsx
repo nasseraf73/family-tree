@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Check, X, GitMerge, Clock, UserCheck, AlertCircle, Users, UserPlus, Trash2, Plus, RefreshCw, Shield } from 'lucide-react';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import Check from 'lucide-react/dist/esm/icons/check';
+import X from 'lucide-react/dist/esm/icons/x';
+import GitMerge from 'lucide-react/dist/esm/icons/git-merge';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import UserCheck from 'lucide-react/dist/esm/icons/user-check';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Users from 'lucide-react/dist/esm/icons/users';
+import UserPlus from 'lucide-react/dist/esm/icons/user-plus';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Shield from 'lucide-react/dist/esm/icons/shield';
 import { Person, Relationship, MergeRequest } from '../types';
 import { normalizeForSearch } from '../lib/dedup';
 import { resolveParentAndChildIds } from '../lib/lineage';

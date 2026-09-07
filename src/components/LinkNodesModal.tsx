@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Link as LinkIcon, RefreshCw, AlertTriangle, CheckCircle, Users } from 'lucide-react';
+import X from 'lucide-react/dist/esm/icons/x';
+import LinkIcon from 'lucide-react/dist/esm/icons/link';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Users from 'lucide-react/dist/esm/icons/users';
 import { Person } from '../types';
 import { useAuth } from '../context/AuthContext';
 

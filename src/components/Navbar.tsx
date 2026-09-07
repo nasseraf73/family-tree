@@ -6,15 +6,13 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import {
-  Sun,
-  Moon,
-  LogIn,
-  LogOut,
-  Menu,
-  X,
-  LayoutDashboard,
-} from 'lucide-react';
+import Sun from 'lucide-react/dist/esm/icons/sun';
+import Moon from 'lucide-react/dist/esm/icons/moon';
+import LogIn from 'lucide-react/dist/esm/icons/log-in';
+import LogOut from 'lucide-react/dist/esm/icons/log-out';
+import Menu from 'lucide-react/dist/esm/icons/menu';
+import X from 'lucide-react/dist/esm/icons/x';
+import LayoutDashboard from 'lucide-react/dist/esm/icons/layout-dashboard';
 
 interface NavbarProps {
   onOpenAuthModal?: () => void;

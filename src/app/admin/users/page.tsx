@@ -6,33 +6,31 @@ import { Navbar } from '@/components/Navbar';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { User as DbUser } from '@/types';
-import {
-  Users,
-  ShieldCheck,
-  UserCheck,
-  UserPlus,
-  Edit2,
-  Trash2,
-  Search,
-  RefreshCw,
-  Mail,
-  Phone,
-  Shield,
-  CheckCircle,
-  AlertTriangle,
-  ArrowRight,
-  Sparkles,
-  X,
-  Save,
-  Filter,
-  CheckCircle2,
-  Info,
-  Layers,
-  Clock,
-  User,
-  GitPullRequest,
-  ShieldAlert,
-} from 'lucide-react';
+import Users from 'lucide-react/dist/esm/icons/users';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import UserCheck from 'lucide-react/dist/esm/icons/user-check';
+import UserPlus from 'lucide-react/dist/esm/icons/user-plus';
+import Edit2 from 'lucide-react/dist/esm/icons/edit-2';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import Search from 'lucide-react/dist/esm/icons/search';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import Phone from 'lucide-react/dist/esm/icons/phone';
+import Shield from 'lucide-react/dist/esm/icons/shield';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import X from 'lucide-react/dist/esm/icons/x';
+import Save from 'lucide-react/dist/esm/icons/save';
+import Filter from 'lucide-react/dist/esm/icons/filter';
+import CheckCircle2 from 'lucide-react/dist/esm/icons/check-circle-2';
+import Info from 'lucide-react/dist/esm/icons/info';
+import Layers from 'lucide-react/dist/esm/icons/layers';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import User from 'lucide-react/dist/esm/icons/user';
+import GitPullRequest from 'lucide-react/dist/esm/icons/git-pull-request';
+import ShieldAlert from 'lucide-react/dist/esm/icons/shield-alert';
 
 interface UserAuditData {
   user: DbUser;

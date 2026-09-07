@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Search, ShieldCheck, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import X from 'lucide-react/dist/esm/icons/x';
+import Search from 'lucide-react/dist/esm/icons/search';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 import { Person } from '../types';
 import { getPentanyicFullName } from '../lib/lineage';
 import { normalizeForSearch, sortSearchResults, filterAndSortSearchResults } from '../lib/dedup';

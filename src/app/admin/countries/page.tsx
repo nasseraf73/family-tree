@@ -6,21 +6,19 @@ import { useRouter } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { Country } from '@/types';
-import {
-  Globe,
-  Plus,
-  Edit2,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  Search,
-  ArrowRight,
-  ShieldAlert,
-  Save,
-  X,
-  Flag,
-} from 'lucide-react';
+import Globe from 'lucide-react/dist/esm/icons/globe';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import Edit2 from 'lucide-react/dist/esm/icons/edit-2';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Search from 'lucide-react/dist/esm/icons/search';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import ShieldAlert from 'lucide-react/dist/esm/icons/shield-alert';
+import Save from 'lucide-react/dist/esm/icons/save';
+import X from 'lucide-react/dist/esm/icons/x';
+import Flag from 'lucide-react/dist/esm/icons/flag';
 
 function AdminCountriesContent() {
   const router = useRouter();

@@ -1,9 +1,22 @@
 'use client';
 
 import React, { memo, useState } from 'react';
-import { Handle, Position, NodeToolbar } from '@xyflow/react';
+import dynamic from 'next/dynamic';
+const Handle = dynamic(() => import('@xyflow/react').then((m) => ({ default: m.Handle })), { ssr: false, loading: () => null });
+const NodeToolbar = dynamic(() => import('@xyflow/react').then((m) => ({ default: m.NodeToolbar })), { ssr: false, loading: () => null });
+import { Position } from '@xyflow/react';
 import { PersonNodeData } from './PersonNode';
-import { Mars, Venus, Sparkles, MapPin, Calendar, Lock, Users, Heart, TreePine, Baby, UserRound } from 'lucide-react';
+import Mars from 'lucide-react/dist/esm/icons/mars';
+import Venus from 'lucide-react/dist/esm/icons/venus';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import Lock from 'lucide-react/dist/esm/icons/lock';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import TreePine from 'lucide-react/dist/esm/icons/tree-pine';
+import Baby from 'lucide-react/dist/esm/icons/baby';
+import UserRound from 'lucide-react/dist/esm/icons/user-round';
 import Image from 'next/image';
 
 const CircleNodeComponent = ({ data }: { data: PersonNodeData }) => {

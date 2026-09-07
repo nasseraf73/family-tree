@@ -63,16 +63,14 @@ import { createClient } from '../lib/supabase/client';
 import { useAuth } from '../context/AuthContext';
 import { normalizeForSearch, sortSearchResults, filterAndSortSearchResults } from '../lib/dedup';
 
-import {
-  ShieldCheck,
-  Search,
-  UserCheck,
-  Sparkles,
-  PlusCircle,
-  GitBranch,
-  Maximize,
-  Minimize,
-} from 'lucide-react';
+import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
+import Search from 'lucide-react/dist/esm/icons/search';
+import UserCheck from 'lucide-react/dist/esm/icons/user-check';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import PlusCircle from 'lucide-react/dist/esm/icons/plus-circle';
+import GitBranch from 'lucide-react/dist/esm/icons/git-branch';
+import Maximize from 'lucide-react/dist/esm/icons/maximize';
+import Minimize from 'lucide-react/dist/esm/icons/minimize';
 
 const nodeTypes = {
   personNode: PersonNode,
