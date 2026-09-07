@@ -190,6 +190,8 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
           } left-1/2 -translate-x-1/2 z-30 p-1 bg-slate-900 hover:bg-slate-800 border-2 border-amber-500/70 rounded-full shadow-2xl transition-transform hover:scale-115 flex items-center justify-center`}
         >
           <img
+            loading="lazy"
+            decoding="async"
             src={isCollapsed ? '/icons/expand-icon.png' : '/icons/collapse-icon.png'}
             alt={isCollapsed ? 'توسيع' : 'طي'}
             className="w-5 h-5 object-contain"
@@ -275,7 +277,7 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
             className="cursor-pointer transition-transform hover:scale-115 shrink-0"
           >
             {data.photo_url ? (
-              <img src={data.photo_url} alt={fullName4} className="w-11 h-11 rounded-full object-cover border-2 border-white/70 shadow-md" />
+              <img loading="lazy" decoding="async" src={data.photo_url} alt={fullName4} className="w-11 h-11 rounded-full object-cover border-2 border-white/70 shadow-md" />
             ) : data.gender === 'FEMALE' ? (
               <span className="w-11 h-11 rounded-full bg-pink-500/30 text-pink-200 border-2 border-pink-400/50 shadow-md flex items-center justify-center" title="أنثى">
                 <svg className="w-6 h-6 fill-pink-300 shrink-0" viewBox="0 0 24 24">
@@ -302,7 +304,7 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
           {/* Marital Status Badge */}
           {isMarried ? (
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-pink-950/60 text-pink-300 border border-pink-500/30 flex items-center gap-1">
-              <img src="/icons/rings-icon.png" alt="متزوج" className="w-3 h-3 object-contain" />
+              <img loading="lazy" decoding="async" src="/icons/rings-icon.png" alt="متزوج" className="w-3 h-3 object-contain" />
               <span>{data.gender === 'FEMALE' ? 'متزوجة' : 'متزوج'}</span>
             </span>
           ) : (
@@ -317,7 +319,7 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
           <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold">
             <span className="flex items-center gap-1">
               {isMarried && (
-                <img src="/icons/rings-icon.png" alt="خاتمين" className="w-3.5 h-3.5 object-contain" />
+                <img loading="lazy" decoding="async" src="/icons/rings-icon.png" alt="خاتمين" className="w-3.5 h-3.5 object-contain" />
               )}
               <span>{data.gender === 'FEMALE' ? 'الأزواج:' : 'الزوجات:'}</span>
             </span>
@@ -437,6 +439,8 @@ const PersonNodeComponent = ({ data }: { data: PersonNodeData }) => {
             <div className="w-full flex-1 flex items-center justify-center p-2 overflow-hidden">
               {data.photo_url ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={data.photo_url}
                   alt={fullName4}
                   className="max-w-full max-h-full object-contain rounded-2xl border border-slate-800 shadow-2xl"
