@@ -17,6 +17,11 @@ interface AuthContextType {
   authFetch: (url: string, init?: RequestInit) => Promise<Response>;
 }
 
+// P0.4: dedup على مستوى الوحدة لمنع الاستدعاءات المتوازية لنفس الطلب.
+// بدون هذا، يتم استدعاء /api/v1/auth/user 3 مرات في تحميل الصفحة الواحدة
+// (من initAuth و onAuthStateChange ومصادر أخرى)، يستهلك ~4.5s على البوابة الباردة.
+let inFlightProfileFetch: Promise<DbUser | null> | null = null;
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -36,24 +41,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchDbUserProfile = useCallback(async (token: string) => {
-    try {
-      const res = await fetch('/api/v1/auth/user', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          setDbUser(data.user);
-          setRole(mapUserRole(data.user.role));
-          return data.user;
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch authenticated user profile:', err);
+    // P0.4: إذا كان هناك طلب جارٍ، أعد نفس الـ Promise بدلا من تكرار الطلب
+    if (inFlightProfileFetch) {
+      return inFlightProfileFetch;
     }
-    return null;
+    inFlightProfileFetch = (async () => {
+      try {
+        const res = await fetch('/api/v1/auth/user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) {
+            setDbUser(data.user);
+            setRole(mapUserRole(data.user.role));
+            return data.user;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch authenticated user profile:', err);
+      }
+      return null;
+    })();
+    try {
+      return await inFlightProfileFetch;
+    } finally {
+      inFlightProfileFetch = null;
+    }
   }, []);
 
   const authFetch = useCallback(async (url: string, init?: RequestInit): Promise<Response> => {
