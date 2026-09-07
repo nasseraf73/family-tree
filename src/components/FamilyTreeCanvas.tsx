@@ -3,9 +3,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  ReactFlow,
-  Background,
-  Controls,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -14,6 +11,11 @@ import {
   Connection,
   ConnectionMode,
 } from '@xyflow/react';
+
+const ReactFlow = dynamic(() => import('@xyflow/react').then(m => ({ default: m.ReactFlow })), { ssr: false, loading: () => null });
+const Background = dynamic(() => import('@xyflow/react').then(m => ({ default: m.Background })), { ssr: false, loading: () => null });
+const Controls = dynamic(() => import('@xyflow/react').then(m => ({ default: m.Controls })), { ssr: false, loading: () => null });
+
 
 import { PersonNode, PersonNodeData } from './PersonNode';
 

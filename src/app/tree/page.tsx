@@ -4,7 +4,12 @@ import React from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import { ThemeProvider } from '../../context/ThemeContext';
-import { FamilyTreeCanvas } from '../../components/FamilyTreeCanvas';
+import dynamic from 'next/dynamic';
+const FamilyTreeCanvas = dynamic(
+  () => import('../../components/FamilyTreeCanvas').then((m) => ({ default: m.FamilyTreeCanvas })),
+  { ssr: false, loading: () => null }
+);
+
 
 function TreePageContent() {
   const { loading } = useAuth();
