@@ -1,10 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { X, CheckCircle, AlertTriangle, Edit3, Upload, RefreshCw, User, Trash2, Link as LinkIcon } from 'lucide-react';
 import { Person, Gender, Country } from '../types';
 import { uploadPersonPhoto } from '../lib/supabase/storage';
-import { ConfirmModal } from './ConfirmModal';
+// P4.3: تحميل كسول للنافذة المؤكدة
+const ConfirmModal = dynamic(
+  () => import('./ConfirmModal').then((m) => ({ default: m.ConfirmModal })),
+  { ssr: false, loading: () => null }
+);
 import { useAuth } from '../context/AuthContext';
 
 interface EditPersonModalProps {

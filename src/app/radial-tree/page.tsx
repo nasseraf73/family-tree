@@ -1,11 +1,16 @@
 'use client';
 
 import React, { Suspense, useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { AuthProvider } from '../../context/AuthContext';
 import { ThemeProvider } from '../../context/ThemeContext';
 import { Navbar } from '../../components/Navbar';
 import { RadialTreeSVG } from '../../components/RadialTreeSVG';
-import { AuthModal } from '../../components/AuthModal';
+// P4.3: تحميل كسول لنافذة المصادقة
+const AuthModal = dynamic(
+  () => import('../../components/AuthModal').then((m) => ({ default: m.AuthModal })),
+  { ssr: false, loading: () => null }
+);
 
 export default function RadialTreePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);

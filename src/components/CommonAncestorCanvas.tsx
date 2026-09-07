@@ -16,9 +16,16 @@ import {
 } from '@xyflow/react';
 
 import { PersonNode, PersonNodeData } from './PersonNode';
-import { PersonProfileModal } from './PersonProfileModal';
+// P4.3: تحميل كسول للنوافذ الثقيلة
+const PersonProfileModal = dynamic(
+  () => import('./PersonProfileModal').then((m) => ({ default: m.PersonProfileModal })),
+  { ssr: false, loading: () => null }
+);
 import { Navbar } from './Navbar';
-import { AuthModal } from './AuthModal';
+const AuthModal = dynamic(
+  () => import('./AuthModal').then((m) => ({ default: m.AuthModal })),
+  { ssr: false, loading: () => null }
+);
 
 import { getLayoutedElements } from '../lib/layout';
 import { findCommonAncestorLineage } from '../lib/ancestorFinder';

@@ -4,10 +4,15 @@
 export const dynamic = 'force-static';
 
 import React, { useState } from 'react';
+import dynamicNext from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Navbar } from '../components/Navbar';
-import { AuthModal } from '../components/AuthModal';
+// P4.3: تحميل كسول لنافذة المصادقة
+const AuthModal = dynamicNext(
+  () => import('../components/AuthModal').then((m) => ({ default: m.AuthModal })),
+  { ssr: false, loading: () => null }
+);
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ThemeProvider } from '../context/ThemeContext';
 import {

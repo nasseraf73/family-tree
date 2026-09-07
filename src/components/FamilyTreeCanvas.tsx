@@ -16,15 +16,41 @@ import {
 } from '@xyflow/react';
 
 import { PersonNode, PersonNodeData } from './PersonNode';
-import { AddRelationModal } from './AddRelationModal';
-import { AddSpouseModal } from './AddSpouseModal';
-import { EditPersonModal } from './EditPersonModal';
-import { ClaimProfileModal } from './ClaimProfileModal';
 
-import { AuthModal } from './AuthModal';
-import { LinkNodesModal } from './LinkNodesModal';
-import { DeleteRelationModal } from './DeleteRelationModal';
-import { PersonProfileModal } from './PersonProfileModal';
+// P4.3: تحميل كسول للنوافذ الثقيلة لتقليل حجم الحزمة الأولية.
+// كل النوافذ تُعرض بشرط isOpen، فـ ssr:false آمن.
+const AddRelationModal = dynamic(
+  () => import('./AddRelationModal').then((m) => ({ default: m.AddRelationModal })),
+  { ssr: false, loading: () => null }
+);
+const AddSpouseModal = dynamic(
+  () => import('./AddSpouseModal').then((m) => ({ default: m.AddSpouseModal })),
+  { ssr: false, loading: () => null }
+);
+const EditPersonModal = dynamic(
+  () => import('./EditPersonModal').then((m) => ({ default: m.EditPersonModal })),
+  { ssr: false, loading: () => null }
+);
+const ClaimProfileModal = dynamic(
+  () => import('./ClaimProfileModal').then((m) => ({ default: m.ClaimProfileModal })),
+  { ssr: false, loading: () => null }
+);
+const AuthModal = dynamic(
+  () => import('./AuthModal').then((m) => ({ default: m.AuthModal })),
+  { ssr: false, loading: () => null }
+);
+const LinkNodesModal = dynamic(
+  () => import('./LinkNodesModal').then((m) => ({ default: m.LinkNodesModal })),
+  { ssr: false, loading: () => null }
+);
+const DeleteRelationModal = dynamic(
+  () => import('./DeleteRelationModal').then((m) => ({ default: m.DeleteRelationModal })),
+  { ssr: false, loading: () => null }
+);
+const PersonProfileModal = dynamic(
+  () => import('./PersonProfileModal').then((m) => ({ default: m.PersonProfileModal })),
+  { ssr: false, loading: () => null }
+);
 import { LayoutToolbar, VisualFilter } from './LayoutToolbar';
 import { Navbar } from './Navbar';
 

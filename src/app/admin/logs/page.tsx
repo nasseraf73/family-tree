@@ -1,8 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { Navbar } from '../../../components/Navbar';
-import { AuthModal } from '../../../components/AuthModal';
+// P4.3: تحميل كسول لنافذة المصادقة
+const AuthModal = dynamic(
+  () => import('../../../components/AuthModal').then((m) => ({ default: m.AuthModal })),
+  { ssr: false, loading: () => null }
+);
 import { AuthProvider, useAuth } from '../../../context/AuthContext';
 import { ThemeProvider } from '../../../context/ThemeContext';
 import {

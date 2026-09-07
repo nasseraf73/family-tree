@@ -1,10 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { Person, Relationship } from '../types';
 import { createClient } from '../lib/supabase/client';
 import { Download, Maximize, Minimize, RotateCw, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
-import { PersonProfileModal } from './PersonProfileModal';
+// P4.3: تحميل كسول للنافذة الثقيلة
+const PersonProfileModal = dynamic(
+  () => import('./PersonProfileModal').then((m) => ({ default: m.PersonProfileModal })),
+  { ssr: false, loading: () => null }
+);
 
 // ===== Tree Node for SVG rendering =====
 interface TreeNode {
