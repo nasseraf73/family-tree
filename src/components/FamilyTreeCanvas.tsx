@@ -774,6 +774,7 @@ function FamilyTreeCanvasContent() {
           <ReactFlow
             nodes={nodes}
             edges={edges}
+            onlyRenderVisibleElements={true}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}

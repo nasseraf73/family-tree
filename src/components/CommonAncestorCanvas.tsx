@@ -593,6 +593,7 @@ function CommonAncestorCanvasContent({
           <ReactFlow
             nodes={nodes}
             edges={edges}
+            onlyRenderVisibleElements={true}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             nodeTypes={nodeTypes}
